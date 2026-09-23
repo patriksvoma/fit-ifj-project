@@ -3,10 +3,12 @@
 .PHONY: build clean
 
 CC = gcc-14
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror -Iinclude -MMD -MP
 
 SRC = $(wildcard src/*.c)
+HEADERS = $(wildcard include/*.h)
 OBJ = $(SRC:.c=.o)
+DEP = $(OBJ:.o=.d)
 TARGET = ifj-project
 
 build: $(TARGET)
@@ -17,5 +19,7 @@ $(TARGET): $(OBJ)
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+-include $(DEP)
+
 clean:
-	rm -f $(OBJ) $(TARGET)
+	rm -f $(OBJ) $(DEP) $(TARGET)
