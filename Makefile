@@ -1,6 +1,6 @@
 # IFJ 2026 project Makefile
 
-.PHONY: build format clean
+.PHONY: build check build-check format clean
 
 CC = gcc-14
 CFLAGS = -Wall -Wextra -Werror -Iinclude -MMD -MP
@@ -20,6 +20,11 @@ $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 -include $(DEP)
+
+check:
+	clang-format --dry-run --Werror $(SRC) $(HEADERS)
+
+build-check: check build
 
 format:
 	clang-format -i $(SRC) $(HEADERS)
