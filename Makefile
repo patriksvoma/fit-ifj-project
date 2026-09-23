@@ -23,7 +23,9 @@ $(TARGET): $(OBJ)
 
 check:
 	clang-format --dry-run --Werror $(SRC) $(HEADERS)
+	cppcheck -I include --enable=style --error-exitcode=1 $(SRC)
 
+# build-check will only build if the code passes a formatting check and static analysis
 build-check: check build
 
 format:
