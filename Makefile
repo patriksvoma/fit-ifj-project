@@ -1,4 +1,7 @@
-# IFJ 2026 project Makefile
+# IFJ 2026 project
+#
+# Authors:
+#	xsvomap00 (Patrik Švoma)
 
 .PHONY: build check build-check format clean
 
@@ -11,6 +14,7 @@ OBJ = $(SRC:.c=.o)
 DEP = $(OBJ:.o=.d)
 TARGET = ifj-project
 
+# Builds the project without any checks
 build: $(TARGET)
 
 $(TARGET): $(OBJ)
@@ -21,15 +25,18 @@ $(TARGET): $(OBJ)
 
 -include $(DEP)
 
+# Runs a formatting check and static code analysis
 check:
 	clang-format --dry-run --Werror $(SRC) $(HEADERS)
 	cppcheck -I include --enable=style --error-exitcode=1 $(SRC)
 
-# build-check will only build if the code passes a formatting check and static analysis
+# Builds the project, but only if the code passes the check target
 build-check: check build
 
+# Formats all .c and .h files
 format:
 	clang-format -i $(SRC) $(HEADERS)
 
+# Cleans files created during a build
 clean:
 	rm -f $(OBJ) $(DEP) $(TARGET)
