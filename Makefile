@@ -6,10 +6,10 @@
 .PHONY: build check build-check format clean
 
 CC = gcc-14
-CFLAGS = -Wall -Wextra -Werror -Iinclude -MMD -MP
+CFLAGS = -Wall -Wextra -Werror -MMD -MP
 
 SRC = $(wildcard src/*.c)
-HEADERS = $(wildcard include/*.h)
+HEADERS = $(wildcard src/*.h)
 OBJ = $(SRC:.c=.o)
 DEP = $(OBJ:.o=.d)
 TARGET = ifj-project
@@ -28,7 +28,7 @@ $(TARGET): $(OBJ)
 # Runs a formatting check and static code analysis
 check:
 	clang-format --dry-run --Werror $(SRC) $(HEADERS)
-	cppcheck -I include --enable=style --error-exitcode=1 $(SRC)
+	cppcheck --enable=style --error-exitcode=1 $(SRC)
 
 # Builds the project, but only if the code passes the check target
 build-check: check build
