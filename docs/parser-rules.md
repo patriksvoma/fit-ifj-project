@@ -12,10 +12,15 @@ Author: Patrik Švoma
 <param-first>		::	<param> <param-list>
 <param-list>		::	) <return-type>
 <param-list>		::	, <param> <param-list>
-<param>				::	id : type
+<param>				::	id : <type>
 <return-type>		::	= <st-list>
-<return-type>		::	: type  = <st-list>
+<return-type>		::	: <type>  = <st-list>
 <st-list>			::	<statement> <st-list>
 <st-list>			::	()
 <statement>			::	TODO
+<type>				::	Double
+<type>				::	Int
+<type>				::	String
+<type>				::	Unit
+<type>				::	Boolean
 ```
