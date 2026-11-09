@@ -2,7 +2,9 @@
 Author: Patrik Švoma
 
 ```
-<prologue>			::	import ifj26.* <func-annotation>
+<prologue>			::	import ifj26.* <func-list>
+<func-list>			::	<func-annotation> <func-list>
+<func-list>			::	ε
 <func-annotation>	::	@main <func>
 <func-annotation>	::	<func>
 <func>				::	def id ( <param-first>
@@ -14,6 +16,6 @@ Author: Patrik Švoma
 <return-type>		::	= <st-list>
 <return-type>		::	: type  = <st-list>
 <st-list>			::	<statement> <st-list>
-<st-list>			::	<func-annotation>
+<st-list>			::	()
 <statement>			::	TODO
 ```
