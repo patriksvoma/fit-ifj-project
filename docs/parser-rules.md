@@ -25,10 +25,14 @@ Author: Patrik Švoma
 <statement>			::	val id <val-var-def>
 <statement>			::	var id <val-var-def>
 <statement>			::	id <funcall-assign>
-<statement>			::	if <expression> then <st-list> else <st-list>
+<statement>			::	if <expression> then <st-list> <else-opt>
 <statement>			::	while <expression> do <st-list>
 <statement>			::	for id <- <expression> <for-generator> <for-guard> do <st-list>
 <statement>			::	return <expression>
+<else-opt>          ::  ε
+<else-opt>          ::  else <else-if-opt>
+<else-if-opt>       ::  if <expression> then <st-list> <else-opt>
+<else-if-opt>       ::  <st-list>
 <for-generator>		::	to <expression> <for-by>
 <for-generator>		::	until <expression>
 <for-by>			::	by <expression>
