@@ -17,10 +17,25 @@ Author: Patrik Švoma
 <return-type>		::	: <type> = <st-list>
 <st-list>			::	<statement> <st-list>
 <st-list>			::	()
-<statement>			::	TODO
 <type>				::	Double
 <type>				::	Int
 <type>				::	String
 <type>				::	Unit
 <type>				::	Boolean
+<statement>			::	val id <val-var-def>
+<statement>			::	var id <val-var-def>
+<statement>			::	id <funcall-assign>
+<statement>			::	if <expression> then <st-list> else <st-list>
+<statement>			::	while <expression> do <st-list>
+<statement>			::	return <expression>
+<val-var-def>		::	: <type> = <expression>
+<val-var-def>		::	= <expression>
+<funcall-assign>	::	( <call-param-first>
+<funcall-assign>	::	= <expression>
+<call-param-first>	::	)
+<call-param-first>	::	<call-param> <call-param-list>
+<call-param-list>	::	)
+<call-param-list>	::	, <call-param> <call-param-list>
+<call-param>		::	<expression>
+<expression>		::	TODO
 ```
