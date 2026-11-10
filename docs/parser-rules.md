@@ -11,16 +11,18 @@ Author: Patrik Švoma
 <ext-def-list>		::	<func-def> <ext-def-list>
 <func-annotation>	::	@main <func-def>
 <func-annotation>	::	<func-def>
-<func-def>			::	def id ( <param-first>
-<param-first>		::	) <return-type>
+<func-def>			::	def id <func-params> <return-type>
+<func-params>		::	ε
+<func-params>		::	( <param-first>
+<param-first>		::	) <func-params>
 <param-first>		::	<param> <param-list>
-<param-list>		::	) <return-type>
+<param-list>		::	) <func-params>
 <param-list>		::	, <param> <param-list>
 <param>				::	id : <type>
 <return-type>		::	= <st-list>
 <return-type>		::	: <type> = <st-list>
 <st-list>			::	<statement> <st-list>
-<st-list>			::	()
+<st-list>			::	ε
 <type>				::	Double
 <type>				::	Int
 <type>				::	String
