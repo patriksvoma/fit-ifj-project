@@ -28,7 +28,9 @@ Author: Patrik Švoma
 <statement>			::	if <expression> then <st-list> <else-opt>
 <statement>			::	while <expression> do <st-list>
 <statement>			::	for id <- <expression> <for-generator> <for-guard> do <st-list>
-<statement>			::	return <expression>
+<statement>			::	return <expression-opt>
+<expression-opt>    ::  ε
+<expression-opt>    ::  <expression>
 <else-opt>          ::  ε
 <else-opt>          ::  else <else-if-opt>
 <else-if-opt>       ::  if <expression> then <st-list> <else-opt>
