@@ -4,7 +4,11 @@ Author: Patrik Švoma
 ```
 <prologue>			::	import ifj26.* <func-list>
 <func-list>			::	<func-annotation> <func-list>
+<func-list>			::	<ext-def> <func-list>
 <func-list>			::	ε
+<ext-def>			::	extension ( <param> ) <func-def> <ext-def-list>
+<ext-def-list>		::	ε
+<ext-def-list>		::	<func-def> <ext-def-list>
 <func-annotation>	::	@main <func-def>
 <func-annotation>	::	<func-def>
 <func-def>			::	def id ( <param-first>
