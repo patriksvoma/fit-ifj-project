@@ -1,10 +1,17 @@
-#include <stdio.h>
+/**
+ * @file main.c
+ * @brief The IFJ26 compiler
+ *
+ * @author Patrik Švoma (xsvomap00@stud.fit.vut.cz)
+ *
+ * @date 2026-11-10
+ */
 
-int main(int argc, char *argv[])
+#include "parser.h"
+
+int main()
 {
-	(void)argc;
-	(void)argv;
+	int err_code = parse();
 
-	printf("cau");
-	return 0;
+	return err_code;
 }
