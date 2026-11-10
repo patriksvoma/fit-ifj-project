@@ -1,3 +1,6 @@
+# Local editor config
+.vscode/
+
 # Build files
 *.o
 *.d
