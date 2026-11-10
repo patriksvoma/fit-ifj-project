@@ -9,9 +9,21 @@
 
 #pragma once
 
+#include "error.h"
+#include "scanner.h"
+
+/**
+ * @brief Struct for holding the parser data
+ *
+ */
+typedef struct
+{
+	token_t token;
+} parser_data_t;
+
 /**
  * @brief Main parsing function
  *
- * @return int Error code
+ * @return err_t Error code
  */
-int parse();
+err_t parse();
