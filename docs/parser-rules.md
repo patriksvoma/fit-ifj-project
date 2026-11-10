@@ -27,7 +27,14 @@ Author: Patrik Švoma
 <statement>			::	id <funcall-assign>
 <statement>			::	if <expression> then <st-list> else <st-list>
 <statement>			::	while <expression> do <st-list>
+<statement>			::	for id <- <expression> <for-generator> <for-guard> do <st-list>
 <statement>			::	return <expression>
+<for-generator>		::	to <expression> <for-by>
+<for-generator>		::	until <expression>
+<for-by>			::	by <expression>
+<for-by>			::	ε
+<for-guard>			::	if <expression> <for-guard>
+<for-guard>			::	ε
 <val-var-def>		::	: <type> = <expression>
 <val-var-def>		::	= <expression>
 <funcall-assign>	::	( <call-param-first>
@@ -37,5 +44,5 @@ Author: Patrik Švoma
 <call-param-list>	::	)
 <call-param-list>	::	, <call-param> <call-param-list>
 <call-param>		::	<expression>
-<expression>		::	TODO
+<expression>		::	SWITCH TO OPERATOR PRECEDENCE PARSER
 ```
