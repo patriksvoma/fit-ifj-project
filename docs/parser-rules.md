@@ -30,11 +30,12 @@ Author: Patrik Švoma
 <type>				::	Boolean
 <statement>			::	val id <val-var-def>
 <statement>			::	var id <val-var-def>
-<statement>			::	id <funcall-assign>
 <statement>			::	if <expression> then <st-list> <else-opt>
 <statement>			::	while <expression> do <st-list>
 <statement>			::	for id <- <expression> <for-generator> <for-guard> do <st-list>
 <statement>			::	return <expression-opt>
+<statement>			::	id = <expression>
+<statement>			::	<expression>
 <expression-opt>	::	ε
 <expression-opt>	::	<expression>
 <else-opt>			::	ε
@@ -49,12 +50,5 @@ Author: Patrik Švoma
 <for-guard>			::	ε
 <val-var-def>		::	: <type> = <expression>
 <val-var-def>		::	= <expression>
-<funcall-assign>	::	( <call-param-first>
-<funcall-assign>	::	= <expression>
-<call-param-first>	::	)
-<call-param-first>	::	<call-param> <call-param-list>
-<call-param-list>	::	)
-<call-param-list>	::	, <call-param> <call-param-list>
-<call-param>		::	<expression>
 <expression>		::	SWITCH TO OPERATOR PRECEDENCE PARSER
 ```
