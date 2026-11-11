@@ -10,6 +10,7 @@
 #pragma once
 
 #include "error.h"
+#include <stdbool.h>
 
 /**
  * @brief IFJ26 keyword definitions
@@ -86,12 +87,26 @@ typedef struct
 {
 	token_type_t type;
 	token_attr_t attribute;
+	bool starts_logical_line;
+	unsigned indent;
 } token_t;
+
+/**
+ * @brief Rules for checking newlines before a token
+ *
+ */
+typedef enum
+{
+	EOL_REQUIRED,
+	EOL_OPTIONAL,
+	EOL_FORBIDDEN
+} eol_rule_t;
 
 /**
  * @brief Get the next token object
  *
  * @param token Pointer to where the accepted token should be saved
- * @return err_t
+ * @param eol Tells the scanner if a newline is required, optional, or forbidden before the next token
+ * @return err_t Error
  */
-err_t get_next_token(token_t *token);
+err_t get_next_token(token_t *token, eol_rule_t eol);

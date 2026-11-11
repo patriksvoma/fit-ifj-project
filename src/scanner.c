@@ -9,10 +9,11 @@
 
 #include "scanner.h"
 
-err_t get_next_token(token_t *token)
+err_t get_next_token(token_t *token, eol_rule_t eol)
 {
-	// TODO: Remove placeholder and write the scanner module
+	// TODO: This placeholder code is here just to pass code checks
 	token->attribute.integer = 0;
+	(void)eol;
 
 	return ERR_SCANNER;
 }

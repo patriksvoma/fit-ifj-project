@@ -17,7 +17,7 @@
  */
 err_t prologue(parser_data_t *pdata)
 {
-	err_t result = get_next_token(&pdata->token);
+	err_t result = get_next_token(&pdata->token, EOL_OPTIONAL);
 	if (result)
 	{
 		return result;
