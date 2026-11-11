@@ -19,6 +19,5 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y gcc-14 clang-format cppcheck
 
-    - name: Install dependencies
+    - name: Run tests and build
       run: make build-check
-
