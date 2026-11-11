@@ -14,6 +14,8 @@
 // Forward declarations of parser rules
 err_t prologue(parser_data_t *pdata);
 err_t func_list(parser_data_t *pdata);
+err_t func_annotation(parser_data_t *pdata);
+err_t ext_def(parser_data_t *pdata);
 
 /**
  * @brief The entry rule of syntax analysis | <prologue>
@@ -84,8 +86,54 @@ err_t prologue(parser_data_t *pdata)
  */
 err_t func_list(parser_data_t *pdata)
 {
-	(void)pdata;
+	err_t result = get_next_token(&pdata->token, EOL_REQUIRED);
+	if (result)
+		return result;
 
+	// Go to <func-annotation>
+	if (pdata->token.type == TOKEN_KEYWORD &&
+		(pdata->token.attribute.keyword == KW_MAIN || pdata->token.attribute.keyword == KW_DEF))
+	{
+		return func_annotation(pdata);
+	}
+	// Go to <ext-def>
+	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_EXTENSION)
+	{
+		return ext_def(pdata);
+	}
+	// If EOF is received, end the function list
+	else if (pdata->token.type == TOKEN_EOF)
+	{
+		return ERR_OK;
+	}
+
+	print_err_l("Expected a function or extension declaration.", ERR_SYNTAX, pdata->token.line);
+	return ERR_SYNTAX;
+}
+
+/**
+ * @brief Rule for the main function annotiation | <func-annotation>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
+err_t func_annotation(parser_data_t *pdata)
+{
+	// TODO:
+	(void)pdata;
+	return ERR_SYNTAX;
+}
+
+/**
+ * @brief Rule for extension definitions | <ext-def>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
+err_t ext_def(parser_data_t *pdata)
+{
+	// TODO:
+	(void)pdata;
 	return ERR_SYNTAX;
 }
 
