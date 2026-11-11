@@ -20,7 +20,8 @@ Author: Patrik Švoma
 <param-list>		::	, <param> <param-list>
 <param>				::	id : <type>
 <return-type>		::	= <st-list>
-<return-type>		::	: <type> = <st-list>
+<return-type>		::	: <type> = <st-first>
+<st-first>			::	<statement> <st-list>
 <st-list>			::	<statement> <st-list>
 <st-list>			::	ε
 <type>				::	Double
