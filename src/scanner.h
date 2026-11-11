@@ -10,6 +10,7 @@
 #pragma once
 
 #include "error.h"
+#include <stdbool.h>
 
 /**
  * @brief IFJ26 keyword definitions
@@ -86,6 +87,8 @@ typedef struct
 {
 	token_type_t type;
 	token_attr_t attribute;
+	bool starts_logical_line;
+	unsigned indent;
 } token_t;
 
 /**
