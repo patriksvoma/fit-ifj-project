@@ -8,6 +8,7 @@
  */
 
 #include "parser.h"
+#include "error.h"
 #include <string.h>
 
 // Forward declarations of parser rules
@@ -28,7 +29,10 @@ err_t prologue(parser_data_t *pdata)
 		return result;
 
 	if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_IMPORT)
+	{
+		print_err_l("Invalid token. Expected the \"import\" keyword.", ERR_SYNTAX, pdata->token.line);
 		return ERR_SYNTAX;
+	}
 
 	// Identifier ifj26
 	result = get_next_token(&pdata->token, EOL_FORBIDDEN);
@@ -36,9 +40,15 @@ err_t prologue(parser_data_t *pdata)
 		return result;
 
 	if (pdata->token.type != TOKEN_IDENTIFIER)
+	{
+		print_err_l("Invalid token. Expected an identifier.", ERR_SYNTAX, pdata->token.line);
 		return ERR_SYNTAX;
+	}
 	if (strcmp(pdata->token.attribute.string, "ifj26"))
+	{
+		print_err_l("Invalid token. Expected the \"ifj26\" identifier.", ERR_SYNTAX, pdata->token.line);
 		return ERR_SYNTAX;
+	}
 
 	// Dot
 	result = get_next_token(&pdata->token, EOL_FORBIDDEN);
@@ -46,7 +56,10 @@ err_t prologue(parser_data_t *pdata)
 		return result;
 
 	if (pdata->token.type != TOKEN_DOT)
+	{
+		print_err_l("Invalid token. Expected a \".\".", ERR_SYNTAX, pdata->token.line);
 		return ERR_SYNTAX;
+	}
 
 	// Asterisk
 	result = get_next_token(&pdata->token, EOL_FORBIDDEN);
@@ -54,7 +67,10 @@ err_t prologue(parser_data_t *pdata)
 		return result;
 
 	if (pdata->token.type != TOKEN_ASTERISK)
+	{
+		print_err_l("Invalid token. Expected a \"*\".", ERR_SYNTAX, pdata->token.line);
 		return ERR_SYNTAX;
+	}
 
 	// <func-list>
 	return func_list(pdata);

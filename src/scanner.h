@@ -89,6 +89,7 @@ typedef struct
 {
 	token_type_t type;
 	token_attr_t attribute;
+	unsigned line;
 	bool starts_logical_line;
 	unsigned indent;
 } token_t;
