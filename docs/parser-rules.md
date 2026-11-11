@@ -2,7 +2,7 @@
 Author: Patrik Švoma
 
 ```
-<prologue>			::	import ifj26.* <func-list>
+<prologue>			::	import ifj26 . * <func-list>
 <func-list>			::	<func-annotation> <func-list>
 <func-list>			::	<ext-def> <func-list>
 <func-list>			::	ε
