@@ -186,14 +186,11 @@ err_t func_def(parser_data_t *pdata)
 	if (result)
 		return result;
 
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	result = func_params(pdata);
 	if (result)
 		return result;
 
 	return return_type(pdata);
-	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 /**
