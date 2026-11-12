@@ -187,11 +187,32 @@ err_t ext_def(parser_data_t *pdata)
 	return ext_def_list(pdata);
 }
 
+/**
+ * @brief Rule for lists of extension function declarations | <ext-def-list>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t ext_def_list(parser_data_t *pdata)
 {
-	// TODO:
-	(void)pdata;
-	return ERR_SYNTAX;
+	// def
+	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_DEF)
+	{
+		err_t result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// <func-def>
+		result = func_def(pdata);
+		if (result)
+			return result;
+
+		// <ext-def-list>
+		return ext_def_list(pdata);
+	}
+
+	// Epsilon rule
+	return ERR_OK;
 }
 
 /**
