@@ -256,6 +256,7 @@ err_t param_first(parser_data_t *pdata)
 		// cppcheck-suppress-end knownConditionTrueFalse
 	}
 
+	print_err_l("Expected a parameter or an end of the parameter list.", ERR_SYNTAX, pdata->token.line);
 	return ERR_SYNTAX;
 }
 
