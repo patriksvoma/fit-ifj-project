@@ -259,10 +259,43 @@ err_t param_first(parser_data_t *pdata)
 	return ERR_SYNTAX;
 }
 
+/**
+ * @brief Continuation of a parameter list | <param-list>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t param_list(parser_data_t *pdata)
 {
-	// TODO:
-	(void)pdata;
+	err_t result;
+
+	// ), go to <func-params>
+	if (pdata->token.type == TOKEN_CLOSING_BRACKET)
+	{
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		return func_params(pdata);
+	}
+	// ","
+	else if (pdata->token.type == TOKEN_COMMA)
+	{
+		// TODO: Remove suppression
+		// cppcheck-suppress-begin knownConditionTrueFalse
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		result = param(pdata);
+		if (result)
+			return result;
+
+		return param_list(pdata);
+		// cppcheck-suppress-end knownConditionTrueFalse
+	}
+
+	print_err_l("Expected a comma or and end of a parameter list.", ERR_SYNTAX, pdata->token.line);
 	return ERR_SYNTAX;
 }
 err_t param(parser_data_t *pdata)
