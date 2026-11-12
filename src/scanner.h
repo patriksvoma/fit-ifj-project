@@ -18,6 +18,7 @@
  */
 typedef enum
 {
+	KW_NONE,
 	KW_DEF,
 	KW_DO,
 	KW_DOUBLE,
