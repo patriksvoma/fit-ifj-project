@@ -19,6 +19,8 @@ err_t ext_def(parser_data_t *pdata);
 err_t func_def(parser_data_t *pdata);
 err_t func_params(parser_data_t *pdata);
 err_t param_first(parser_data_t *pdata);
+err_t param_list(parser_data_t *pdata);
+err_t param(parser_data_t *pdata);
 err_t return_type(parser_data_t *pdata);
 
 /**
@@ -219,7 +221,51 @@ err_t func_params(parser_data_t *pdata)
 	return ERR_OK;
 }
 
+/**
+ * @brief First parameter of a parameter list rule | <param-first>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t param_first(parser_data_t *pdata)
+{
+	err_t result;
+
+	// ), go to <func-params>
+	if (pdata->token.type == TOKEN_CLOSING_BRACKET)
+	{
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		return func_params(pdata);
+	}
+	// Identifier
+	else if (pdata->token.type == TOKEN_IDENTIFIER)
+	{
+		// TODO: Remove suppression check
+		// cppcheck-suppress-begin knownConditionTrueFalse
+
+		// <param>
+		result = param(pdata);
+		if (result)
+			return result;
+
+		// <param-list>
+		return param_list(pdata);
+		// cppcheck-suppress-end knownConditionTrueFalse
+	}
+
+	return ERR_SYNTAX;
+}
+
+err_t param_list(parser_data_t *pdata)
+{
+	// TODO:
+	(void)pdata;
+	return ERR_SYNTAX;
+}
+err_t param(parser_data_t *pdata)
 {
 	// TODO:
 	(void)pdata;
