@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "scanner.h"
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -177,5 +178,13 @@ struct ast_node
 			ast_node_t *condition;
 			ast_node_t *block;
 		} while_loop;
-	};
+	} ast_node_t;
 };
+
+/**
+ * @brief Function to add a leaf containing literal
+ *
+ * @param token Token containing the literal
+ * @return ast_node_t Pointer to leaf
+ */
+ast_node_t *ast_add_literal(token_t *token);
