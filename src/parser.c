@@ -167,12 +167,14 @@ err_t ext_def(parser_data_t *pdata)
  */
 err_t func_def(parser_data_t *pdata)
 {
+	// def
 	if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_DEF)
 	{
 		print_err_l("Expected a function declaration.", ERR_SYNTAX, pdata->token.line);
 		return ERR_SYNTAX;
 	}
 
+	// Function identifier
 	err_t result = get_next_token(&pdata->token, EOL_FORBIDDEN);
 	if (result)
 		return result;
@@ -186,10 +188,12 @@ err_t func_def(parser_data_t *pdata)
 	if (result)
 		return result;
 
+	// <func-params>
 	result = func_params(pdata);
 	if (result)
 		return result;
 
+	// <return-type>
 	return return_type(pdata);
 }
 
