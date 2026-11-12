@@ -15,6 +15,7 @@
 err_t prologue(parser_data_t *pdata);
 err_t func_list(parser_data_t *pdata);
 err_t ext_def(parser_data_t *pdata);
+err_t ext_def_list(parser_data_t *pdata);
 err_t func_annotation(parser_data_t *pdata);
 err_t func_def(parser_data_t *pdata);
 err_t func_params(parser_data_t *pdata);
@@ -133,6 +134,67 @@ err_t func_list(parser_data_t *pdata)
 }
 
 /**
+ * @brief Rule for extension definitions | <ext-def>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
+err_t ext_def(parser_data_t *pdata)
+{
+	err_t result;
+
+	// extension
+	if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_EXTENSION)
+	{
+		print_err_l("Expected a type extension block declaration", ERR_SYNTAX, pdata->token.line);
+		return ERR_SYNTAX;
+	}
+	result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+	if (result)
+		return result;
+
+	// (
+	if (pdata->token.type != TOKEN_OPENING_BRACKET)
+	{
+		print_err_l("Missing \"(\" after an extension keyword.", ERR_SYNTAX, pdata->token.line);
+		return ERR_SYNTAX;
+	}
+	result = get_next_token(&pdata->token, EOL_OPTIONAL);
+	if (result)
+		return result;
+
+	// <param>
+	result = param(pdata);
+	if (result)
+		return result;
+
+	// )
+	if (pdata->token.type != TOKEN_CLOSING_BRACKET)
+	{
+		print_err_l("Missing \")\" after an extension type declaration.", ERR_SYNTAX, pdata->token.line);
+		return ERR_SYNTAX;
+	}
+	result = get_next_token(&pdata->token, EOL_REQUIRED);
+	if (result)
+		return result;
+
+	// <func-def>
+	result = func_def(pdata);
+	if (result)
+		return result;
+
+	// <ext-def-list>
+	return ext_def_list(pdata);
+}
+
+err_t ext_def_list(parser_data_t *pdata)
+{
+	// TODO:
+	(void)pdata;
+	return ERR_SYNTAX;
+}
+
+/**
  * @brief Rule for the main function annotiation | <func-annotation>
  *
  * @param pdata Parser data
@@ -157,19 +219,6 @@ err_t func_annotation(parser_data_t *pdata)
 	}
 
 	print_err_l("Expeced a function declaration.", ERR_SYNTAX, pdata->token.line);
-	return ERR_SYNTAX;
-}
-
-/**
- * @brief Rule for extension definitions | <ext-def>
- *
- * @param pdata Parser data
- * @return err_t Error code
- */
-err_t ext_def(parser_data_t *pdata)
-{
-	// TODO:
-	(void)pdata;
 	return ERR_SYNTAX;
 }
 
@@ -318,7 +367,7 @@ err_t param(parser_data_t *pdata)
 	// Identifier
 	if (pdata->token.type != TOKEN_IDENTIFIER)
 	{
-		print_err_l("Expected a parameter identifier.", ERR_SYNTAX, pdata->token.line);
+		print_err_l("Expected an identifier.", ERR_SYNTAX, pdata->token.line);
 		return ERR_SYNTAX;
 	}
 	result = get_next_token(&pdata->token, EOL_OPTIONAL);
@@ -328,7 +377,7 @@ err_t param(parser_data_t *pdata)
 	// :
 	if (pdata->token.type != TOKEN_COLON)
 	{
-		print_err_l("Expected a \":\" separator between parameter identifier and type.", ERR_SYNTAX, pdata->token.line);
+		print_err_l("Expected a \":\" separator between identifier and type.", ERR_SYNTAX, pdata->token.line);
 		return ERR_SYNTAX;
 	}
 	result = get_next_token(&pdata->token, EOL_OPTIONAL);
