@@ -245,9 +245,6 @@ err_t param_first(parser_data_t *pdata)
 	// Identifier
 	else if (pdata->token.type == TOKEN_IDENTIFIER)
 	{
-		// TODO: Remove suppression check
-		// cppcheck-suppress-begin knownConditionTrueFalse
-
 		// <param>
 		result = param(pdata);
 		if (result)
@@ -255,7 +252,6 @@ err_t param_first(parser_data_t *pdata)
 
 		// <param-list>
 		return param_list(pdata);
-		// cppcheck-suppress-end knownConditionTrueFalse
 	}
 
 	print_err_l("Expected a parameter or an end of the parameter list.", ERR_SYNTAX, pdata->token.line);
@@ -284,8 +280,6 @@ err_t param_list(parser_data_t *pdata)
 	// ","
 	else if (pdata->token.type == TOKEN_COMMA)
 	{
-		// TODO: Remove suppression
-		// cppcheck-suppress-begin knownConditionTrueFalse
 		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
 		if (result)
 			return result;
@@ -295,7 +289,6 @@ err_t param_list(parser_data_t *pdata)
 			return result;
 
 		return param_list(pdata);
-		// cppcheck-suppress-end knownConditionTrueFalse
 	}
 
 	print_err_l("Expected a comma or and end of a parameter list.", ERR_SYNTAX, pdata->token.line);
@@ -391,11 +384,49 @@ err_t block_start(parser_data_t *pdata)
 	return ERR_SYNTAX;
 }
 
+/**
+ * @brief Type parsing rule | <type>
+ *
+ * @param pdata Parser data
+ * @return err_t Erroc code
+ */
 err_t type(parser_data_t *pdata)
 {
-	// TODO:
-	(void)pdata;
-	return ERR_SYNTAX;
+	bool valid_keyword = false;
+
+	if (pdata->token.type == TOKEN_KEYWORD)
+	{
+		switch (pdata->token.attribute.keyword)
+		{
+		case KW_INT:
+			valid_keyword = true;
+			break;
+		case KW_DOUBLE:
+			valid_keyword = true;
+			break;
+		case KW_STRING:
+			valid_keyword = true;
+			break;
+		case KW_UNIT:
+			valid_keyword = true;
+			break;
+		case KW_BOOLEAN:
+			valid_keyword = true;
+			break;
+		default:
+			break;
+		}
+	}
+
+	if (valid_keyword)
+	{
+		return get_next_token(&pdata->token, EOL_OPTIONAL);
+	}
+	else
+	{
+		print_err_l("Expected a valid type (Int, Double, String, Unit, Boolean).", ERR_SYNTAX, pdata->token.line);
+		return ERR_SYNTAX;
+	}
 }
 
 err_t parse()
