@@ -17,6 +17,8 @@ err_t func_list(parser_data_t *pdata);
 err_t func_annotation(parser_data_t *pdata);
 err_t ext_def(parser_data_t *pdata);
 err_t func_def(parser_data_t *pdata);
+err_t func_params(parser_data_t *pdata);
+err_t return_type(parser_data_t *pdata);
 
 /**
  * @brief The entry rule of syntax analysis | <prologue>
@@ -76,6 +78,9 @@ err_t prologue(parser_data_t *pdata)
 	}
 
 	// <func-list>
+	result = get_next_token(&pdata->token, EOL_REQUIRED);
+	if (result)
+		return result;
 	return func_list(pdata);
 }
 
@@ -87,15 +92,15 @@ err_t prologue(parser_data_t *pdata)
  */
 err_t func_list(parser_data_t *pdata)
 {
-	err_t result = get_next_token(&pdata->token, EOL_REQUIRED);
-	if (result)
-		return result;
-
 	// @main or def, go to <func-annotation>
 	if (pdata->token.type == TOKEN_KEYWORD &&
 		(pdata->token.attribute.keyword == KW_MAIN || pdata->token.attribute.keyword == KW_DEF))
 	{
-		return func_annotation(pdata);
+		err_t result = func_annotation(pdata);
+		if (result)
+			return result;
+
+		return func_list(pdata);
 	}
 	// extension, go to <ext-def>
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_EXTENSION)
@@ -123,9 +128,14 @@ err_t func_annotation(parser_data_t *pdata)
 	// @main, go to <func-def>
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_MAIN)
 	{
-		get_next_token(&pdata->token, EOL_OPTIONAL);
+		err_t result;
+
+		result = get_next_token(&pdata->token, EOL_OPTIONAL);
+		if (result)
+			return result;
 		return func_def(pdata);
 	}
+	// def, go to <func-def>
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_DEF)
 	{
 		return func_def(pdata);
@@ -156,6 +166,45 @@ err_t ext_def(parser_data_t *pdata)
  */
 err_t func_def(parser_data_t *pdata)
 {
+	if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_DEF)
+	{
+		print_err_l("Expected a function declaration.", ERR_SYNTAX, pdata->token.line);
+		return ERR_SYNTAX;
+	}
+
+	err_t result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+	if (result)
+		return result;
+	if (pdata->token.type != TOKEN_IDENTIFIER)
+	{
+		print_err_l("Expected an identifier in a function declaration.", ERR_SYNTAX, pdata->token.line);
+		return ERR_SYNTAX;
+	}
+
+	result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+	if (result)
+		return result;
+
+	// TODO: Remove suppression
+	// cppcheck-suppress-begin knownConditionTrueFalse
+	result = func_params(pdata);
+	if (result)
+		return result;
+
+	return return_type(pdata);
+	// cppcheck-suppress-end knownConditionTrueFalse
+}
+
+err_t func_params(parser_data_t *pdata)
+{
+	// TODO:
+	(void)pdata;
+	return ERR_SYNTAX;
+}
+
+err_t return_type(parser_data_t *pdata)
+{
+	// TODO:
 	(void)pdata;
 	return ERR_SYNTAX;
 }
