@@ -22,6 +22,7 @@ err_t param_first(parser_data_t *pdata);
 err_t param_list(parser_data_t *pdata);
 err_t param(parser_data_t *pdata);
 err_t return_type(parser_data_t *pdata);
+err_t block_start(parser_data_t *pdata);
 err_t type(parser_data_t *pdata);
 
 /**
@@ -335,7 +336,55 @@ err_t param(parser_data_t *pdata)
 	return type(pdata);
 }
 
+/**
+ * @brief Function return type definition | <return-type>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t return_type(parser_data_t *pdata)
+{
+	err_t result;
+
+	// =, go to <block-start>
+	if (pdata->token.type == TOKEN_EQUAL)
+	{
+		result = get_next_token(&pdata->token, EOL_REQUIRED);
+		if (result)
+			return result;
+
+		return block_start(pdata);
+	}
+	// :
+	else if (pdata->token.type == TOKEN_COLON)
+	{
+		// <type>
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// cppcheck-suppress-begin knownConditionTrueFalse
+		result = type(pdata);
+		if (result)
+			return result;
+		// cppcheck-suppress-end knownConditionTrueFalse
+
+		// =
+		if (pdata->token.type != TOKEN_EQUAL)
+		{
+			print_err_l("Expected a block start delimiter (=).", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
+
+		// <block-start>
+		return block_start(pdata);
+	}
+
+	print_err_l("Expected a return type definiton, or a block start delimiter (=).", ERR_SYNTAX, pdata->token.line);
+	return ERR_SYNTAX;
+}
+
+err_t block_start(parser_data_t *pdata)
 {
 	// TODO:
 	(void)pdata;
