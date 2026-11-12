@@ -28,7 +28,7 @@ $(TARGET): $(OBJ)
 # Runs a formatting check and static code analysis
 check:
 	clang-format --dry-run --Werror $(SRC) $(HEADERS)
-	cppcheck --enable=style --error-exitcode=1 $(SRC)
+	cppcheck --enable=style --inline-suppr --error-exitcode=1 $(SRC)
 
 # Builds the project, but only if the code passes the check target
 build-check: check build
