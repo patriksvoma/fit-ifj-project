@@ -16,6 +16,7 @@ err_t prologue(parser_data_t *pdata);
 err_t func_list(parser_data_t *pdata);
 err_t func_annotation(parser_data_t *pdata);
 err_t ext_def(parser_data_t *pdata);
+err_t func_def(parser_data_t *pdata);
 
 /**
  * @brief The entry rule of syntax analysis | <prologue>
@@ -90,13 +91,13 @@ err_t func_list(parser_data_t *pdata)
 	if (result)
 		return result;
 
-	// Go to <func-annotation>
+	// @main or def, go to <func-annotation>
 	if (pdata->token.type == TOKEN_KEYWORD &&
 		(pdata->token.attribute.keyword == KW_MAIN || pdata->token.attribute.keyword == KW_DEF))
 	{
 		return func_annotation(pdata);
 	}
-	// Go to <ext-def>
+	// extension, go to <ext-def>
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_EXTENSION)
 	{
 		return ext_def(pdata);
@@ -119,8 +120,18 @@ err_t func_list(parser_data_t *pdata)
  */
 err_t func_annotation(parser_data_t *pdata)
 {
-	// TODO:
-	(void)pdata;
+	// @main, go to <func-def>
+	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_MAIN)
+	{
+		get_next_token(&pdata->token, EOL_OPTIONAL);
+		return func_def(pdata);
+	}
+	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_DEF)
+	{
+		return func_def(pdata);
+	}
+
+	print_err_l("Expeced a function declaration.", ERR_SYNTAX, pdata->token.line);
 	return ERR_SYNTAX;
 }
 
@@ -133,6 +144,18 @@ err_t func_annotation(parser_data_t *pdata)
 err_t ext_def(parser_data_t *pdata)
 {
 	// TODO:
+	(void)pdata;
+	return ERR_SYNTAX;
+}
+
+/**
+ * @brief Rule for function declarations | <func-def>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
+err_t func_def(parser_data_t *pdata)
+{
 	(void)pdata;
 	return ERR_SYNTAX;
 }
