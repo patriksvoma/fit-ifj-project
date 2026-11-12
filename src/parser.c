@@ -14,8 +14,8 @@
 // Forward declarations of parser rules
 err_t prologue(parser_data_t *pdata);
 err_t func_list(parser_data_t *pdata);
-err_t func_annotation(parser_data_t *pdata);
 err_t ext_def(parser_data_t *pdata);
+err_t func_annotation(parser_data_t *pdata);
 err_t func_def(parser_data_t *pdata);
 err_t func_params(parser_data_t *pdata);
 err_t param_first(parser_data_t *pdata);
@@ -97,20 +97,30 @@ err_t prologue(parser_data_t *pdata)
  */
 err_t func_list(parser_data_t *pdata)
 {
+	err_t result;
+
 	// @main or def, go to <func-annotation>
 	if (pdata->token.type == TOKEN_KEYWORD &&
 		(pdata->token.attribute.keyword == KW_MAIN || pdata->token.attribute.keyword == KW_DEF))
 	{
-		err_t result = func_annotation(pdata);
+		result = func_annotation(pdata);
 		if (result)
 			return result;
 
 		return func_list(pdata);
 	}
-	// extension, go to <ext-def>
+	// extension
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_EXTENSION)
 	{
-		return ext_def(pdata);
+		// <ext-def>
+		// cppcheck-suppress-begin knownConditionTrueFalse
+		result = ext_def(pdata);
+		if (result)
+			return result;
+
+		// <func-list>
+		return func_list(pdata);
+		// cppcheck-suppress-end knownConditionTrueFalse
 	}
 	// If EOF is received, end the function list
 	else if (pdata->token.type == TOKEN_EOF)
@@ -420,6 +430,9 @@ err_t type(parser_data_t *pdata)
 
 	if (valid_keyword)
 	{
+		// FIXME: The end of line cannot be decided here, as the <type> rule can be used both inside and outside
+		// parenthesis.
+		// The fix is probably to hold a "in_parenthesis" value in the parser data and decide based on that.
 		return get_next_token(&pdata->token, EOL_OPTIONAL);
 	}
 	else
