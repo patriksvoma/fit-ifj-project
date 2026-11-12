@@ -22,6 +22,7 @@ err_t param_first(parser_data_t *pdata);
 err_t param_list(parser_data_t *pdata);
 err_t param(parser_data_t *pdata);
 err_t return_type(parser_data_t *pdata);
+err_t type(parser_data_t *pdata);
 
 /**
  * @brief The entry rule of syntax analysis | <prologue>
@@ -299,14 +300,49 @@ err_t param_list(parser_data_t *pdata)
 	print_err_l("Expected a comma or and end of a parameter list.", ERR_SYNTAX, pdata->token.line);
 	return ERR_SYNTAX;
 }
+
+/**
+ * @brief Function parameter definition rule | <param>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t param(parser_data_t *pdata)
+{
+	err_t result;
+
+	// Identifier
+	if (pdata->token.type != TOKEN_IDENTIFIER)
+	{
+		print_err_l("Expected a parameter identifier.", ERR_SYNTAX, pdata->token.line);
+		return ERR_SYNTAX;
+	}
+	result = get_next_token(&pdata->token, EOL_OPTIONAL);
+	if (result)
+		return result;
+
+	// :
+	if (pdata->token.type != TOKEN_COLON)
+	{
+		print_err_l("Expected a \":\" separator between parameter identifier and type.", ERR_SYNTAX, pdata->token.line);
+		return ERR_SYNTAX;
+	}
+	result = get_next_token(&pdata->token, EOL_OPTIONAL);
+	if (result)
+		return result;
+
+	// Type
+	return type(pdata);
+}
+
+err_t return_type(parser_data_t *pdata)
 {
 	// TODO:
 	(void)pdata;
 	return ERR_SYNTAX;
 }
 
-err_t return_type(parser_data_t *pdata)
+err_t type(parser_data_t *pdata)
 {
 	// TODO:
 	(void)pdata;
