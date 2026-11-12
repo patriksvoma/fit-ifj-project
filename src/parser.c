@@ -18,6 +18,7 @@ err_t func_annotation(parser_data_t *pdata);
 err_t ext_def(parser_data_t *pdata);
 err_t func_def(parser_data_t *pdata);
 err_t func_params(parser_data_t *pdata);
+err_t param_first(parser_data_t *pdata);
 err_t return_type(parser_data_t *pdata);
 
 /**
@@ -195,7 +196,29 @@ err_t func_def(parser_data_t *pdata)
 	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
+/**
+ * @brief Rule for the start of function parameter declaration | <func-params>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t func_params(parser_data_t *pdata)
+{
+	// (, go to <param-first>
+	if (pdata->token.type == TOKEN_OPENING_BRACKET)
+	{
+		err_t result = get_next_token(&pdata->token, EOL_OPTIONAL);
+		if (result)
+			return result;
+
+		return param_first(pdata);
+	}
+
+	// Epsilon rule
+	return ERR_OK;
+}
+
+err_t param_first(parser_data_t *pdata)
 {
 	// TODO:
 	(void)pdata;
