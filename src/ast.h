@@ -47,7 +47,7 @@ typedef enum
 	OP_CONCATENATION,
 	OP_NOT,
 	OP_LOGIC_AND,
-	OP_LOGIC_OR		// TODO: BOOL2INT, desetninne deleni
+	OP_LOGIC_OR // TODO: BOOL2INT, desetninne deleni
 } operator_type_t;
 
 /**
