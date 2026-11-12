@@ -5,7 +5,7 @@ Author: Patrik Švoma
 1   <prologue>			::	import ifj26 . * <func-list>
 2   <func-list>			::	<func-annotation> <func-list>
 3   <func-list>			::	<ext-def> <func-list>
-4   <func-list>			::	ε
+4   <func-list>			::	EOF
 5   <ext-def>			::	extension ( <param> ) <func-def> <ext-def-list>
 6   <ext-def-list>		::	ε
 7   <ext-def-list>		::	<func-def> <ext-def-list>
