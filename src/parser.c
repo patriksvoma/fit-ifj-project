@@ -631,6 +631,30 @@ err_t statement(parser_data_t *pdata)
 		return else_opt(pdata);
 	}
 	// while
+	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_WHILE)
+	{
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// <expression>
+		result = expression(pdata);
+		if (result)
+			return result;
+
+		// do
+		if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_DO)
+		{
+			print_err_l("Expected a \"do\" keyword after expression", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
+		result = get_next_token(&pdata->token, EOL_REQUIRED);
+		if (result)
+			return result;
+
+		// <block-start>
+		return block_start(pdata);
+	}
 
 	// for
 
