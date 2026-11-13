@@ -27,6 +27,7 @@ err_t block_start(parser_data_t *pdata);
 err_t block(parser_data_t *pdata);
 err_t type(parser_data_t *pdata);
 err_t statement(parser_data_t *pdata);
+err_t expression_opt(parser_data_t *pdata);
 err_t else_opt(parser_data_t *pdata);
 err_t for_generator(parser_data_t *pdata);
 err_t for_by(parser_data_t *pdata);
@@ -713,8 +714,16 @@ err_t statement(parser_data_t *pdata)
 		// <block-start>
 		return block_start(pdata);
 	}
-
 	// return
+	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_RETURN)
+	{
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// <expression>
+		return expression_opt(pdata);
+	}
 
 	// TODO: A lookahead token needs to be used to decide between assignment and an expression
 	// id =
@@ -723,6 +732,13 @@ err_t statement(parser_data_t *pdata)
 
 	return ERR_SYNTAX;
 	// cppcheck-suppress-end knownConditionTrueFalse
+}
+
+err_t expression_opt(parser_data_t *pdata)
+{
+	// TODO:
+	(void)pdata;
+	return ERR_SYNTAX;
 }
 
 err_t else_opt(parser_data_t *pdata)
