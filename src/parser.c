@@ -790,11 +790,50 @@ err_t else_opt(parser_data_t *pdata)
 	return ERR_OK;
 }
 
+/**
+ * @brief Else, or else if branch of an if statement | <else-if-opt>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t else_if_opt(parser_data_t *pdata)
 {
-	// TODO:
-	(void)pdata;
-	return ERR_SYNTAX;
+	// TODO: Remove suppression
+	// cppcheck-suppress-begin knownConditionTrueFalse
+	// if (makes for an else if with the previous rule)
+	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_IF)
+	{
+		err_t result = get_next_token(&pdata->token, EOL_OPTIONAL);
+		if (result)
+			return result;
+
+		// <expression>
+		result = expression(pdata);
+		if (result)
+			return result;
+
+		// then
+		if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_THEN)
+		{
+			print_err_l("Expected a \"then\" keyword after expression.", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
+		result = get_next_token(&pdata->token, EOL_OPTIONAL);
+		if (result)
+			return result;
+
+		// <block-start>
+		result = block_start(pdata);
+		if (result)
+			return result;
+
+		// <else-opt>
+		return else_opt(pdata);
+	}
+
+	// <block_start>
+	return block_start(pdata);
+	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 err_t for_generator(parser_data_t *pdata)
