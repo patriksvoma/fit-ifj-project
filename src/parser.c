@@ -27,6 +27,7 @@ err_t block_start(parser_data_t *pdata);
 err_t block(parser_data_t *pdata);
 err_t type(parser_data_t *pdata);
 err_t statement(parser_data_t *pdata);
+err_t val_var_def(parser_data_t *pdata);
 
 /**
  * @brief The entry rule of syntax analysis | <prologue>
@@ -546,9 +547,76 @@ err_t type(parser_data_t *pdata)
 	}
 }
 
+/**
+ * @brief Statements | <statement>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t statement(parser_data_t *pdata)
 {
-	// TODO:
+	err_t result;
+
+	// val
+	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_VAL)
+	{
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// id
+		if (pdata->token.type != TOKEN_IDENTIFIER)
+		{
+			print_err_l("Expected an identifier in constant declaration.", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// <val-var-def>
+		return val_var_def(pdata);
+	}
+
+	// var
+	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_VAR)
+	{
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// id
+		if (pdata->token.type != TOKEN_IDENTIFIER)
+		{
+			print_err_l("Expected an identifier in variable declaration.", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// <val-var-def>
+		return val_var_def(pdata);
+	}
+
+	// if
+
+	// while
+
+	// for
+
+	// return
+
+	// TODO: A lookahead token needs to be used to decide between assignment and an expression
+	// id =
+
+	// <expression>
+
+	return ERR_SYNTAX;
+}
+
+err_t val_var_def(parser_data_t *pdata)
+{
 	(void)pdata;
 	return ERR_SYNTAX;
 }
