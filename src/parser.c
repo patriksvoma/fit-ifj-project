@@ -837,7 +837,7 @@ err_t else_if_opt(parser_data_t *pdata)
 }
 
 /**
- * @brief For statement generator
+ * @brief For statement generator | <for-generator>
  *
  * @param pdata Parser data
  * @return err_t Error code
@@ -879,11 +879,26 @@ err_t for_generator(parser_data_t *pdata)
 	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
+/**
+ * @brief For statement generator "by" | <for-by>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t for_by(parser_data_t *pdata)
 {
-	// TODO:
-	(void)pdata;
-	return ERR_SYNTAX;
+	if (pdata->token.type == TOKEN_IDENTIFIER && !strcmp(pdata->token.attribute.string, "by"))
+	{
+		err_t result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// <expression>
+		return expression(pdata);
+	}
+
+	// Epsilon rule
+	return ERR_OK;
 }
 
 err_t for_guard(parser_data_t *pdata)
