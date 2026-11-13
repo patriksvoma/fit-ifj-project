@@ -46,7 +46,7 @@ typedef enum
 	OP_EQUAL,
 	OP_NOT_EQUAL,
 	OP_CONCATENATION,
-	OP_NOT,
+	OP_NEG,
 	OP_LOGIC_AND,
 	OP_LOGIC_OR // TODO: BOOL2INT, desetninne deleni
 } operator_type_t;
@@ -203,3 +203,31 @@ struct ast_node
  * @return ast_node_t Pointer to leaf
  */
 ast_node_t *ast_add_literal(literal_t *literal);
+
+/**
+ * @brief Function to add a leaf containing identifier
+ *
+ * @param i Poiter to identifier name
+ * @param i_type Data type of identifier
+ * @return ast_node_t Pointer to leaf
+ */
+ast_node_t *ast_add_identifier(char *i, data_type_t i_type);
+
+/**
+ * @brief Function to add a node containing unary operation
+ *
+ * @param operand Poiter to node containing operand
+ * @param op Type of operator
+ * @return ast_node_t Pointer to node of the operation
+ */
+ast_node_t *ast_add_unary_op(ast_node_t *operand, operator_type_t op);
+
+/**
+ * @brief Function to add a node containing binary operation
+ *
+ * @param operand_left Poiter to node containing left operand
+ * @param operand_right Poiter to node containing right operand
+ * @param op Type of operator
+ * @return ast_node_t Pointer to node of the operation
+ */
+ast_node_t *ast_add_binary_op(ast_node_t *operand_left, ast_node_t *operand_right, operator_type_t op);
