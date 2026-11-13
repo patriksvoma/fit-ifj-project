@@ -24,7 +24,9 @@ err_t param_list(parser_data_t *pdata);
 err_t param(parser_data_t *pdata);
 err_t return_type(parser_data_t *pdata);
 err_t block_start(parser_data_t *pdata);
+err_t block(parser_data_t *pdata);
 err_t type(parser_data_t *pdata);
+err_t statement(parser_data_t *pdata);
 
 /**
  * @brief The entry rule of syntax analysis | <prologue>
@@ -457,7 +459,26 @@ err_t return_type(parser_data_t *pdata)
 	return ERR_SYNTAX;
 }
 
+/**
+ * @brief Statement block start | <block-start>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t block_start(parser_data_t *pdata)
+{
+	// cppcheck-suppress-begin knownConditionTrueFalse
+	// <statement>
+	err_t result = statement(pdata);
+	if (result)
+		return result;
+
+	// <block>
+	return block(pdata);
+	// cppcheck-suppress-end knownConditionTrueFalse
+}
+
+err_t block(parser_data_t *pdata)
 {
 	// TODO:
 	(void)pdata;
@@ -510,6 +531,13 @@ err_t type(parser_data_t *pdata)
 		print_err_l("Expected a valid type (Int, Double, String, Unit, Boolean).", ERR_SYNTAX, pdata->token.line);
 		return ERR_SYNTAX;
 	}
+}
+
+err_t statement(parser_data_t *pdata)
+{
+	// TODO:
+	(void)pdata;
+	return ERR_SYNTAX;
 }
 
 err_t parse()
