@@ -836,11 +836,47 @@ err_t else_if_opt(parser_data_t *pdata)
 	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
+/**
+ * @brief For statement generator
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t for_generator(parser_data_t *pdata)
 {
-	// TODO:
-	(void)pdata;
+	// cppcheck-suppress-begin knownConditionTrueFalse
+	if (pdata->token.type == TOKEN_IDENTIFIER)
+	{
+		err_t result;
+
+		if (!strcmp(pdata->token.attribute.string, "to"))
+		{
+			result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+			if (result)
+				return result;
+
+			// <expression>
+			result = expression(pdata);
+			if (result)
+				return result;
+
+			// <for-by>
+			return for_by(pdata);
+		}
+		else if (!strcmp(pdata->token.attribute.string, "until"))
+		{
+			result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+			if (result)
+				return result;
+
+			// <expression>
+			return expression(pdata);
+		}
+	}
+
+	print_err_l("Expected \"to\" or \"until\" as a for statement generator.", ERR_SYNTAX, pdata->token.line);
 	return ERR_SYNTAX;
+	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 err_t for_by(parser_data_t *pdata)
