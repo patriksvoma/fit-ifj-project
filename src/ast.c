@@ -26,8 +26,7 @@
 	AST_PROGRAM,
 	AST_FUNC_DEF,
 	AST_BLOCK,
-	AST_IF,
-	AST_WHILE,
+	AST_IF, ?
 	AST_CALL,
 */
 
@@ -218,5 +217,43 @@ ast_node_t *ast_add_param(char *i, data_type_t i_type)
 	node->node_type = AST_PARAM;
 	node->ast_node_value.param.data_type = i_type;
 	node->ast_node_value.param.identifier = i;
+	return node;
+}
+
+ast_node_t *ast_add_while(ast_node_t *condition, ast_node_t *block)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	// Setting values
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_WHILE;
+	node->ast_node_value.while_loop.block = block;
+	node->ast_node_value.while_loop.condition = condition;
+	return node;
+}
+
+// TODO: Domluvit se, mozna predelat
+ast_node_t *ast_add_if(ast_node_t *condition, ast_node_t **blocks, size_t block_count)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	// Setting values
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_IF;
+	node->ast_node_value.if_statement.condition = condition;
+	node->ast_node_value.if_statement.block_count = block_count;
+	node->ast_node_value.if_statement.block = blocks;
 	return node;
 }

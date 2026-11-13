@@ -215,7 +215,7 @@ ast_node_t *ast_add_literal(literal_t *literal);
 ast_node_t *ast_add_identifier(char *i, data_type_t i_type);
 
 /**
- * @brief Function to add a node containing unary operation
+ * @brief Function to make tree containing unary operation
  *
  * @param operand Poiter to node containing operand
  * @param op Type of operator
@@ -224,7 +224,7 @@ ast_node_t *ast_add_identifier(char *i, data_type_t i_type);
 ast_node_t *ast_add_unary_op(ast_node_t *operand, operator_type_t op);
 
 /**
- * @brief Function to add a node containing binary operation
+ * @brief Function to make a tree containing binary operation
  *
  * @param operand_left Poiter to node containing left operand
  * @param operand_right Poiter to node containing right operand
@@ -234,7 +234,7 @@ ast_node_t *ast_add_unary_op(ast_node_t *operand, operator_type_t op);
 ast_node_t *ast_add_binary_op(ast_node_t *operand_left, ast_node_t *operand_right, operator_type_t op);
 
 /**
- * @brief Function to add a node containing assigment
+ * @brief Function to make tree containing variable assigment
  *
  * @param i Poiter to identifier name
  * @param i_type Data type of identifier
@@ -244,7 +244,7 @@ ast_node_t *ast_add_binary_op(ast_node_t *operand_left, ast_node_t *operand_righ
 ast_node_t *ast_add_assign(char *i, data_type_t i_type, ast_node_t *expression);
 
 /**
- * @brief Function to add node containing variable definition
+ * @brief Function to make tree containing variable definition
  *
  * @param i Poiter to identifier name
  * @param i_type Data type of identifier
@@ -255,7 +255,7 @@ ast_node_t *ast_add_assign(char *i, data_type_t i_type, ast_node_t *expression);
 ast_node_t *ast_add_var_def(char *i, data_type_t i_type, ast_node_t *expression, bool non_modifiable);
 
 /**
- * @brief Function to add node containing return
+ * @brief Function to make tree containing return expression
  *
  * @param expression Pointer to node with expression that should be returned
  * @return ast_node_t Pointer to node with return expression
@@ -270,3 +270,22 @@ ast_node_t *ast_add_return(ast_node_t *expression);
  * @return ast_node_t Pointer to node of the parameter
  */
 ast_node_t *ast_add_param(char *i, data_type_t i_type);
+
+/**
+ * @brief Function to make a tree containing while cycle
+ *
+ * @param condition Poiter to node containing condition
+ * @param block Pointer to node containing block of the while cycle
+ * @return ast_node_t Pointer to node of the while cycle
+ */
+ast_node_t *ast_add_while(ast_node_t *condition, ast_node_t *block);
+
+/**
+ * @brief Function to make a tree containing if statement
+ *
+ * @param condition A node with condition for the statement
+ * @param blocks An array of code blocks for each branch, first is if, last else, others else if
+ * @param block_count Number of code blocks for the statement
+ * @return ast_node_t Pointer to node of the if statement
+ */
+ast_node_t *ast_add_if(ast_node_t *condition, ast_node_t **blocks, size_t block_count);
