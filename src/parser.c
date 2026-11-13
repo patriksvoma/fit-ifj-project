@@ -34,6 +34,7 @@ err_t for_by(parser_data_t *pdata);
 err_t for_guard(parser_data_t *pdata);
 err_t val_var_def(parser_data_t *pdata);
 err_t expression(parser_data_t *pdata);
+err_t expression_seeded(parser_data_t *pdata, token_t *seed_token);
 
 /**
  * @brief The entry rule of syntax analysis | <prologue>
@@ -724,13 +725,37 @@ err_t statement(parser_data_t *pdata)
 		// <expression>
 		return expression_opt(pdata);
 	}
+	// identifier
+	else if (pdata->token.type == TOKEN_IDENTIFIER)
+	{
+		// A lookahead needs to be performed here in order to
+		// tell between the rules:
+		// id = <expression>
+		// <expression>
 
-	// TODO: A lookahead token needs to be used to decide between assignment and an expression
-	// id =
+		token_t id_token = pdata->token;
+
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// id = <expression>
+		if (pdata->token.type == TOKEN_ASSIGN)
+		{
+			result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+			if (result)
+				return result;
+
+			return expression(pdata);
+		}
+
+		// <expression>
+		// The expression parser needs to have the id token seeded before the token in pdata
+		return expression_seeded(pdata, &id_token);
+	}
 
 	// <expression>
-
-	return ERR_SYNTAX;
+	return expression(pdata);
 	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
@@ -780,6 +805,14 @@ err_t expression(parser_data_t *pdata)
 {
 	// TODO:
 	(void)pdata;
+	return ERR_SYNTAX;
+}
+
+err_t expression_seeded(parser_data_t *pdata, token_t *seed_token)
+{
+	// TODO:
+	(void)pdata;
+	(void)seed_token;
 	return ERR_SYNTAX;
 }
 
