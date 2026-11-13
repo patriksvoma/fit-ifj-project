@@ -18,25 +18,25 @@
  */
 typedef enum
 {
-	KW_NONE,
-	KW_DEF,
-	KW_DO,
-	KW_DOUBLE,
-	KW_ELSE,
-	KW_IF,
-	KW_IMPORT,
-	KW_INT,
-	KW_MAIN,
-	KW_RETURN,
-	KW_STRING,
-	KW_THEN,
-	KW_UNIT,
-	KW_VAL,
-	KW_VAR,
-	KW_WHILE,
-	KW_BOOLEAN,
-	KW_EXTENSION,
-	KW_FOR,
+	KW_NONE,	  // Default value
+	KW_DEF,		  // def
+	KW_DO,		  // do
+	KW_DOUBLE,	  // Double
+	KW_ELSE,	  // else
+	KW_IF,		  // if
+	KW_IMPORT,	  // import
+	KW_INT,		  // Int
+	KW_MAIN,	  // @main
+	KW_RETURN,	  // return
+	KW_STRING,	  // String
+	KW_THEN,	  // then
+	KW_UNIT,	  // Unit
+	KW_VAL,		  // val
+	KW_VAR,		  // var
+	KW_WHILE,	  // while
+	KW_BOOLEAN,	  // Boolean
+	KW_EXTENSION, // extension
+	KW_FOR,		  // for
 } keyword_t;
 
 /**
