@@ -29,6 +29,7 @@ err_t type(parser_data_t *pdata);
 err_t statement(parser_data_t *pdata);
 err_t expression_opt(parser_data_t *pdata);
 err_t else_opt(parser_data_t *pdata);
+err_t else_if_opt(parser_data_t *pdata);
 err_t for_generator(parser_data_t *pdata);
 err_t for_by(parser_data_t *pdata);
 err_t for_guard(parser_data_t *pdata);
@@ -766,7 +767,30 @@ err_t expression_opt(parser_data_t *pdata)
 	return ERR_SYNTAX;
 }
 
+/**
+ * @brief Optional else branch of an if, later can be made into an else if branch | <else-opt>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t else_opt(parser_data_t *pdata)
+{
+	// else
+	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_ELSE)
+	{
+		err_t result = get_next_token(&pdata->token, EOL_OPTIONAL);
+		if (result)
+			return result;
+
+		// <else-if-opt>
+		else_if_opt(pdata);
+	}
+
+	// Epsilon rule
+	return ERR_OK;
+}
+
+err_t else_if_opt(parser_data_t *pdata)
 {
 	// TODO:
 	(void)pdata;
