@@ -430,7 +430,7 @@ err_t return_type(parser_data_t *pdata)
 	err_t result;
 
 	// =, go to <block-start>
-	if (pdata->token.type == TOKEN_EQUAL)
+	if (pdata->token.type == TOKEN_ASSIGN)
 	{
 		result = get_next_token(&pdata->token, EOL_REQUIRED);
 		if (result)
@@ -453,7 +453,7 @@ err_t return_type(parser_data_t *pdata)
 		// cppcheck-suppress-end knownConditionTrueFalse
 
 		// =
-		if (pdata->token.type != TOKEN_EQUAL)
+		if (pdata->token.type != TOKEN_ASSIGN)
 		{
 			print_err_l("Expected a block start delimiter (=).", ERR_SYNTAX, pdata->token.line);
 			return ERR_SYNTAX;
