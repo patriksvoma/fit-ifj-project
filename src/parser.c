@@ -467,6 +467,7 @@ err_t return_type(parser_data_t *pdata)
  */
 err_t block_start(parser_data_t *pdata)
 {
+	// TODO: Remove suppression
 	// cppcheck-suppress-begin knownConditionTrueFalse
 	// <statement>
 	err_t result = statement(pdata);
@@ -478,11 +479,23 @@ err_t block_start(parser_data_t *pdata)
 	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
+/**
+ * @brief Statement block | <block>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t block(parser_data_t *pdata)
 {
-	// TODO:
-	(void)pdata;
-	return ERR_SYNTAX;
+	// TODO: Remove suppression
+	// cppcheck-suppress-begin knownConditionTrueFalse
+	err_t result = statement(pdata);
+	if (result)
+		return result;
+
+	// TODO: End blocks by checking indentation
+	return block(pdata);
+	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 /**
