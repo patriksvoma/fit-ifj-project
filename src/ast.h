@@ -104,6 +104,7 @@ struct ast_node
 	data_type_t eval_type;
 
 	union {
+		// Blocks and program
 		struct
 		{
 			ast_node_t **expression;
@@ -159,7 +160,7 @@ struct ast_node
 		} call;
 
 		// Return
-		ast_node_t *return_var;
+		ast_node_t *expression;
 
 		// Function definition
 		struct
@@ -231,3 +232,41 @@ ast_node_t *ast_add_unary_op(ast_node_t *operand, operator_type_t op);
  * @return ast_node_t Pointer to node of the operation
  */
 ast_node_t *ast_add_binary_op(ast_node_t *operand_left, ast_node_t *operand_right, operator_type_t op);
+
+/**
+ * @brief Function to add a node containing assigment
+ *
+ * @param i Poiter to identifier name
+ * @param i_type Data type of identifier
+ * @param expression Pointer to node with expression that should be assigned to identifier
+ * @return ast_node_t Pointer to node with assigment
+ */
+ast_node_t *ast_add_assign(char *i, data_type_t i_type, ast_node_t *expression);
+
+/**
+ * @brief Function to add node containing variable definition
+ *
+ * @param i Poiter to identifier name
+ * @param i_type Data type of identifier
+ * @param expression Pointer to node with expression that should be assigned to identifier
+ * @param non_modifiable Bool to decide if its val or var
+ * @return ast_node_t Pointer to node with variable definition
+ */
+ast_node_t *ast_add_var_def(char *i, data_type_t i_type, ast_node_t *expression, bool non_modifiable);
+
+/**
+ * @brief Function to add node containing return
+ *
+ * @param expression Pointer to node with expression that should be returned
+ * @return ast_node_t Pointer to node with return expression
+ */
+ast_node_t *ast_add_return(ast_node_t *expression);
+
+/**
+ * @brief Function to add a node containing function parameter
+ *
+ * @param i Poiter to parameter identifier name
+ * @param i_type Data type of identifier
+ * @return ast_node_t Pointer to node of the parameter
+ */
+ast_node_t *ast_add_param(char *i, data_type_t i_type);

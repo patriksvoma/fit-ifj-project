@@ -23,15 +23,11 @@
 }*/
 
 /*
-AST_PROGRAM,
+	AST_PROGRAM,
 	AST_FUNC_DEF,
-	AST_PARAM,
-	AST_RETURN,
 	AST_BLOCK,
 	AST_IF,
 	AST_WHILE,
-	AST_VAR_DEF,
-	AST_ASSIGN,
 	AST_CALL,
 */
 
@@ -150,4 +146,77 @@ ast_node_t *ast_add_binary_op(ast_node_t *operand_left, ast_node_t *operand_righ
 		free(node);
 		return NULL;
 	}
+}
+
+ast_node_t *ast_add_assign(char *i, data_type_t i_type, ast_node_t *expression)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	// Setting values
+	node->eval_type = i_type;
+	node->node_type = AST_ASSIGN;
+	node->ast_node_value.assign.expression = expression;
+	node->ast_node_value.assign.identifier = i;
+	return node;
+}
+
+ast_node_t *ast_add_var_def(char *i, data_type_t i_type, ast_node_t *expression, bool non_modifiable)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	// Setting values
+	node->eval_type = i_type;
+	node->node_type = AST_VAR_DEF;
+	node->ast_node_value.var_def.data_type = i_type;
+	node->ast_node_value.var_def.expression = expression;
+	node->ast_node_value.var_def.identifier = i;
+	node->ast_node_value.var_def.non_modifiable = non_modifiable;
+	return node;
+}
+
+ast_node_t *ast_add_return(ast_node_t *expression)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	// Setting values
+	node->eval_type = expression->eval_type;
+	node->node_type = AST_RETURN;
+	node->ast_node_value.expression = expression;
+	return node;
+}
+
+ast_node_t *ast_add_param(char *i, data_type_t i_type)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	// Setting values
+	node->eval_type = i_type;
+	node->node_type = AST_PARAM;
+	node->ast_node_value.param.data_type = i_type;
+	node->ast_node_value.param.identifier = i;
+	return node;
 }
