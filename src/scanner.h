@@ -45,32 +45,32 @@ typedef enum
  */
 typedef enum
 {
-	TOKEN_IDENTIFIER,
-	TOKEN_KEYWORD,
-	TOKEN_OPENING_BRACKET,
-	TOKEN_CLOSING_BRACKET,
-	TOKEN_INT,
-	TOKEN_DOUBLE,
-	TOKEN_STRING,
-	TOKEN_MULTLINE_STRING,
-	TOKEN_EOF,
-	TOKEN_FOR_GEN_ASSIGN,
-	TOKEN_DOT,
-	TOKEN_COMMA,
-	TOKEN_COLON,
-	TOKEN_UNDERSCORE,
-	TOKEN_PLUS,
-	TOKEN_MINUS,
-	TOKEN_ASTERISK,
-	TOKEN_DIV,
-	TOKEN_ASSIGN,
-	TOKEN_EQUAL,
-	TOKEN_NOT_EQUAL,
-	TOKEN_GREATER,
-	TOKEN_GREATER_EQUAL,
-	TOKEN_LESS,
-	TOKEN_LESS_EQUAL
-} token_type_t; // TODO: Figure out all correct token types
+	TOKEN_IDENTIFIER,	   // Any identifier
+	TOKEN_KEYWORD,		   // Any keyword
+	TOKEN_OPENING_BRACKET, // (
+	TOKEN_CLOSING_BRACKET, // )
+	TOKEN_BOOLEAN,		   // Any boolean literal
+	TOKEN_INT,			   // Any integer literal
+	TOKEN_DOUBLE,		   // Any double literal
+	TOKEN_STRING,		   // Any string literal
+	TOKEN_EOF,			   // End-of-file
+	TOKEN_FOR_GEN_ASSIGN,  // <-
+	TOKEN_DOT,			   // .
+	TOKEN_COMMA,		   // ,
+	TOKEN_COLON,		   // :
+	TOKEN_UNDERSCORE,	   // _
+	TOKEN_PLUS,			   // +
+	TOKEN_MINUS,		   // -
+	TOKEN_ASTERISK,		   // *
+	TOKEN_DIV,			   // /
+	TOKEN_ASSIGN,		   // =
+	TOKEN_EQUAL,		   // ==
+	TOKEN_NOT_EQUAL,	   // !=
+	TOKEN_GREATER,		   // >
+	TOKEN_GREATER_EQUAL,   // >=
+	TOKEN_LESS,			   // <
+	TOKEN_LESS_EQUAL	   // <=
+} token_type_t;
 
 /**
  * @brief Optional attributes of an accepted token
