@@ -27,7 +27,9 @@ err_t block_start(parser_data_t *pdata);
 err_t block(parser_data_t *pdata);
 err_t type(parser_data_t *pdata);
 err_t statement(parser_data_t *pdata);
+err_t else_opt(parser_data_t *pdata);
 err_t val_var_def(parser_data_t *pdata);
+err_t expression(parser_data_t *pdata);
 
 /**
  * @brief The entry rule of syntax analysis | <prologue>
@@ -555,6 +557,7 @@ err_t type(parser_data_t *pdata)
  */
 err_t statement(parser_data_t *pdata)
 {
+	// cppcheck-suppress-begin knownConditionTrueFalse
 	err_t result;
 
 	// val
@@ -577,9 +580,8 @@ err_t statement(parser_data_t *pdata)
 		// <val-var-def>
 		return val_var_def(pdata);
 	}
-
 	// var
-	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_VAR)
+	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_VAR)
 	{
 		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
 		if (result)
@@ -598,9 +600,36 @@ err_t statement(parser_data_t *pdata)
 		// <val-var-def>
 		return val_var_def(pdata);
 	}
-
 	// if
+	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_IF)
+	{
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
 
+		// <expression>
+		result = expression(pdata);
+		if (result)
+			return result;
+
+		// then
+		if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_THEN)
+		{
+			print_err_l("Expected a \"then\" keyword after expression", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
+		result = get_next_token(&pdata->token, EOL_OPTIONAL);
+		if (result)
+			return result;
+
+		// <block-start>
+		result = block_start(pdata);
+		if (result)
+			return result;
+
+		// <else-opt>
+		return else_opt(pdata);
+	}
 	// while
 
 	// for
@@ -613,9 +642,22 @@ err_t statement(parser_data_t *pdata)
 	// <expression>
 
 	return ERR_SYNTAX;
+	// cppcheck-suppress-end knownConditionTrueFalse
+}
+
+err_t else_opt(parser_data_t *pdata)
+{
+	(void)pdata;
+	return ERR_SYNTAX;
 }
 
 err_t val_var_def(parser_data_t *pdata)
+{
+	(void)pdata;
+	return ERR_SYNTAX;
+}
+
+err_t expression(parser_data_t *pdata)
 {
 	(void)pdata;
 	return ERR_SYNTAX;
