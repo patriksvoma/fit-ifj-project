@@ -845,6 +845,7 @@ err_t else_if_opt(parser_data_t *pdata)
 err_t for_generator(parser_data_t *pdata)
 {
 	// cppcheck-suppress-begin knownConditionTrueFalse
+	// identifier
 	if (pdata->token.type == TOKEN_IDENTIFIER)
 	{
 		err_t result;
@@ -887,6 +888,7 @@ err_t for_generator(parser_data_t *pdata)
  */
 err_t for_by(parser_data_t *pdata)
 {
+	// by
 	if (pdata->token.type == TOKEN_IDENTIFIER && !strcmp(pdata->token.attribute.string, "by"))
 	{
 		err_t result = get_next_token(&pdata->token, EOL_FORBIDDEN);
@@ -901,11 +903,35 @@ err_t for_by(parser_data_t *pdata)
 	return ERR_OK;
 }
 
+/**
+ * @brief For statement guard | <for-guard>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t for_guard(parser_data_t *pdata)
 {
-	// TODO:
-	(void)pdata;
-	return ERR_SYNTAX;
+	// TODO: Remove suppression
+	// cppcheck-suppress-begin knownConditionTrueFalse
+	// if
+	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_IF)
+	{
+		err_t result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// <expression>
+		result = expression(pdata);
+		if (result)
+			return result;
+
+		// <for-guard>
+		return for_guard(pdata);
+	}
+
+	// Epsilon rule
+	return ERR_OK;
+	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 err_t val_var_def(parser_data_t *pdata)
