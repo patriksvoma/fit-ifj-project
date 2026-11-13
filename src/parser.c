@@ -28,6 +28,9 @@ err_t block(parser_data_t *pdata);
 err_t type(parser_data_t *pdata);
 err_t statement(parser_data_t *pdata);
 err_t else_opt(parser_data_t *pdata);
+err_t for_generator(parser_data_t *pdata);
+err_t for_by(parser_data_t *pdata);
+err_t for_guard(parser_data_t *pdata);
 err_t val_var_def(parser_data_t *pdata);
 err_t expression(parser_data_t *pdata);
 
@@ -615,7 +618,7 @@ err_t statement(parser_data_t *pdata)
 		// then
 		if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_THEN)
 		{
-			print_err_l("Expected a \"then\" keyword after expression", ERR_SYNTAX, pdata->token.line);
+			print_err_l("Expected a \"then\" keyword after expression.", ERR_SYNTAX, pdata->token.line);
 			return ERR_SYNTAX;
 		}
 		result = get_next_token(&pdata->token, EOL_OPTIONAL);
@@ -645,7 +648,7 @@ err_t statement(parser_data_t *pdata)
 		// do
 		if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_DO)
 		{
-			print_err_l("Expected a \"do\" keyword after expression", ERR_SYNTAX, pdata->token.line);
+			print_err_l("Expected a \"do\" keyword after expression.", ERR_SYNTAX, pdata->token.line);
 			return ERR_SYNTAX;
 		}
 		result = get_next_token(&pdata->token, EOL_REQUIRED);
@@ -655,8 +658,61 @@ err_t statement(parser_data_t *pdata)
 		// <block-start>
 		return block_start(pdata);
 	}
-
 	// for
+	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_FOR)
+	{
+		result = get_next_token(&pdata->token, EOL_OPTIONAL);
+		if (result)
+			return result;
+
+		// identifier
+		if (pdata->token.type != TOKEN_IDENTIFIER)
+		{
+			print_err_l("Expected an iterator identifier after \"for\".", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// <-
+		if (pdata->token.type != TOKEN_FOR_GEN_ASSIGN)
+		{
+			print_err_l("Expected a generator variable assignment operator (<-).", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// <expression>
+		result = expression(pdata);
+		if (result)
+			return result;
+
+		// <for-generator>
+		result = for_generator(pdata);
+		if (result)
+			return result;
+
+		// <for-guard>
+		result = for_guard(pdata);
+		if (result)
+			return result;
+
+		// do
+		if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_DO)
+		{
+			print_err_l("Expected the \"do\" keyword after a for guard.", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
+		result = get_next_token(&pdata->token, EOL_REQUIRED);
+		if (result)
+			return result;
+
+		// <block-start>
+		return block_start(pdata);
+	}
 
 	// return
 
@@ -671,18 +727,42 @@ err_t statement(parser_data_t *pdata)
 
 err_t else_opt(parser_data_t *pdata)
 {
+	// TODO:
+	(void)pdata;
+	return ERR_SYNTAX;
+}
+
+err_t for_generator(parser_data_t *pdata)
+{
+	// TODO:
+	(void)pdata;
+	return ERR_SYNTAX;
+}
+
+err_t for_by(parser_data_t *pdata)
+{
+	// TODO:
+	(void)pdata;
+	return ERR_SYNTAX;
+}
+
+err_t for_guard(parser_data_t *pdata)
+{
+	// TODO:
 	(void)pdata;
 	return ERR_SYNTAX;
 }
 
 err_t val_var_def(parser_data_t *pdata)
 {
+	// TODO:
 	(void)pdata;
 	return ERR_SYNTAX;
 }
 
 err_t expression(parser_data_t *pdata)
 {
+	// TODO:
 	(void)pdata;
 	return ERR_SYNTAX;
 }
