@@ -77,6 +77,21 @@ typedef enum
 	AST_LITERAL_BOOLEAN
 } node_type_t;
 
+/**
+ * @brief Struct for literals
+ *
+ */
+typedef struct
+{
+	data_type_t literal_type;
+	union {
+		int integer;
+		double decimal;
+		char *string;
+		bool boolean;
+	} value;
+} literal_t;
+
 typedef struct ast_node ast_node_t;
 
 /**
@@ -178,13 +193,13 @@ struct ast_node
 			ast_node_t *condition;
 			ast_node_t *block;
 		} while_loop;
-	} ast_node_t;
+	} ast_node_value;
 };
 
 /**
  * @brief Function to add a leaf containing literal
  *
- * @param token Token containing the literal
+ * @param literal Structure containing the literal value and type
  * @return ast_node_t Pointer to leaf
  */
-ast_node_t *ast_add_literal(token_t *token);
+ast_node_t *ast_add_literal(literal_t *literal);
