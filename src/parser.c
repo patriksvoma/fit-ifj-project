@@ -934,10 +934,54 @@ err_t for_guard(parser_data_t *pdata)
 	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
+/**
+ * @brief Val or var definition
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t val_var_def(parser_data_t *pdata)
 {
-	// TODO:
-	(void)pdata;
+	err_t result;
+
+	// :
+	if (pdata->token.type == TOKEN_COLON)
+	{
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// <type>
+		result = type(pdata);
+		if (result)
+			return result;
+
+		// =
+		if (pdata->token.type != TOKEN_ASSIGN)
+		{
+			print_err_l("Expected an assignment operator after type declaration.", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		// <expression
+		return expression(pdata);
+	}
+
+	// =
+	if (pdata->token.type == TOKEN_ASSIGN)
+	{
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
+
+		return expression(pdata);
+	}
+
+	print_err_l("Expected a type declaration or an assignment operator after identifier", ERR_SYNTAX,
+				pdata->token.line);
 	return ERR_SYNTAX;
 }
 
