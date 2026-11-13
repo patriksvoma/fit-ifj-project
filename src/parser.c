@@ -125,14 +125,12 @@ err_t func_list(parser_data_t *pdata)
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_EXTENSION)
 	{
 		// <ext-def>
-		// cppcheck-suppress-begin knownConditionTrueFalse
 		result = ext_def(pdata);
 		if (result)
 			return result;
 
 		// <func-list>
 		return func_list(pdata);
-		// cppcheck-suppress-end knownConditionTrueFalse
 	}
 	// If EOF is received, end the function list
 	else if (pdata->token.type == TOKEN_EOF)
@@ -447,11 +445,9 @@ err_t return_type(parser_data_t *pdata)
 		if (result)
 			return result;
 
-		// cppcheck-suppress-begin knownConditionTrueFalse
 		result = type(pdata);
 		if (result)
 			return result;
-		// cppcheck-suppress-end knownConditionTrueFalse
 
 		// =
 		if (pdata->token.type != TOKEN_ASSIGN)
@@ -476,8 +472,6 @@ err_t return_type(parser_data_t *pdata)
  */
 err_t block_start(parser_data_t *pdata)
 {
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	// <statement>
 	err_t result = statement(pdata);
 	if (result)
@@ -485,7 +479,6 @@ err_t block_start(parser_data_t *pdata)
 
 	// <block>
 	return block(pdata);
-	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 /**
@@ -496,15 +489,12 @@ err_t block_start(parser_data_t *pdata)
  */
 err_t block(parser_data_t *pdata)
 {
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	err_t result = statement(pdata);
 	if (result)
 		return result;
 
 	// TODO: End blocks by checking indentation
 	return block(pdata);
-	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 /**
@@ -563,6 +553,7 @@ err_t type(parser_data_t *pdata)
  */
 err_t statement(parser_data_t *pdata)
 {
+	// TODO: Remove suppression
 	// cppcheck-suppress-begin knownConditionTrueFalse
 	err_t result;
 
@@ -757,6 +748,7 @@ err_t statement(parser_data_t *pdata)
 
 	// <expression>
 	return expression(pdata);
+	// TODO: Remove suppression
 	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
@@ -833,6 +825,7 @@ err_t else_if_opt(parser_data_t *pdata)
 
 	// <block_start>
 	return block_start(pdata);
+	// TODO: Remove suppression
 	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
@@ -844,6 +837,7 @@ err_t else_if_opt(parser_data_t *pdata)
  */
 err_t for_generator(parser_data_t *pdata)
 {
+	// TODO: Remove suppression
 	// cppcheck-suppress-begin knownConditionTrueFalse
 	// identifier
 	if (pdata->token.type == TOKEN_IDENTIFIER)
@@ -877,6 +871,7 @@ err_t for_generator(parser_data_t *pdata)
 
 	print_err_l("Expected \"to\" or \"until\" as a for statement generator.", ERR_SYNTAX, pdata->token.line);
 	return ERR_SYNTAX;
+	// TODO: Remove suppression
 	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
@@ -931,6 +926,7 @@ err_t for_guard(parser_data_t *pdata)
 
 	// Epsilon rule
 	return ERR_OK;
+	// TODO: Remove suppression
 	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
