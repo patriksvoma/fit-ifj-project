@@ -1,6 +1,7 @@
 # Parser grammar
 Author: Patrik Švoma
 
+## Top-down parser rules
 ```
 1   <prologue>			::	import ifj26 . * <func-list>
 2   <func-list>			::	<func-annotation> <func-list>
@@ -52,4 +53,26 @@ Author: Patrik Švoma
 48  <val-var-def>		::	: <type> = <expression>
 49  <val-var-def>		::	= <expression>
 50  <expression>		::	SWITCH TO OPERATOR PRECEDENCE PARSER
+```
+
+## Expression parser rules
+```
+1   E :: i
+2   E :: (E)
+3   E :: E.E
+4   E :: !E
+5   E :: +E
+6   E :: -E
+7   E :: E*E
+8   E :: E/E
+9   E :: E+E
+10  E :: E-E
+11  E :: E<E
+12  E :: E<=E
+13  E :: E>E
+14  E :: E>=
+15  E :: E==E
+16  E :: E!=E
+17  E :: E&&E
+18  E :: E||E
 ```
