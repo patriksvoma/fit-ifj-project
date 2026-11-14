@@ -312,6 +312,11 @@ ast_node_t *ast_add_block(ast_node_t **expressions, size_t exp_count, bool is_ro
 
 void destruct(ast_node_t *root)
 {
+	if (root == NULL)
+	{
+		return;
+	}
+
 	node_type_t type = root->node_type;
 	switch (type)
 	{
@@ -360,6 +365,7 @@ void destruct(ast_node_t *root)
 		{
 			destruct(root->ast_node_value.code_block.expression[i]);
 		}
+		free(root->ast_node_value.code_block.expression);
 		break;
 
 	case (AST_CALL):
@@ -367,6 +373,7 @@ void destruct(ast_node_t *root)
 		{
 			destruct(root->ast_node_value.call.arguments[i]);
 		}
+		free(root->ast_node_value.call.arguments);
 		break;
 
 	case (AST_FUNC_DEF):
@@ -375,6 +382,7 @@ void destruct(ast_node_t *root)
 		{
 			destruct(root->ast_node_value.func_def.params[i]);
 		}
+		free(root->ast_node_value.func_def.params);
 		break;
 
 	// Leaf nodes
@@ -382,4 +390,7 @@ void destruct(ast_node_t *root)
 		free(root);
 		break;
 	}
+
+	free(root);
+	return;
 }
