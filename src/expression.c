@@ -9,6 +9,8 @@
 
 #include "expression.h"
 
+#define PREC_TABLE_SIZE 20
+
 /**
  * @brief Symbols in the precedence table
  *
@@ -16,9 +18,9 @@
 typedef enum
 {
 	N, // None
-	S, // Shift
-	E, // Equal
-	R  // Reduce
+	S, // Shift <
+	E, // Equal =
+	R  // Reduce >
 } prec_table_sign_t;
 
 /**
@@ -48,3 +50,29 @@ typedef enum
 	I_NOT,			 // ||
 	I_DOLLAR		 // $
 } prec_table_index_t;
+
+/**
+ * @brief Precedence table
+ *
+ */
+prec_table_sign_t prec_table[PREC_TABLE_SIZE][PREC_TABLE_SIZE] = {
+	{N, N, R, R, N, N, N, R, R, R, R, R, R, R, R, R, R, R, R, R},
+	{S, S, E, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, N},
+	{N, N, R, R, N, N, N, R, R, R, R, R, R, R, R, R, R, R, R, R},
+	{S, N, R, R, R, R, R, R, R, R, R, R, R, R, R, R, R, R, R, R},
+	{S, S, R, S, S, S, S, R, R, R, R, R, R, R, R, R, R, R, R, R},
+	{S, S, R, S, S, S, S, R, R, R, R, R, R, R, R, R, R, R, R, R},
+	{S, S, R, S, S, S, S, R, R, R, R, R, R, R, R, R, R, R, R, R},
+	{S, S, R, S, S, S, S, R, R, R, R, R, R, R, R, R, R, R, R, R},
+	{S, S, R, S, S, S, S, R, R, R, R, R, R, R, R, R, R, R, R, R},
+	{S, S, R, S, S, S, S, S, S, N, N, R, R, R, R, R, R, R, R, R},
+	{S, S, R, S, S, S, S, S, S, N, N, R, R, R, R, R, R, R, R, R},
+	{S, S, R, S, S, S, S, S, S, S, S, N, N, N, N, N, N, R, R, R},
+	{S, S, R, S, S, S, S, S, S, S, S, N, N, N, N, N, N, R, R, R},
+	{S, S, R, S, S, S, S, S, S, S, S, N, N, N, N, N, N, R, R, R},
+	{S, S, R, S, S, S, S, S, S, S, S, N, N, N, N, N, N, R, R, R},
+	{S, S, R, S, S, S, S, S, S, S, S, N, N, N, N, N, N, R, R, R},
+	{S, S, R, S, S, S, S, S, S, S, S, N, N, N, N, N, N, R, R, R},
+	{S, S, R, S, S, S, S, S, S, S, S, S, S, S, S, S, S, N, R, R},
+	{S, S, R, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, N, R},
+	{S, S, N, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, N}};
