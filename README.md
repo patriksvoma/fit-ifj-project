@@ -1,5 +1,5 @@
 # IFJ project - IFJ26 Imperative Language Compiler (FIT VUT 2026/27)
-This is an implementation of a IFJ26 to IFJcode26 compiler.
+This is an implementation of a IFJ26 to IFJcode26 compiler built for the Formal Languages and Compilers class.
 
 ## Make targets
 - build - Builds the executable
