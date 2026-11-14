@@ -305,3 +305,81 @@ ast_node_t *ast_add_block(ast_node_t **expressions, size_t exp_count, bool is_ro
 	node->ast_node_value.code_block.exp_count = exp_count;
 	return node;
 }
+
+/*
+	AST_FUNC_DEF,
+*/
+
+void destruct(ast_node_t *root)
+{
+	node_type_t type = root->node_type;
+	switch (type)
+	{
+	case (AST_RETURN):
+		if (root == NULL)
+		{
+			free(root);
+		}
+		else
+		{
+			destruct(root->ast_node_value.expression);
+		}
+		break;
+
+	case (AST_UN_OPERATOR):
+		destruct(root->ast_node_value.un_operator.operand);
+		break;
+
+	case (AST_BIN_OPERATOR):
+		destruct(root->ast_node_value.bin_operator.operand_left);
+		destruct(root->ast_node_value.bin_operator.operand_right);
+		break;
+
+	case (AST_ASSIGN):
+		destruct(root->ast_node_value.assign.expression);
+		break;
+
+	case (AST_VAR_DEF):
+		destruct(root->ast_node_value.var_def.expression);
+		break;
+
+	case (AST_WHILE):
+		destruct(root->ast_node_value.while_loop.block);
+		destruct(root->ast_node_value.while_loop.condition);
+		break;
+
+	case (AST_IF):
+		destruct(root->ast_node_value.if_statement.condition);
+		destruct(root->ast_node_value.if_statement.else_block);
+		destruct(root->ast_node_value.if_statement.if_block);
+		break;
+
+	case (AST_PROGRAM):
+	case (AST_BLOCK):
+		for (int i = 0; i < root->ast_node_value.code_block.exp_count; i++)
+		{
+			destruct(root->ast_node_value.code_block.expression[i]);
+		}
+		break;
+
+	case (AST_CALL):
+		for (int i = 0; i < root->ast_node_value.call.arg_count; i++)
+		{
+			destruct(root->ast_node_value.call.arguments[i]);
+		}
+		break;
+
+	case (AST_FUNC_DEF):
+		destruct(root->ast_node_value.func_def.block);
+		for (int i = 0; i < root->ast_node_value.func_def.param_count; i++)
+		{
+			destruct(root->ast_node_value.func_def.params[i]);
+		}
+		break;
+
+	// Leaf nodes
+	default:
+		free(root);
+		break;
+	}
+}

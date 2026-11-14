@@ -323,3 +323,11 @@ ast_node_t *ast_add_func_def(char *i, bool is_main, ast_node_t *block, ast_node_
  * @return ast_node_t Pointer to node of the code block
  */
 ast_node_t *ast_add_block(ast_node_t **expressions, size_t exp_count, bool is_root);
+
+/**
+ * @brief Function to destruct the tree
+ *
+ * @param root Pointer to root node
+ * @return void
+ */
+void destruct(ast_node_t *root);
