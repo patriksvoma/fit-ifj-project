@@ -316,7 +316,7 @@ void destruct(ast_node_t *root)
 	switch (type)
 	{
 	case (AST_RETURN):
-		if (root == NULL)
+		if (root->ast_node_value.expression == NULL)
 		{
 			free(root);
 		}
@@ -356,14 +356,14 @@ void destruct(ast_node_t *root)
 
 	case (AST_PROGRAM):
 	case (AST_BLOCK):
-		for (int i = 0; i < root->ast_node_value.code_block.exp_count; i++)
+		for (size_t i = 0; i < root->ast_node_value.code_block.exp_count; i++)
 		{
 			destruct(root->ast_node_value.code_block.expression[i]);
 		}
 		break;
 
 	case (AST_CALL):
-		for (int i = 0; i < root->ast_node_value.call.arg_count; i++)
+		for (size_t i = 0; i < root->ast_node_value.call.arg_count; i++)
 		{
 			destruct(root->ast_node_value.call.arguments[i]);
 		}
@@ -371,7 +371,7 @@ void destruct(ast_node_t *root)
 
 	case (AST_FUNC_DEF):
 		destruct(root->ast_node_value.func_def.block);
-		for (int i = 0; i < root->ast_node_value.func_def.param_count; i++)
+		for (size_t i = 0; i < root->ast_node_value.func_def.param_count; i++)
 		{
 			destruct(root->ast_node_value.func_def.params[i]);
 		}
