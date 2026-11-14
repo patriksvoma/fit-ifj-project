@@ -9,27 +9,6 @@
 
 #include "ast.h"
 
-/*ast_node_t *ast_node_init(ast_node_t *node) {
-	node = malloc(sizeof(ast_node_t));
-
-	if (node == NULL)
-	{
-		return NULL;
-	}
-	else
-	{
-		return node;
-	}
-}*/
-
-/*
-	AST_PROGRAM,
-	AST_FUNC_DEF,
-	AST_BLOCK,
-	AST_IF, ?
-	AST_CALL,
-*/
-
 ast_node_t *ast_add_literal(literal_t *literal)
 {
 	ast_node_t *leaf;
@@ -86,7 +65,7 @@ ast_node_t *ast_add_identifier(char *i, data_type_t i_type)
 		return NULL;
 	}
 
-	// Set values
+	// Setting values
 	leaf->eval_type = i_type;
 	leaf->node_type = AST_IDENTIFIER;
 	leaf->ast_node_value.identifier = i;
@@ -187,6 +166,9 @@ ast_node_t *ast_add_var_def(char *i, data_type_t i_type, ast_node_t *expression,
 
 ast_node_t *ast_add_return(ast_node_t *expression)
 {
+	if (!expression)
+		return NULL;
+
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
 
@@ -238,8 +220,7 @@ ast_node_t *ast_add_while(ast_node_t *condition, ast_node_t *block)
 	return node;
 }
 
-// TODO: Domluvit se, mozna predelat
-ast_node_t *ast_add_if(ast_node_t *condition, ast_node_t **blocks, size_t block_count)
+ast_node_t *ast_add_if(ast_node_t *condition, ast_node_t *if_block, ast_node_t *else_block)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -253,7 +234,74 @@ ast_node_t *ast_add_if(ast_node_t *condition, ast_node_t **blocks, size_t block_
 	node->eval_type = TYPE_NONE;
 	node->node_type = AST_IF;
 	node->ast_node_value.if_statement.condition = condition;
-	node->ast_node_value.if_statement.block_count = block_count;
-	node->ast_node_value.if_statement.block = blocks;
+	node->ast_node_value.if_statement.if_block = if_block;
+	node->ast_node_value.if_statement.else_block = else_block;
+	return node;
+}
+
+ast_node_t *ast_add_call(char *i, ast_node_t **args, size_t args_count)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	// Setting values
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_CALL;
+	node->ast_node_value.call.arg_count = args_count;
+	node->ast_node_value.call.arguments = args;
+	node->ast_node_value.call.identifier = i;
+	return node;
+}
+
+ast_node_t *ast_add_func_def(char *i, bool is_main, ast_node_t *block, ast_node_t **params, size_t param_count,
+							 data_type_t return_type)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	// Setting values
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_FUNC_DEF;
+	node->ast_node_value.func_def.block = block;
+	node->ast_node_value.func_def.identifier = i;
+	node->ast_node_value.func_def.is_main = is_main;
+	node->ast_node_value.func_def.param_count = param_count;
+	node->ast_node_value.func_def.params = params;
+	node->ast_node_value.func_def.return_type = return_type;
+	return node;
+}
+
+ast_node_t *ast_add_block(ast_node_t **expressions, size_t exp_count, bool is_root)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	// Setting values
+	node->eval_type = TYPE_NONE;
+	if (is_root)
+	{
+		node->node_type = AST_PROGRAM;
+	}
+	else
+	{
+		node->node_type = AST_BLOCK;
+	}
+	node->ast_node_value.code_block.expression = expressions;
+	node->ast_node_value.code_block.exp_count = exp_count;
 	return node;
 }

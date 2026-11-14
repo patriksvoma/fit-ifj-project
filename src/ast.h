@@ -106,10 +106,10 @@ struct ast_node
 	union {
 		// Blocks and program
 		struct
-		{
+		{ // TODO: Domluvit se jak se to bude ukladat (Mozna bude potreba predelat)
 			ast_node_t **expression;
 			size_t exp_count;
-		} program;
+		} code_block;
 
 		// Literals
 		int int_literal;
@@ -153,7 +153,7 @@ struct ast_node
 
 		// Call function
 		struct
-		{
+		{ // TODO: Domluvit se jak se to bude ukladat (Mozna bude potreba predelat)
 			char *identifier;
 			ast_node_t **arguments;
 			size_t arg_count;
@@ -164,7 +164,7 @@ struct ast_node
 
 		// Function definition
 		struct
-		{
+		{ // TODO: Domluvit se jak se to bude ukladat (Mozna bude potreba predelat)
 			char *identifier;
 			bool is_main;
 			ast_node_t *block;
@@ -184,8 +184,8 @@ struct ast_node
 		struct
 		{
 			ast_node_t *condition;
-			ast_node_t **block;
-			size_t block_count;
+			ast_node_t *if_block;
+			ast_node_t *else_block;
 		} if_statement;
 
 		// While
@@ -284,8 +284,42 @@ ast_node_t *ast_add_while(ast_node_t *condition, ast_node_t *block);
  * @brief Function to make a tree containing if statement
  *
  * @param condition A node with condition for the statement
- * @param blocks An array of code blocks for each branch, first is if, last else, others else if
- * @param block_count Number of code blocks for the statement
+ * @param if_block Code block for if branch
+ * @param else_block Code block for else branch
  * @return ast_node_t Pointer to node of the if statement
  */
-ast_node_t *ast_add_if(ast_node_t *condition, ast_node_t **blocks, size_t block_count);
+ast_node_t *ast_add_if(ast_node_t *condition, ast_node_t *if_block, ast_node_t *else_block);
+
+/**
+ * @brief Function to make a tree containing function calling
+ *
+ * @param i Poiter to function identifier name
+ * @param args An array of arguments of the function
+ * @param args_count Number of arguments of the function
+ * @return ast_node_t Pointer to node of the function call
+ */
+ast_node_t *ast_add_call(char *i, ast_node_t **args, size_t args_count);
+
+/**
+ * @brief Function to make a tree containing function definition
+ *
+ * @param i Poiter to function identifier name
+ * @param is_main Bool to decide if its main function
+ * @param block Pointer to node with function code block
+ * @param params Array with nodes containing parameters of the functiuon
+ * @param param_count Number of parameters of the function
+ * @param return_type Data type that the fuction returns
+ * @return ast_node_t Pointer to node of the function definition
+ */
+ast_node_t *ast_add_func_def(char *i, bool is_main, ast_node_t *block, ast_node_t **params, size_t param_count,
+							 data_type_t return_type);
+
+/**
+ * @brief Function to make a tree containing code blocks and full program
+ *
+ * @param expressions Array of all expressions
+ * @param exp_count Count of expressions
+ * @param is_root Bool to decide if its the root
+ * @return ast_node_t Pointer to node of the code block
+ */
+ast_node_t *ast_add_block(ast_node_t **expressions, size_t exp_count, bool is_root);
