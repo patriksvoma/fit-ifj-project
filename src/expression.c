@@ -410,8 +410,14 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 			return result;
 		break;
 	case RULE_DOT:
+		// TODO: Implement
 		break;
 	case RULE_NEG:
+		node = ast_add_unary_op(stack->top->data.expression_node, OP_NEG);
+
+		result = symstack_pop_multiple(stack, 3);
+		if (result)
+			return result;
 		break;
 	case RULE_UPLUS:
 		break;
