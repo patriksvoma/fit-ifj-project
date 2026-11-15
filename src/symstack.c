@@ -25,10 +25,11 @@ err_t symstack_destroy(symstack_t *stack)
 	return ERR_OK;
 }
 
-err_t symstack_push(symstack_t *stack)
+err_t symstack_push(symstack_t *stack, symstack_item_t *item)
 {
 	// TODO: Implement
 	(void)stack;
+	(void)item;
 	print_err("symstack_push() is not implemented yet.", ERR_INTERNAL);
 	return ERR_OK;
 }

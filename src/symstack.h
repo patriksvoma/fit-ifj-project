@@ -41,9 +41,10 @@ err_t symstack_destroy(symstack_t *stack);
  * @brief Pushes a symbol to the top of the stack
  *
  * @param stack Pointer to the stack
+ * @param item Item to push
  * @return err_t Error code
  */
-err_t symstack_push(symstack_t *stack);
+err_t symstack_push(symstack_t *stack, symstack_item_t *item);
 
 /**
  * @brief Pops a symbol from the top of the stack
