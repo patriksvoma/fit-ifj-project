@@ -13,6 +13,33 @@
 #define PREC_TABLE_SIZE 20
 
 /**
+ * @brief All possible grammar rules
+ *
+ */
+typedef enum
+{
+	RULE_NONE,		  // Invalid rule
+	RULE_I,			  // E :: i
+	RULE_PARENTHESIS, // E :: (E)
+	RULE_DOT,		  // E :: E.E
+	RULE_NEG,		  // E :: !E
+	RULE_UPLUS,		  // E :: +E
+	RULE_UMINUS,	  // E :: -E
+	RULE_MUL,		  // E :: E*E
+	RULE_DIV,		  // E :: E/E
+	RULE_ADD,		  // E :: E+E
+	RULE_SUB,		  // E :: E-E
+	RULE_LT,		  // E :: E<E
+	RULE_LE,		  // E :: E<=E
+	RULE_GT,		  // E :: E>E
+	RULE_GE,		  // E :: E>=
+	RULE_EQ,		  // E :: E==E
+	RULE_NE,		  // E :: E!=E
+	RULE_AND,		  // E :: E&&E
+	RULE_OR			  // E :: E||E
+} prec_rule_t;
+
+/**
  * @brief Precedence table
  *
  */
@@ -179,6 +206,124 @@ err_t token_to_stack_item(token_t *token, symstack_item_t *stack_item)
 
 	*stack_item = item;
 	return ERR_OK;
+}
+
+/**
+ * @brief Checks if any rule is applicable to the symbols on the top of the stack
+ *
+ * @param stack Symbol stack
+ * @return prec_rule_t Found rule
+ */
+prec_rule_t find_rule(symstack_t *stack)
+{
+	if (!stack || !stack->top || !stack->top->next)
+		return RULE_NONE;
+
+	symstack_item_t *top1 = stack->top;
+	symstack_item_t *top2 = top1->next;
+	symstack_item_t *top3 = NULL;
+	symstack_item_t *top4 = NULL;
+
+	if (top2)
+		top3 = top2->next;
+	if (top3)
+		top4 = top3->next;
+
+	// <i
+	if (top1->type == STACKITEM_TYPE_TERMINAL && top1->data.terminal == TERMINAL_I)
+	{
+		if (top2->type == STACKITEM_TYPE_OPERATOR && top2->data.operator == S)
+		{
+			return RULE_I;
+		}
+	}
+	// <(E)
+	else if (top1->type == STACKITEM_TYPE_TERMINAL && top1->data.terminal == TERMINAL_RIGHT_BRACKET)
+	{
+		if (!top3 || !top4)
+			return RULE_NONE;
+
+		if (top2->type == STACKITEM_TYPE_EXPRESSION && top3->type == STACKITEM_TYPE_TERMINAL &&
+			top3->data.terminal == TERMINAL_LEFT_BRACKET && top4->type == STACKITEM_TYPE_OPERATOR &&
+			top4->data.operator == S)
+		{
+			return RULE_PARENTHESIS;
+		}
+	}
+	// xxE
+	else if (top1->type == STACKITEM_TYPE_EXPRESSION && top2->type == STACKITEM_TYPE_TERMINAL)
+	{
+		// <ExE
+		if (top3 && top4 && top3->type == STACKITEM_TYPE_EXPRESSION && top4->type == STACKITEM_TYPE_OPERATOR &&
+			top4->data.operator == S)
+		{
+			switch (top2->data.terminal)
+			{
+			// <E.E
+			case TERMINAL_DOT:
+				return RULE_DOT;
+			// <E*E
+			case TERMINAL_MUL:
+				return RULE_MUL;
+			// <E/E
+			case TERMINAL_DIV:
+				return RULE_DIV;
+			// <E+E
+			case TERMINAL_ADD:
+				return RULE_ADD;
+			// <E-E
+			case TERMINAL_SUB:
+				return RULE_SUB;
+			// <E<E
+			case TERMINAL_LT:
+				return RULE_LT;
+			// <E<=E
+			case TERMINAL_LET:
+				return RULE_LE;
+			// <E>E
+			case TERMINAL_GT:
+				return RULE_GT;
+			// <E>=E
+			case TERMINAL_GET:
+				return RULE_GE;
+			// <E==E
+			case TERMINAL_EQ:
+				return RULE_EQ;
+			// <E!=E
+			case TERMINAL_NE:
+				return RULE_NE;
+			// <E&&E
+			case TERMINAL_AND:
+				return RULE_AND;
+			// <E||E
+			case TERMINAL_OR:
+				return RULE_OR;
+			default:
+				return RULE_NONE;
+			}
+		}
+		// <xE
+		else if (top3 && top2->type == STACKITEM_TYPE_TERMINAL && top3->type == STACKITEM_TYPE_OPERATOR &&
+				 top3->data.operator == S)
+		{
+			switch (top2->data.terminal)
+			{
+			// <!E
+			case TERMINAL_U_NEG:
+				return RULE_NEG;
+			// <+E
+			case TERMINAL_U_PLUS:
+				return RULE_UPLUS;
+			// <-E
+			case TERMINAL_U_MINUS:
+				return RULE_UMINUS;
+			default:
+				return RULE_NONE;
+			}
+		}
+	}
+
+	return RULE_NONE;
 }
 
 err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
