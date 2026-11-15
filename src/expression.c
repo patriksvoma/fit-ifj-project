@@ -434,6 +434,12 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 			return result;
 		break;
 	case RULE_MUL:
+		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
+								 OP_ASTERISK);
+
+		result = symstack_pop_multiple(stack, 4);
+		if (result)
+			return result;
 		break;
 	case RULE_DIV:
 		break;
