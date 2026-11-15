@@ -89,7 +89,7 @@ err_t symstack_pop(symstack_t *stack);
  * @param stack Pointer to the stack
  * @return symstack_item_t Pointer to the top of the stack, NULL if the stack is empty
  */
-symstack_item_t *symstack_top(symstack_t *stack);
+symstack_item_t *symstack_top(const symstack_t *stack);
 
 /**
  * @brief Returns a pointer to a terminal item closest to the stack top
@@ -97,4 +97,4 @@ symstack_item_t *symstack_top(symstack_t *stack);
  * @param stack Pointer to the stack
  * @return symstack_item_t* Pointer to the terminal stack item, NULL if the stack is empty
  */
-symstack_item_t *symstack_top_terminal(symstack_t *stack);
+symstack_item_t *symstack_top_terminal(const symstack_t *stack);

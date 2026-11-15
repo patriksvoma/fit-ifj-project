@@ -42,18 +42,28 @@ err_t symstack_pop(symstack_t *stack)
 	return ERR_OK;
 }
 
-symstack_item_t *symstack_top(symstack_t *stack)
+symstack_item_t *symstack_top(const symstack_t *stack)
 {
-	// TODO: Implement
-	(void)stack;
-	print_err("symstack_top() is not implemented yet.", ERR_INTERNAL);
-	return ERR_OK;
+	if (stack == NULL)
+		return NULL;
+
+	return stack->top;
 }
 
-symstack_item_t *symstack_top_terminal(symstack_t *stack)
+symstack_item_t *symstack_top_terminal(const symstack_t *stack)
 {
-	// TODO: Implement
-	(void)stack;
-	print_err("symstack_top_terminal() is not implemented yet.", ERR_INTERNAL);
-	return ERR_OK;
+	if (stack == NULL || stack->top == NULL)
+		return NULL;
+
+	symstack_item_t *item = stack->top;
+
+	while (item != NULL)
+	{
+		if (item->type == STACKITEM_TYPE_TERMINAL)
+			return item;
+
+		item = item->next;
+	}
+
+	return NULL;
 }
