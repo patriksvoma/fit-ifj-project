@@ -7,6 +7,8 @@
  * @date 2026-11-14
  */
 
+#pragma once
+
 #include "error.h"
 
 typedef struct symstack_item_t
