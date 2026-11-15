@@ -399,7 +399,15 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 			return result;
 		break;
 	case RULE_PARENTHESIS:
+		result = symstack_pop(stack);
+		if (result)
+			return result;
 
+		node = stack->top->data.expression_node;
+
+		result = symstack_pop_multiple(stack, 3);
+		if (result)
+			return result;
 		break;
 	case RULE_DOT:
 		break;
