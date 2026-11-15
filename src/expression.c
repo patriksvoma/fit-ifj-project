@@ -72,7 +72,7 @@ prec_table_operator_t prec_table[PREC_TABLE_SIZE][PREC_TABLE_SIZE] = {
  * @param stack_item Stack item which will be filled
  * @return err_t Error code
  */
-err_t token_to_stack_item(token_t *token, symstack_item_t *stack_item)
+err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item)
 {
 	if (!token || !stack_item)
 	{
@@ -214,15 +214,15 @@ err_t token_to_stack_item(token_t *token, symstack_item_t *stack_item)
  * @param stack Symbol stack
  * @return prec_rule_t Found rule
  */
-prec_rule_t find_rule(symstack_t *stack)
+prec_rule_t find_rule(const symstack_t *stack)
 {
 	if (!stack || !stack->top || !stack->top->next)
 		return RULE_NONE;
 
-	symstack_item_t *top1 = stack->top;
-	symstack_item_t *top2 = top1->next;
-	symstack_item_t *top3 = NULL;
-	symstack_item_t *top4 = NULL;
+	const symstack_item_t *top1 = stack->top;
+	const symstack_item_t *top2 = top1->next;
+	const symstack_item_t *top3 = NULL;
+	const symstack_item_t *top4 = NULL;
 
 	if (top2)
 		top3 = top2->next;
@@ -303,8 +303,7 @@ prec_rule_t find_rule(symstack_t *stack)
 			}
 		}
 		// <xE
-		else if (top3 && top2->type == STACKITEM_TYPE_TERMINAL && top3->type == STACKITEM_TYPE_OPERATOR &&
-				 top3->data.operator == S)
+		else if (top3 && top3->type == STACKITEM_TYPE_OPERATOR && top3->data.operator == S)
 		{
 			switch (top2->data.terminal)
 			{
