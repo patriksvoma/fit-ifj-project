@@ -775,7 +775,7 @@ err_t else_opt(parser_data_t *pdata)
 			return result;
 
 		// <else-if-opt>
-		else_if_opt(pdata);
+		return else_if_opt(pdata);
 	}
 
 	// Epsilon rule
