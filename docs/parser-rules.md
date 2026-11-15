@@ -70,7 +70,7 @@ Author: Patrik Švoma
 11  E :: E<E
 12  E :: E<=E
 13  E :: E>E
-14  E :: E>=
+14  E :: E>=E
 15  E :: E==E
 16  E :: E!=E
 17  E :: E&&E
