@@ -9,13 +9,42 @@
 
 #pragma once
 
+#include "ast.h"
 #include "error.h"
+#include "expression.h"
 
-typedef struct symstack_item_t
+/**
+ * @brief Type of symbol stack item
+ *
+ */
+typedef enum
 {
-	struct symstack_item_t *next;
+	STACKITEM_TYPE_OPERATOR,
+	STACKITEM_TYPE_TERMINAL,
+	STACKITEM_TYPE_EXPRESSION
+} symstack_item_type_t;
+
+/**
+ * @brief Symbol stack item
+ *
+ */
+typedef struct symstack_item
+{
+	struct symstack_item *next;
+	token_t source_token;
+	symstack_item_type_t type;
+
+	union {
+		prec_table_sign_t operator;
+		prec_table_index_t terminal;
+		ast_node_t expression_node;
+	} data;
 } symstack_item_t;
 
+/**
+ * @brief Symbol stack
+ *
+ */
 typedef struct
 {
 	symstack_item_t *top;
