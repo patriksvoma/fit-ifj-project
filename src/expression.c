@@ -442,26 +442,92 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 			return result;
 		break;
 	case RULE_DIV:
+		node =
+			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_DIV);
+
+		result = symstack_pop_multiple(stack, 4);
+		if (result)
+			return result;
 		break;
 	case RULE_ADD:
+		node =
+			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_PLUS);
+
+		result = symstack_pop_multiple(stack, 4);
+		if (result)
+			return result;
 		break;
 	case RULE_SUB:
+		node =
+			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_MINUS);
+
+		result = symstack_pop_multiple(stack, 4);
+		if (result)
+			return result;
 		break;
 	case RULE_LT:
+		node =
+			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_LESS);
+
+		result = symstack_pop_multiple(stack, 4);
+		if (result)
+			return result;
 		break;
 	case RULE_LE:
+		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
+								 OP_LESS_EQUAL);
+
+		result = symstack_pop_multiple(stack, 4);
+		if (result)
+			return result;
 		break;
 	case RULE_GT:
+		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
+								 OP_GREATER);
+
+		result = symstack_pop_multiple(stack, 4);
+		if (result)
+			return result;
 		break;
 	case RULE_GE:
+		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
+								 OP_GREATER_EQUAL);
+
+		result = symstack_pop_multiple(stack, 4);
+		if (result)
+			return result;
 		break;
 	case RULE_EQ:
+		node =
+			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_EQUAL);
+
+		result = symstack_pop_multiple(stack, 4);
+		if (result)
+			return result;
 		break;
 	case RULE_NE:
+		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
+								 OP_NOT_EQUAL);
+
+		result = symstack_pop_multiple(stack, 4);
+		if (result)
+			return result;
 		break;
 	case RULE_AND:
+		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
+								 OP_LOGIC_AND);
+
+		result = symstack_pop_multiple(stack, 4);
+		if (result)
+			return result;
 		break;
 	case RULE_OR:
+		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
+								 OP_LOGIC_OR);
+
+		result = symstack_pop_multiple(stack, 4);
+		if (result)
+			return result;
 		break;
 	default:
 		break;
