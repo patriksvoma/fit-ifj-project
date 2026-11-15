@@ -9,6 +9,7 @@
 
 #include "parser.h"
 #include "error.h"
+#include "expression.h"
 #include <string.h>
 
 // Forward declarations of parser rules
@@ -981,19 +982,28 @@ err_t val_var_def(parser_data_t *pdata)
 	return ERR_SYNTAX;
 }
 
+/**
+ * @brief Expression rule | <expression>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t expression(parser_data_t *pdata)
 {
-	// TODO:
-	(void)pdata;
-	return ERR_SYNTAX;
+	return parse_expression(pdata, NULL);
 }
 
+/**
+ * @brief Expression rule with a seeded token at the beginning | <expression>
+ *
+ * @param pdata Parser data
+ * @param seed_token If specified, this token is used as the first token in the expression.
+ * 					 If NULL, works the same as expression().
+ * @return err_t Error code
+ */
 err_t expression_seeded(parser_data_t *pdata, token_t *seed_token)
 {
-	// TODO:
-	(void)pdata;
-	(void)seed_token;
-	return ERR_SYNTAX;
+	return parse_expression(pdata, seed_token);
 }
 
 err_t parse()

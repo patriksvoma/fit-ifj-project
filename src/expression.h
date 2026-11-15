@@ -11,3 +11,12 @@
 
 #include "error.h"
 #include "parser.h"
+
+/**
+ * @brief Parses an expression
+ *
+ * @param pdata Parser data
+ * @param seed_token If not NULL, the seed_token is used as the first token in the expression
+ * @return err_t Error code
+ */
+err_t parse_expression(parser_data_t *pdata, token_t *seed_token);
