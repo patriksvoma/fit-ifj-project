@@ -45,6 +45,7 @@ typedef enum
  */
 typedef enum
 {
+	TOKEN_NONE,			   // Default value
 	TOKEN_IDENTIFIER,	   // Any identifier
 	TOKEN_KEYWORD,		   // Any keyword
 	TOKEN_OPENING_BRACKET, // (
@@ -69,7 +70,10 @@ typedef enum
 	TOKEN_GREATER,		   // >
 	TOKEN_GREATER_EQUAL,   // >=
 	TOKEN_LESS,			   // <
-	TOKEN_LESS_EQUAL	   // <=
+	TOKEN_LESS_EQUAL,	   // <=
+	TOKEN_AND,			   // &&
+	TOKEN_OR,			   // ||
+	TOKEN_NEG			   // !
 } token_type_t;
 
 /**
@@ -79,6 +83,7 @@ typedef enum
 typedef struct
 {
 	keyword_t keyword;
+	bool boolean;
 	int integer;
 	double decimal;
 	char *string;
