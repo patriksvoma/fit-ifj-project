@@ -326,16 +326,14 @@ prec_rule_t find_rule(const symstack_t *stack)
 }
 
 /**
- * @brief
+ * @brief Applies a rule on the stack by popping the necessary symbols and pushing a new expression one
  *
- * @param rule
- * @param stack
+ * @param rule Rule to apply
+ * @param stack Symbol stack
+ * @return err_t Error code
  */
-void apply_rule(prec_rule_t rule, const symstack_t *stack)
+err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 {
-	// TODO: Remove
-	(void)stack;
-
 	symstack_item_t *item = symstack_create_item();
 	item->type = STACKITEM_TYPE_EXPRESSION;
 
@@ -387,8 +385,11 @@ void apply_rule(prec_rule_t rule, const symstack_t *stack)
 			// Probably will need lookahead to be implemented into the scanner to support calls without parameter lists
 			node = ast_add_identifier(token.attribute.string, TYPE_INT);
 		}
+
+		symstack_pop_multiple(stack, 2);
 		break;
 	case RULE_PARENTHESIS:
+
 		break;
 	case RULE_DOT:
 		break;
@@ -426,7 +427,18 @@ void apply_rule(prec_rule_t rule, const symstack_t *stack)
 		break;
 	}
 
+	if (node == NULL)
+	{
+		print_err("Failed to create an AST node.", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	item->data.expression_node = node;
+	err_t result = symstack_push(stack, item);
+	if (result)
+		return result;
+
+	return ERR_OK;
 }
 
 err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
@@ -503,7 +515,11 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 				return ERR_SYNTAX;
 			}
 
-			apply_rule(rule, &stack);
+			result = apply_rule(rule, &stack);
+			if (result)
+				return result;
+
+			// TODO: Remove
 			print_err_l("Applied rule - line", ERR_INTERNAL, rule);
 
 			break;
