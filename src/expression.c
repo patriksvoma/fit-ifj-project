@@ -339,10 +339,54 @@ void apply_rule(prec_rule_t rule, const symstack_t *stack)
 	symstack_item_t *item = symstack_create_item();
 	item->type = STACKITEM_TYPE_EXPRESSION;
 
+	ast_node_t *node;
+
 	switch (rule)
 	{
 	case RULE_I:
+		token_t token = stack->top->source_token;
+		if (token.type == TOKEN_BOOLEAN)
+		{
+			literal_t lit;
+			lit.literal_type = TYPE_BOOLEAN;
+			lit.value.boolean = token.attribute.boolean;
 
+			node = ast_add_literal(&lit);
+		}
+		else if (token.type == TOKEN_INT)
+		{
+			literal_t lit;
+			lit.literal_type = TYPE_INT;
+			lit.value.integer = token.attribute.integer;
+
+			node = ast_add_literal(&lit);
+		}
+		else if (token.type == TOKEN_DOUBLE)
+		{
+			literal_t lit;
+			lit.literal_type = TYPE_DOUBLE;
+			lit.value.decimal = token.attribute.decimal;
+
+			node = ast_add_literal(&lit);
+		}
+		else if (token.type == TOKEN_STRING)
+		{
+			literal_t lit;
+			lit.literal_type = TYPE_STRING;
+			lit.value.string = token.attribute.string;
+
+			node = ast_add_literal(&lit);
+		}
+		else if (token.type == TOKEN_IDENTIFIER)
+		{
+			// TODO: Check the symbol table, figure out if it is a function or a variable.
+			// If it is a visible variable, call add_identifier().
+			// If not, make a function call, the existence of the function will be checked
+			// before generating output code, as the function can be declared later
+			//
+			// Probably will need lookahead to be implemented into the scanner to support calls without parameter lists
+			node = ast_add_identifier(token.attribute.string, TYPE_INT);
+		}
 		break;
 	case RULE_PARENTHESIS:
 		break;
@@ -381,6 +425,8 @@ void apply_rule(prec_rule_t rule, const symstack_t *stack)
 	default:
 		break;
 	}
+
+	item->data.expression_node = node;
 }
 
 err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
