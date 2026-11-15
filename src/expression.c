@@ -420,8 +420,18 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 			return result;
 		break;
 	case RULE_UPLUS:
+		node = ast_add_unary_op(stack->top->data.expression_node, OP_UPLUS);
+
+		result = symstack_pop_multiple(stack, 3);
+		if (result)
+			return result;
 		break;
 	case RULE_UMINUS:
+		node = ast_add_unary_op(stack->top->data.expression_node, OP_UMINUS);
+
+		result = symstack_pop_multiple(stack, 3);
+		if (result)
+			return result;
 		break;
 	case RULE_MUL:
 		break;
