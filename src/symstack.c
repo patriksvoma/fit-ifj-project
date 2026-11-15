@@ -9,11 +9,6 @@
 
 #include "symstack.h"
 
-/**
- * @brief Creates an empty item and returns the pointer to it
- *
- * @return symstack_item_t* Pointer to the newly created item
- */
 symstack_item_t *symstack_create_item()
 {
 	symstack_item_t *item = malloc(sizeof(symstack_item_t));

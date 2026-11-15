@@ -51,6 +51,13 @@ typedef struct
 } symstack_t;
 
 /**
+ * @brief Creates an empty item and returns the pointer to it
+ *
+ * @return symstack_item_t* Pointer to the newly created item
+ */
+symstack_item_t *symstack_create_item();
+
+/**
  * @brief Initializes the symbol stack with a $ at the bottom
  *
  * @param stack Pointer to the stack which will be initialized
