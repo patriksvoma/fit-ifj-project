@@ -91,6 +91,15 @@ err_t symstack_push(symstack_t *stack, symstack_item_t *item);
 err_t symstack_pop(symstack_t *stack);
 
 /**
+ * @brief Pops multiple symbols from the top of the stack
+ *
+ * @param stack Pointer to the stack
+ * @param count How many symbols should be popped
+ * @return err_t Error code
+ */
+err_t symstack_pop_multiple(symstack_t *stack, unsigned count);
+
+/**
  * @brief Returns a pointer to the top item of the symbol stack
  *
  * @param stack Pointer to the stack

@@ -88,6 +88,18 @@ err_t symstack_pop(symstack_t *stack)
 	return ERR_OK;
 }
 
+err_t symstack_pop_multiple(symstack_t *stack, unsigned count)
+{
+	for (unsigned i = 0; i < count; i++)
+	{
+		err_t result = symstack_pop(stack);
+		if (result)
+			return result;
+	}
+
+	return ERR_OK;
+}
+
 symstack_item_t *symstack_top(const symstack_t *stack)
 {
 	if (stack == NULL)
