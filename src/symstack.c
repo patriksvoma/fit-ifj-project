@@ -59,18 +59,37 @@ err_t symstack_destroy(symstack_t *stack)
 
 err_t symstack_push(symstack_t *stack, symstack_item_t *item)
 {
-	// TODO: Implement
-	(void)stack;
-	(void)item;
-	print_err("symstack_push() is not implemented yet.", ERR_INTERNAL);
+	if (!stack || !item)
+	{
+		print_err("Null-reference in symstack_push().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	item->next = stack->top;
+	stack->top = item;
+
 	return ERR_OK;
 }
 
 err_t symstack_pop(symstack_t *stack)
 {
-	// TODO: Implement
-	(void)stack;
-	print_err("symstack_pop() is not implemented yet.", ERR_INTERNAL);
+	if (!stack)
+	{
+		print_err("Null-reference in symstack_pop().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	if (stack->top == NULL)
+	{
+		print_err("Tried to pop an empty symstack.", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	symstack_item_t *item = stack->top;
+	stack->top = item->next;
+
+	free(item);
+
 	return ERR_OK;
 }
 
