@@ -325,46 +325,147 @@ prec_rule_t find_rule(const symstack_t *stack)
 	return RULE_NONE;
 }
 
+/**
+ * @brief
+ *
+ * @param rule
+ * @param stack
+ */
+void apply_rule(prec_rule_t rule, const symstack_t *stack)
+{
+	// TODO: Remove
+	(void)stack;
+
+	symstack_item_t *item = symstack_create_item();
+	item->type = STACKITEM_TYPE_EXPRESSION;
+
+	switch (rule)
+	{
+	case RULE_I:
+
+		break;
+	case RULE_PARENTHESIS:
+		break;
+	case RULE_DOT:
+		break;
+	case RULE_NEG:
+		break;
+	case RULE_UPLUS:
+		break;
+	case RULE_UMINUS:
+		break;
+	case RULE_MUL:
+		break;
+	case RULE_DIV:
+		break;
+	case RULE_ADD:
+		break;
+	case RULE_SUB:
+		break;
+	case RULE_LT:
+		break;
+	case RULE_LE:
+		break;
+	case RULE_GT:
+		break;
+	case RULE_GE:
+		break;
+	case RULE_EQ:
+		break;
+	case RULE_NE:
+		break;
+	case RULE_AND:
+		break;
+	case RULE_OR:
+		break;
+	default:
+		break;
+	}
+}
+
 err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 {
 	bool use_seed = seed_token;
 
-	// TODO: Remove suppressions
-	(void)pdata;
-	(void)seed_token;
-	(void)use_seed;
+	symstack_t stack;
+	err_t result = symstack_init(&stack);
+	if (result)
+		return result;
 
-	// symstack_init();
+	symstack_item_t *b = symstack_create_item();
 
-	while (true)
+	if (use_seed)
+		result = token_to_stack_item(seed_token, b);
+	else
+		result = token_to_stack_item(&pdata->token, b);
+	if (result)
+		return result;
+
+	while (!((b->type == STACKITEM_TYPE_TERMINAL && b->data.terminal == TERMINAL_DOLLAR) &&
+			 (stack.top->type == STACKITEM_TYPE_EXPRESSION && stack.top->next->type == STACKITEM_TYPE_TERMINAL &&
+			  stack.top->next->data.terminal == TERMINAL_DOLLAR)))
 	{
-		// a = symstack top TERMINAL !;
-		// b = symbol z tokenu;
+		const symstack_item_t *a = symstack_top_terminal(&stack);
 
-		// switch (prec_table[a][b])
-		// {
-		// case E:
-		// 	symstack_push(b);
-		// 	// FIXME: EOL should only be optional if inside parenthesis
-		// 	get_next_token(&pdata->token, EOL_OPTIONAL);
-		// 	break;
-		// case S:
-		// 	symstack_push(<);
-		// 	symstack_push(b);
-		// 	get_next_token(&pdata->token, EOL_OPTIONAL);
-		// 	break;
-		// case R:
-		// 	if symstack_top ()
-		// 		== < y &&existuje pravidlo A->y
-		// 		{
-		// 		}
-		// 	else
-		// 	{
-		// 		chyba
-		// 	}
-		// 	break;
-		// case N:
-		// 	chyba break;
-		// }
+		switch (prec_table[a->data.terminal][b->data.terminal])
+		{
+		case E:
+			symstack_push(&stack, b);
+
+			// FIXME: EOL should only be optional if inside parenthesis
+			if (use_seed)
+				use_seed = false;
+			else
+				result = get_next_token(&pdata->token, EOL_OPTIONAL);
+			if (result)
+				return result;
+
+			b = symstack_create_item();
+			result = token_to_stack_item(&pdata->token, b);
+			if (result)
+				return result;
+
+			break;
+		case S:
+			symstack_item_t *item = symstack_create_item();
+			item->type = STACKITEM_TYPE_OPERATOR;
+			item->data.operator = S;
+			symstack_push(&stack, item);
+
+			symstack_push(&stack, b);
+
+			// FIXME: EOL should only be optional if inside parenthesis
+			if (use_seed)
+				use_seed = false;
+			else
+				result = get_next_token(&pdata->token, EOL_OPTIONAL);
+			if (result)
+				return result;
+
+			b = symstack_create_item();
+			result = token_to_stack_item(&pdata->token, b);
+			if (result)
+				return result;
+
+			break;
+		case R:
+			prec_rule_t rule = find_rule(&stack);
+
+			if (rule == RULE_NONE)
+			{
+				print_err_l("Unexpected token in an expression.", ERR_SYNTAX, pdata->token.line);
+				return ERR_SYNTAX;
+			}
+
+			apply_rule(rule, &stack);
+			print_err_l("Applied rule - line", ERR_INTERNAL, rule);
+
+			break;
+		case N:
+			print_err_l("Unexpected token sequence in an expression.", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
 	}
+
+	return ERR_OK;
 }
