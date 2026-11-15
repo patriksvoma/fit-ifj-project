@@ -9,11 +9,43 @@
 
 #include "symstack.h"
 
+/**
+ * @brief Creates an empty item and returns the pointer to it
+ *
+ * @return symstack_item_t* Pointer to the newly created item
+ */
+symstack_item_t *symstack_create_item()
+{
+	symstack_item_t *item = malloc(sizeof(symstack_item_t));
+	if (!item)
+		return NULL;
+
+	item->next = NULL;
+	item->source_token.type = TOKEN_NONE;
+
+	return item;
+}
+
 err_t symstack_init(symstack_t *stack)
 {
-	// TODO: Implement
-	(void)stack;
-	print_err("symstack_init() is not implemented yet.", ERR_INTERNAL);
+	if (!stack)
+	{
+		print_err("Null-reference in symstack_init().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	symstack_item_t *item = symstack_create_item();
+	if (item == NULL)
+	{
+		print_err("Failed to allocate memory in symstack_init().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	item->type = STACKITEM_TYPE_TERMINAL;
+	item->data.terminal = TERMINAL_DOLLAR;
+
+	stack->top = item;
+
 	return ERR_OK;
 }
 
