@@ -334,7 +334,15 @@ prec_rule_t find_rule(const symstack_t *stack)
  */
 err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 {
+	err_t result;
+
 	symstack_item_t *item = symstack_create_item();
+	if (!item)
+	{
+		print_err("Failed to create an item inside apply_rule().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	item->type = STACKITEM_TYPE_EXPRESSION;
 
 	ast_node_t *node;
@@ -386,7 +394,9 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 			node = ast_add_identifier(token.attribute.string, TYPE_INT);
 		}
 
-		symstack_pop_multiple(stack, 2);
+		result = symstack_pop_multiple(stack, 2);
+		if (result)
+			return result;
 		break;
 	case RULE_PARENTHESIS:
 
@@ -434,7 +444,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 	}
 
 	item->data.expression_node = node;
-	err_t result = symstack_push(stack, item);
+	result = symstack_push(stack, item);
 	if (result)
 		return result;
 
