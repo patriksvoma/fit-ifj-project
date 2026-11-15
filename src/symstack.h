@@ -35,8 +35,8 @@ typedef struct symstack_item
 	symstack_item_type_t type;
 
 	union {
-		prec_table_sign_t operator;
-		prec_table_index_t terminal;
+		prec_table_operator_t operator;
+		prec_table_terminal_t terminal;
 		ast_node_t expression_node;
 	} data;
 } symstack_item_t;

@@ -16,7 +16,7 @@
  * @brief Precedence table
  *
  */
-prec_table_sign_t prec_table[PREC_TABLE_SIZE][PREC_TABLE_SIZE] = {
+prec_table_operator_t prec_table[PREC_TABLE_SIZE][PREC_TABLE_SIZE] = {
 	{N, N, R, R, N, N, N, R, R, R, R, R, R, R, R, R, R, R, R, R},
 	{S, S, E, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, N},
 	{N, N, R, R, N, N, N, R, R, R, R, R, R, R, R, R, R, R, R, R},
@@ -62,115 +62,115 @@ err_t token_to_stack_item(token_t *token, symstack_item_t *stack_item)
 	{
 	case TOKEN_IDENTIFIER:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_I;
+		item.data.terminal = TERMINAL_I;
 		break;
 	case TOKEN_KEYWORD:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_DOLLAR;
+		item.data.terminal = TERMINAL_DOLLAR;
 		break;
 	case TOKEN_OPENING_BRACKET:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_LEFT_BRACKET;
+		item.data.terminal = TERMINAL_LEFT_BRACKET;
 		break;
 	case TOKEN_CLOSING_BRACKET:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_RIGHT_BRACKET;
+		item.data.terminal = TERMINAL_RIGHT_BRACKET;
 		break;
 	case TOKEN_BOOLEAN:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_I;
+		item.data.terminal = TERMINAL_I;
 		break;
 	case TOKEN_INT:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_I;
+		item.data.terminal = TERMINAL_I;
 		break;
 	case TOKEN_DOUBLE:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_I;
+		item.data.terminal = TERMINAL_I;
 		break;
 	case TOKEN_STRING:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_I;
+		item.data.terminal = TERMINAL_I;
 		break;
 	case TOKEN_EOF:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_DOLLAR;
+		item.data.terminal = TERMINAL_DOLLAR;
 		break;
 	case TOKEN_FOR_GEN_ASSIGN:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_DOLLAR;
+		item.data.terminal = TERMINAL_DOLLAR;
 		break;
 	case TOKEN_DOT:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_DOT;
+		item.data.terminal = TERMINAL_DOT;
 		break;
 	case TOKEN_COMMA:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_DOLLAR;
+		item.data.terminal = TERMINAL_DOLLAR;
 		break;
 	case TOKEN_COLON:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_DOLLAR;
+		item.data.terminal = TERMINAL_DOLLAR;
 		break;
 	case TOKEN_UNDERSCORE:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_DOLLAR;
+		item.data.terminal = TERMINAL_DOLLAR;
 		break;
 	case TOKEN_PLUS:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_ADD; // TODO: Figure out if it is a unary or binary plus
+		item.data.terminal = TERMINAL_ADD; // TODO: Figure out if it is a unary or binary plus
 		break;
 	case TOKEN_MINUS:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_SUB; // TODO: Figure out if it is a unary or binary minus
+		item.data.terminal = TERMINAL_SUB; // TODO: Figure out if it is a unary or binary minus
 		break;
 	case TOKEN_ASTERISK:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_MUL;
+		item.data.terminal = TERMINAL_MUL;
 		break;
 	case TOKEN_DIV:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_DIV;
+		item.data.terminal = TERMINAL_DIV;
 		break;
 	case TOKEN_ASSIGN:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_DOLLAR;
+		item.data.terminal = TERMINAL_DOLLAR;
 		break;
 	case TOKEN_EQUAL:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_EQ;
+		item.data.terminal = TERMINAL_EQ;
 		break;
 	case TOKEN_NOT_EQUAL:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_NE;
+		item.data.terminal = TERMINAL_NE;
 		break;
 	case TOKEN_GREATER:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_GT;
+		item.data.terminal = TERMINAL_GT;
 		break;
 	case TOKEN_GREATER_EQUAL:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_GET;
+		item.data.terminal = TERMINAL_GET;
 		break;
 	case TOKEN_LESS:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_LT;
+		item.data.terminal = TERMINAL_LT;
 		break;
 	case TOKEN_LESS_EQUAL:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_LET;
+		item.data.terminal = TERMINAL_LET;
 		break;
 	case TOKEN_AND:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_AND;
+		item.data.terminal = TERMINAL_AND;
 		break;
 	case TOKEN_OR:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_OR;
+		item.data.terminal = TERMINAL_OR;
 		break;
 	case TOKEN_NEG:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = INDEX_U_NEG;
+		item.data.terminal = TERMINAL_U_NEG;
 		break;
 	default:
 		print_err_l("Invalid token type in expression.", ERR_SYNTAX, token->line);
