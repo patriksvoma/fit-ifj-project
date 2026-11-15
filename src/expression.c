@@ -594,9 +594,13 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 			symstack_item_t *item = symstack_create_item();
 			item->type = STACKITEM_TYPE_OPERATOR;
 			item->data.operator = S;
-			symstack_push(&stack, item);
+			result = symstack_insert_before(&stack, item, a);
+			if (result)
+				return result;
 
-			symstack_push(&stack, b);
+			result = symstack_push(&stack, b);
+			if (result)
+				return result;
 
 			// FIXME: EOL should only be optional if inside parenthesis
 			if (use_seed)

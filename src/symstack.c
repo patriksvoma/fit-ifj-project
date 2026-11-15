@@ -65,6 +65,37 @@ err_t symstack_push(symstack_t *stack, symstack_item_t *item)
 
 	return ERR_OK;
 }
+err_t symstack_insert_before(symstack_t *stack, symstack_item_t *item, const symstack_item_t *before)
+{
+	if (!stack || !item || !before || item->next != NULL)
+	{
+		print_err("Invalid item passed to symstack_insert_before().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	for (const symstack_item_t *current = stack->top; current != NULL; current = current->next)
+	{
+		if (current == item)
+		{
+			print_err("Item is already in the stack in symstack_insert_before().", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+	}
+
+	symstack_item_t **link = &stack->top;
+	while (*link != NULL && *link != before)
+		link = &(*link)->next;
+
+	if (*link == NULL)
+	{
+		print_err("Before item is not in the stack in symstack_insert_before().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	item->next = *link;
+	*link = item;
+	return ERR_OK;
+}
 
 err_t symstack_pop(symstack_t *stack)
 {

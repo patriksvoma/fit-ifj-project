@@ -83,6 +83,17 @@ err_t symstack_destroy(symstack_t *stack);
 err_t symstack_push(symstack_t *stack, symstack_item_t *item);
 
 /**
+ * @brief Inserts a symbol before (from the top of the stack) a different item. The before item has to be a pointer to
+ * an item inside the list.
+ *
+ * @param stack Symbol stack
+ * @param item Item to be inserted
+ * @param before Item before which the item will be inserted
+ * @return err_t Error code
+ */
+err_t symstack_insert_before(symstack_t *stack, symstack_item_t *item, const symstack_item_t *before);
+
+/**
  * @brief Pops a symbol from the top of the stack
  *
  * @param stack Pointer to the stack
