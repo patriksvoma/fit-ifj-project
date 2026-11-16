@@ -346,7 +346,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 
 	item->type = STACKITEM_TYPE_EXPRESSION;
 
-	data_type_t op_type = TYPE_NONE;
+	data_type_t op1_type = TYPE_NONE;
+	data_type_t op2_type = TYPE_NONE;
 	ast_node_t *node;
 
 	switch (rule)
@@ -420,8 +421,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// !E
 	case RULE_NEG:
 		// Type check
-		op_type = stack->top->data.expression_node->eval_type;
-		if (op_type != TYPE_BOOLEAN)
+		op2_type = stack->top->data.expression_node->eval_type;
+		if (op2_type != TYPE_BOOLEAN)
 		{
 			print_err_l("Invalid operand type for unary operator \"!\".", ERR_SEMANTIC_INVALID_TYPE, line);
 			return ERR_SEMANTIC_INVALID_TYPE;
@@ -436,8 +437,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// +E
 	case RULE_UPLUS:
 		// Type check
-		op_type = stack->top->data.expression_node->eval_type;
-		if (op_type != TYPE_INT && op_type != TYPE_DOUBLE)
+		op2_type = stack->top->data.expression_node->eval_type;
+		if (op2_type != TYPE_INT && op2_type != TYPE_DOUBLE)
 		{
 			print_err_l("Invalid operand type for unary operator \"+\".", ERR_SEMANTIC_INVALID_TYPE, line);
 			return ERR_SEMANTIC_INVALID_TYPE;
@@ -452,8 +453,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// -E
 	case RULE_UMINUS:
 		// Type check
-		op_type = stack->top->data.expression_node->eval_type;
-		if (op_type != TYPE_INT && op_type != TYPE_DOUBLE)
+		op2_type = stack->top->data.expression_node->eval_type;
+		if (op2_type != TYPE_INT && op2_type != TYPE_DOUBLE)
 		{
 			print_err_l("Invalid operand type for unary operator \"-\".", ERR_SEMANTIC_INVALID_TYPE, line);
 			return ERR_SEMANTIC_INVALID_TYPE;
