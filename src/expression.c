@@ -330,9 +330,10 @@ prec_rule_t find_rule(const symstack_t *stack)
  *
  * @param rule Rule to apply
  * @param stack Symbol stack
+ * @param line Line on which the expression is located
  * @return err_t Error code
  */
-err_t apply_rule(prec_rule_t rule, symstack_t *stack)
+err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 {
 	err_t result;
 
@@ -420,8 +421,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		// Type check
 		if (stack->top->data.expression_node->eval_type != TYPE_BOOLEAN)
 		{
-			// TODO: Report line on which the error occured
-			print_err("Invalid operand type for operator (!).", ERR_SEMANTIC_INVALID_TYPE);
+			print_err_l("Invalid operand type for operator \"!\".", ERR_SEMANTIC_INVALID_TYPE, line);
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
@@ -578,6 +578,7 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 	bool use_seed = seed_token;
 
 	symstack_t stack;
+	unsigned expression_start_line;
 	err_t result = symstack_init(&stack);
 	if (result)
 		return result;
@@ -585,9 +586,15 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 	symstack_item_t *b = symstack_create_item();
 
 	if (use_seed)
+	{
 		result = token_to_stack_item(seed_token, b);
+		expression_start_line = seed_token->line;
+	}
 	else
+	{
 		result = token_to_stack_item(&pdata->token, b);
+		expression_start_line = pdata->token.line;
+	}
 	if (result)
 		return result;
 
@@ -651,7 +658,7 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 				return ERR_SYNTAX;
 			}
 
-			result = apply_rule(rule, &stack);
+			result = apply_rule(rule, &stack, expression_start_line);
 			if (result)
 				return result;
 			break;
