@@ -628,16 +628,16 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 			result = apply_rule(rule, &stack);
 			if (result)
 				return result;
-
-			// TODO: Remove
-			print_err_l("Applied rule - line", ERR_INTERNAL, rule);
-
 			break;
 		case N:
 			print_err_l("Unexpected token sequence in an expression.", ERR_SYNTAX, pdata->token.line);
 			return ERR_SYNTAX;
 		}
 	}
+
+	// TODO: Give back to the parser
+	ast_node_t *return_node = stack.top->data.expression_node;
+	(void)return_node;
 
 	return ERR_OK;
 }
