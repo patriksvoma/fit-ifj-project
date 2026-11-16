@@ -66,7 +66,10 @@ typedef enum
 	TOKEN_GREATER,
 	TOKEN_GREATER_EQUAL,
 	TOKEN_LESS,
-	TOKEN_LESS_EQUAL
+	TOKEN_LESS_EQUAL,
+	TOKEN_AND,
+    TOKEN_OR,
+    TOKEN_NEG
 } token_type_t; // TODO: Figure out all correct token types
 
 /**
