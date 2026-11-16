@@ -1,6 +1,6 @@
 /**
  * @file parser.c
- * @brief Syntax analyzer for the IFJ26 compiler
+ * @brief Recursive (top-down) part of the syntax analyzer for the IFJ26 compiler
  *
  * @author Patrik Švoma (xsvomap00@stud.fit.vut.cz)
  *
@@ -9,6 +9,7 @@
 
 #include "parser.h"
 #include "error.h"
+#include "expression.h"
 #include <string.h>
 
 // Forward declarations of parser rules
@@ -455,6 +456,9 @@ err_t return_type(parser_data_t *pdata)
 			print_err_l("Expected a block start delimiter (=).", ERR_SYNTAX, pdata->token.line);
 			return ERR_SYNTAX;
 		}
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
 
 		// <block-start>
 		return block_start(pdata);
@@ -489,6 +493,9 @@ err_t block_start(parser_data_t *pdata)
  */
 err_t block(parser_data_t *pdata)
 {
+	if (pdata->token.type == TOKEN_EOF)
+		return ERR_OK;
+
 	err_t result = statement(pdata);
 	if (result)
 		return result;
@@ -981,19 +988,28 @@ err_t val_var_def(parser_data_t *pdata)
 	return ERR_SYNTAX;
 }
 
+/**
+ * @brief Expression rule | <expression>
+ *
+ * @param pdata Parser data
+ * @return err_t Error code
+ */
 err_t expression(parser_data_t *pdata)
 {
-	// TODO:
-	(void)pdata;
-	return ERR_SYNTAX;
+	return parse_expression(pdata, NULL);
 }
 
+/**
+ * @brief Expression rule with a seeded token at the beginning | <expression>
+ *
+ * @param pdata Parser data
+ * @param seed_token If specified, this token is used as the first token in the expression.
+ * 					 If NULL, works the same as expression().
+ * @return err_t Error code
+ */
 err_t expression_seeded(parser_data_t *pdata, token_t *seed_token)
 {
-	// TODO:
-	(void)pdata;
-	(void)seed_token;
-	return ERR_SYNTAX;
+	return parse_expression(pdata, seed_token);
 }
 
 err_t parse()
