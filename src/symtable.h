@@ -15,7 +15,7 @@ typedef enum
 {
 	SYMBOL_VARIABLE,
 	SYMBOL_FUNCTION,
-}	symbol_type_t;
+} symbol_type_t;
 
 typedef struct symbol
 {
