@@ -349,6 +349,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 
 	switch (rule)
 	{
+	// i
 	case RULE_I:
 		token_t token = stack->top->source_token;
 		if (token.type == TOKEN_BOOLEAN)
@@ -398,6 +399,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// (E)
 	case RULE_PARENTHESIS:
 		result = symstack_pop(stack);
 		if (result)
@@ -409,16 +411,27 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E.E
 	case RULE_DOT:
 		// TODO: Implement
 		break;
+	// !E
 	case RULE_NEG:
+		// Type check
+		if (stack->top->data.expression_node->eval_type != TYPE_BOOLEAN)
+		{
+			// TODO: Report line on which the error occured
+			print_err("Invalid operand type for operator (!).", ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node = ast_add_unary_op(stack->top->data.expression_node, OP_NEG);
 
 		result = symstack_pop_multiple(stack, 3);
 		if (result)
 			return result;
 		break;
+	// +E
 	case RULE_UPLUS:
 		node = ast_add_unary_op(stack->top->data.expression_node, OP_UPLUS);
 
@@ -426,6 +439,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// -E
 	case RULE_UMINUS:
 		node = ast_add_unary_op(stack->top->data.expression_node, OP_UMINUS);
 
@@ -433,6 +447,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E*E
 	case RULE_MUL:
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_ASTERISK);
@@ -441,6 +456,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E/E
 	case RULE_DIV:
 		node =
 			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_DIV);
@@ -449,6 +465,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E+E
 	case RULE_ADD:
 		node =
 			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_PLUS);
@@ -457,6 +474,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E-E
 	case RULE_SUB:
 		node =
 			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_MINUS);
@@ -465,6 +483,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E<E
 	case RULE_LT:
 		node =
 			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_LESS);
@@ -473,6 +492,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E<=E
 	case RULE_LE:
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_LESS_EQUAL);
@@ -481,6 +501,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E>E
 	case RULE_GT:
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_GREATER);
@@ -489,6 +510,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E>=E
 	case RULE_GE:
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_GREATER_EQUAL);
@@ -497,6 +519,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E==E
 	case RULE_EQ:
 		node =
 			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_EQUAL);
@@ -505,6 +528,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E!=E
 	case RULE_NE:
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_NOT_EQUAL);
@@ -513,6 +537,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E&&E
 	case RULE_AND:
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_LOGIC_AND);
@@ -521,6 +546,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E||E
 	case RULE_OR:
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_LOGIC_OR);
