@@ -35,8 +35,8 @@ err_t for_generator(parser_data_t *pdata);
 err_t for_by(parser_data_t *pdata);
 err_t for_guard(parser_data_t *pdata);
 err_t val_var_def(parser_data_t *pdata);
-err_t expression(parser_data_t *pdata);
-err_t expression_seeded(parser_data_t *pdata, token_t *seed_token);
+err_t expression(parser_data_t *pdata, ast_node_t **return_node);
+err_t expression_seeded(parser_data_t *pdata, ast_node_t **return_node, token_t *seed_token);
 
 /**
  * @brief The entry rule of syntax analysis | <prologue>
@@ -992,24 +992,26 @@ err_t val_var_def(parser_data_t *pdata)
  * @brief Expression rule | <expression>
  *
  * @param pdata Parser data
+ * @param return_node Address to which the address of the created AST note should be written
  * @return err_t Error code
  */
-err_t expression(parser_data_t *pdata)
+err_t expression(parser_data_t *pdata, ast_node_t **return_node)
 {
-	return parse_expression(pdata, NULL);
+	return parse_expression(pdata, NULL, return_node);
 }
 
 /**
  * @brief Expression rule with a seeded token at the beginning | <expression>
  *
  * @param pdata Parser data
+ * @param return_node Address to which the address of the created AST note should be written
  * @param seed_token If specified, this token is used as the first token in the expression.
  * 					 If NULL, works the same as expression().
  * @return err_t Error code
  */
-err_t expression_seeded(parser_data_t *pdata, token_t *seed_token)
+err_t expression_seeded(parser_data_t *pdata, ast_node_t **return_node, token_t *seed_token)
 {
-	return parse_expression(pdata, seed_token);
+	return parse_expression(pdata, seed_token, return_node);
 }
 
 err_t parse()
