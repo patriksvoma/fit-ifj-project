@@ -113,7 +113,15 @@ ast_node_t *ast_make_binary_op(ast_node_t *operand_left, ast_node_t *operand_rig
 	if (op != OP_NEG && op != OP_UMINUS && op != OP_UPLUS)
 	{
 		// Setting values
-		node->eval_type = operand_left->eval_type; // TODO: Vyresit zmeny typu po vyhodnocovani
+
+		if (op == OP_CONCATENATION || op == OP_MUL || op == OP_DIV || op == OP_MINUS || op == OP_PLUS)
+		{
+			node->eval_type = operand_left->eval_type;
+		}
+		else // Type canges for comparing operations
+		{
+			node->eval_type = TYPE_BOOLEAN;
+		}
 		node->node_type = AST_BIN_OPERATOR;
 		node->ast_node_value.bin_operator.operand_left = operand_left;
 		node->ast_node_value.bin_operator.operand_right = operand_right;

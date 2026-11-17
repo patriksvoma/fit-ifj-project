@@ -501,8 +501,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_make_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
-								  OP_ASTERISK);
+		node =
+			ast_make_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_MUL);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)

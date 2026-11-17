@@ -34,7 +34,7 @@ typedef enum
 {
 	OP_UPLUS,
 	OP_UMINUS,
-	OP_ASTERISK,
+	OP_MUL,
 	OP_DIV,
 	OP_PLUS,
 	OP_MINUS,
