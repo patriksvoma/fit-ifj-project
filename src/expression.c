@@ -917,5 +917,7 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 	ast_node_t *return_node = stack.top->data.expression_node;
 	(void)return_node;
 
+	symstack_destroy(&stack);
+
 	return ERR_OK;
 }
