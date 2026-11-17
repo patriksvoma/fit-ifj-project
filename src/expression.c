@@ -255,7 +255,7 @@ prec_rule_t find_rule(const symstack_t *stack)
 	// <i
 	if (top1->type == STACKITEM_TYPE_TERMINAL && top1->data.terminal == TERMINAL_I)
 	{
-		if (top2->type == STACKITEM_TYPE_OPERATOR && top2->data.operator == S)
+		if (top2->type == STACKITEM_TYPE_OPERATOR && top2->data.operator== S)
 		{
 			return RULE_I;
 		}
@@ -268,7 +268,7 @@ prec_rule_t find_rule(const symstack_t *stack)
 
 		if (top2->type == STACKITEM_TYPE_EXPRESSION && top3->type == STACKITEM_TYPE_TERMINAL &&
 			top3->data.terminal == TERMINAL_LEFT_BRACKET && top4->type == STACKITEM_TYPE_OPERATOR &&
-			top4->data.operator == S)
+			top4->data.operator== S)
 		{
 			return RULE_PARENTHESIS;
 		}
@@ -278,7 +278,7 @@ prec_rule_t find_rule(const symstack_t *stack)
 	{
 		// <ExE
 		if (top3 && top4 && top3->type == STACKITEM_TYPE_EXPRESSION && top4->type == STACKITEM_TYPE_OPERATOR &&
-			top4->data.operator == S)
+			top4->data.operator== S)
 		{
 			switch (top2->data.terminal)
 			{
@@ -326,7 +326,7 @@ prec_rule_t find_rule(const symstack_t *stack)
 			}
 		}
 		// <xE
-		else if (top3 && top3->type == STACKITEM_TYPE_OPERATOR && top3->data.operator == S)
+		else if (top3 && top3->type == STACKITEM_TYPE_OPERATOR && top3->data.operator== S)
 		{
 			switch (top2->data.terminal)
 			{
@@ -896,7 +896,7 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 		case S:
 			symstack_item_t *item = symstack_create_item();
 			item->type = STACKITEM_TYPE_OPERATOR;
-			item->data.operator = S;
+			item->data.operator= S;
 			result = symstack_insert_before(&stack, item, a);
 			if (result)
 				return result;
