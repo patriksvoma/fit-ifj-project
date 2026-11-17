@@ -337,15 +337,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 {
 	err_t result;
 
-	symstack_item_t *item = symstack_create_item();
-	if (!item)
-	{
-		print_err("Failed to create an item inside apply_rule().", ERR_INTERNAL);
-		return ERR_INTERNAL;
-	}
-
-	item->type = STACKITEM_TYPE_EXPRESSION;
-
 	data_type_t op1_type = TYPE_NONE;
 	data_type_t op2_type = TYPE_NONE;
 	ast_node_t *node = NULL;
@@ -804,6 +795,15 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		print_err("Failed to create an AST node.", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
+
+	symstack_item_t *item = symstack_create_item();
+	if (!item)
+	{
+		print_err("Failed to create an item inside apply_rule().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	item->type = STACKITEM_TYPE_EXPRESSION;
 
 	item->data.expression_node = node;
 	result = symstack_push(stack, item);
