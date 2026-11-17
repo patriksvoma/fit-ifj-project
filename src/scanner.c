@@ -73,6 +73,29 @@ const char *const keywords[] = {
 	[KW_FOR] = "for",
 };
 
+#define KEYWORD_COUNT (sizeof(keywords) / sizeof(keywords[0]))
+
+/**
+ * @brief Look up a word in the keyword table
+ *
+ * @param word
+ * @param keyword
+ * @return true if the word is a keyword, false otherwise
+ */
+bool find_keyword(const char *word, keyword_t *keyword)
+{
+	for (size_t i = 0; i < KEYWORD_COUNT; i++)
+	{
+		if (keywords[i] != NULL && strcmp(word, keywords[i]) == 0)
+		{
+			*keyword = (keyword_t)i;
+			return true;
+		}
+	}
+
+	return false;
+}
+
 /**
  * @brief Get the next token object
  *
@@ -85,6 +108,7 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 	// TODO: This placeholder code is here just to pass code checks
 	token->attribute.integer = 0;
 	(void)eol;
+	(void)find_keyword;
 
 	return ERR_SCANNER;
 }
