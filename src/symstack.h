@@ -69,9 +69,8 @@ err_t symstack_init(symstack_t *stack);
  * @brief Destroys all elements of the stack
  *
  * @param stack Pointer to the stack which will be destroyed
- * @return err_t Error code
  */
-err_t symstack_destroy(symstack_t *stack);
+void symstack_destroy(symstack_t *stack);
 
 /**
  * @brief Pushes a symbol to the top of the stack
