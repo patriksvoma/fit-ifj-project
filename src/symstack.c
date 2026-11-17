@@ -44,12 +44,20 @@ err_t symstack_init(symstack_t *stack)
 	return ERR_OK;
 }
 
-err_t symstack_destroy(symstack_t *stack)
+void symstack_destroy(symstack_t *stack)
 {
-	// TODO: Implement
-	(void)stack;
-	print_err("symstack_destroy() is not implemented yet.", ERR_INTERNAL);
-	return ERR_OK;
+	if (!stack)
+		return;
+
+	symstack_item_t *current = stack->top;
+	while (current)
+	{
+		symstack_item_t *next = current->next;
+		free(current);
+		current = next;
+	}
+
+	stack->top = NULL;
 }
 
 err_t symstack_push(symstack_t *stack, symstack_item_t *item)
