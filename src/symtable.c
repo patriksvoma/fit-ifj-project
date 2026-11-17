@@ -26,14 +26,14 @@ static void destroy_node(symbol_node_t *node)
 
 err_t symtable_destroy(symbol_tree_t *tree)
 {
-    if (tree == NULL)
-    {
-        print_err("NULL pointer in symtable_destroy().", ERR_INTERNAL);
-        return ERR_INTERNAL;
-    }
+	if (tree == NULL)
+	{
+		print_err("NULL pointer in symtable_destroy().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
 
-    destroy_node(tree->root);
-    tree->root = NULL;
+	destroy_node(tree->root);
+	tree->root = NULL;
 
-    return ERR_OK;
+	return ERR_OK;
 }

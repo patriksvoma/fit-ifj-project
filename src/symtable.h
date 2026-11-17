@@ -29,15 +29,15 @@ typedef struct symbol_data
 
 typedef struct symbol_node
 {
-    char *key;
-    symbol_data_t data;
-    struct symbol_node *left;
-    struct symbol_node *right;
+	char *key;
+	symbol_data_t data;
+	struct symbol_node *left;
+	struct symbol_node *right;
 } symbol_node_t;
 
 typedef struct symbol_tree
 {
-    symbol_node_t *root;
+	symbol_node_t *root;
 } symbol_tree_t;
 
 typedef struct scope
