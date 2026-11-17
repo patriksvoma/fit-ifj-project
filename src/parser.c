@@ -24,13 +24,13 @@ err_t param_first(parser_data_t *pdata);
 err_t param_list(parser_data_t *pdata);
 err_t param(parser_data_t *pdata);
 err_t return_type(parser_data_t *pdata);
-err_t block_start(parser_data_t *pdata);
-err_t block(parser_data_t *pdata);
+err_t block_start(parser_data_t *pdata, unsigned header_indent_level);
+err_t block(parser_data_t *pdata, unsigned block_indent_level);
 err_t type(parser_data_t *pdata);
 err_t statement(parser_data_t *pdata);
 err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value);
-err_t else_opt(parser_data_t *pdata);
-err_t else_if_opt(parser_data_t *pdata);
+err_t else_opt(parser_data_t *pdata, unsigned header_indent_level);
+err_t else_if_opt(parser_data_t *pdata, unsigned header_indent_level);
 err_t for_generator(parser_data_t *pdata);
 err_t for_by(parser_data_t *pdata);
 err_t for_guard(parser_data_t *pdata);
@@ -429,6 +429,8 @@ err_t return_type(parser_data_t *pdata)
 {
 	err_t result;
 
+	unsigned header_indentation = pdata->token.indent;
+
 	// =, go to <block-start>
 	if (pdata->token.type == TOKEN_ASSIGN)
 	{
@@ -436,7 +438,7 @@ err_t return_type(parser_data_t *pdata)
 		if (result)
 			return result;
 
-		return block_start(pdata);
+		return block_start(pdata, header_indentation);
 	}
 	// :
 	else if (pdata->token.type == TOKEN_COLON)
@@ -461,7 +463,7 @@ err_t return_type(parser_data_t *pdata)
 			return result;
 
 		// <block-start>
-		return block_start(pdata);
+		return block_start(pdata, header_indentation);
 	}
 
 	print_err_l("Expected a return type definiton, or a block start delimiter (=).", ERR_SYNTAX, pdata->token.line);
@@ -474,15 +476,23 @@ err_t return_type(parser_data_t *pdata)
  * @param pdata Parser data
  * @return err_t Error code
  */
-err_t block_start(parser_data_t *pdata)
+err_t block_start(parser_data_t *pdata, unsigned header_indent_level)
 {
+	unsigned statement_indent_level = pdata->token.indent;
+	if (statement_indent_level <= header_indent_level)
+	{
+		print_err_l("Start of a block must be on a higher indentation level than the header.", ERR_SYNTAX,
+					pdata->token.line);
+		return ERR_SYNTAX;
+	}
+
 	// <statement>
 	err_t result = statement(pdata);
 	if (result)
 		return result;
 
 	// <block>
-	return block(pdata);
+	return block(pdata, statement_indent_level);
 }
 
 /**
@@ -491,9 +501,21 @@ err_t block_start(parser_data_t *pdata)
  * @param pdata Parser data
  * @return err_t Error code
  */
-err_t block(parser_data_t *pdata)
+err_t block(parser_data_t *pdata, unsigned block_indent_level)
 {
 	if (pdata->token.type == TOKEN_EOF)
+		return ERR_OK;
+
+	unsigned statement_indent_level = pdata->token.indent;
+	// Invalid
+	if (statement_indent_level > block_indent_level)
+	{
+		print_err_l("All statements within a block must be on the same indentation level.", ERR_SYNTAX,
+					pdata->token.line);
+		return ERR_SYNTAX;
+	}
+	// End of the block
+	else if (statement_indent_level < block_indent_level)
 		return ERR_OK;
 
 	err_t result = statement(pdata);
@@ -501,7 +523,7 @@ err_t block(parser_data_t *pdata)
 		return result;
 
 	// TODO: End blocks by checking indentation
-	return block(pdata);
+	return block(pdata, block_indent_level);
 }
 
 /**
@@ -561,6 +583,7 @@ err_t type(parser_data_t *pdata)
 err_t statement(parser_data_t *pdata)
 {
 	err_t result;
+	unsigned statement_indent_level = pdata->token.indent;
 
 	// val
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_VAL)
@@ -626,12 +649,12 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <block-start>
-		result = block_start(pdata);
+		result = block_start(pdata, statement_indent_level);
 		if (result)
 			return result;
 
 		// <else-opt>
-		return else_opt(pdata);
+		return else_opt(pdata, statement_indent_level);
 	}
 	// while
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_WHILE)
@@ -657,7 +680,7 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <block-start>
-		return block_start(pdata);
+		return block_start(pdata, statement_indent_level);
 	}
 	// for
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_FOR)
@@ -713,7 +736,7 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <block-start>
-		return block_start(pdata);
+		return block_start(pdata, statement_indent_level);
 	}
 	// return
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_RETURN)
@@ -776,17 +799,18 @@ err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value)
  * @param pdata Parser data
  * @return err_t Error code
  */
-err_t else_opt(parser_data_t *pdata)
+err_t else_opt(parser_data_t *pdata, unsigned header_indent_level)
 {
 	// else
-	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_ELSE)
+	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_ELSE &&
+		pdata->token.indent == header_indent_level)
 	{
 		err_t result = get_next_token(&pdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
 
 		// <else-if-opt>
-		return else_if_opt(pdata);
+		return else_if_opt(pdata, header_indent_level);
 	}
 
 	// Epsilon rule
@@ -799,7 +823,7 @@ err_t else_opt(parser_data_t *pdata)
  * @param pdata Parser data
  * @return err_t Error code
  */
-err_t else_if_opt(parser_data_t *pdata)
+err_t else_if_opt(parser_data_t *pdata, unsigned header_indent_level)
 {
 	// if (makes for an else if with the previous rule)
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_IF)
@@ -825,16 +849,16 @@ err_t else_if_opt(parser_data_t *pdata)
 			return result;
 
 		// <block-start>
-		result = block_start(pdata);
+		result = block_start(pdata, header_indent_level);
 		if (result)
 			return result;
 
 		// <else-opt>
-		return else_opt(pdata);
+		return else_opt(pdata, header_indent_level);
 	}
 
 	// <block_start>
-	return block_start(pdata);
+	return block_start(pdata, header_indent_level);
 }
 
 /**
