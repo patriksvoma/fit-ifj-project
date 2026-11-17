@@ -216,7 +216,7 @@ ast_node_t *ast_make_literal(literal_t *literal);
  * @param i_type Data type of variable
  * @return ast_node_t* Pointer to leaf
  */
-ast_node_t *ast_make_variable(char *i, data_type_t i_type);
+ast_node_t *ast_make_identifier(char *i, data_type_t i_type);
 
 /**
  * @brief Function to make tree containing unary operation
