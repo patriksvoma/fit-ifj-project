@@ -836,7 +836,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	return ERR_OK;
 }
 
-err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
+err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **return_node)
 {
 	bool use_seed = seed_token;
 
@@ -938,9 +938,7 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 		}
 	}
 
-	// TODO: Give back to the parser
-	ast_node_t *return_node = stack.top->data.expression_node;
-	(void)return_node;
+	*return_node = stack.top->data.expression_node;
 
 	symstack_destroy(&stack);
 	free(b);

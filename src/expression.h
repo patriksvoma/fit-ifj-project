@@ -57,6 +57,7 @@ typedef enum
  *
  * @param pdata Parser data
  * @param seed_token If not NULL, the seed_token is used as the first token in the expression
+ * @param return_node Address to which the address of the created AST note should be written
  * @return err_t Error code
  */
-err_t parse_expression(parser_data_t *pdata, token_t *seed_token);
+err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **return_node);
