@@ -28,7 +28,7 @@ err_t block_start(parser_data_t *pdata);
 err_t block(parser_data_t *pdata);
 err_t type(parser_data_t *pdata);
 err_t statement(parser_data_t *pdata);
-err_t expression_opt(parser_data_t *pdata);
+err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value);
 err_t else_opt(parser_data_t *pdata);
 err_t else_if_opt(parser_data_t *pdata);
 err_t for_generator(parser_data_t *pdata);
@@ -612,7 +612,8 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		result = expression(pdata);
+		ast_node_t *condition_node;
+		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
 
@@ -642,7 +643,8 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		result = expression(pdata);
+		ast_node_t *condition_node;
+		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
 
@@ -687,7 +689,8 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		result = expression(pdata);
+		ast_node_t *iterator_node;
+		result = expression(pdata, &iterator_node);
 		if (result)
 			return result;
 
@@ -722,7 +725,8 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		return expression_opt(pdata);
+		ast_node_t *return_value_node;
+		return expression_opt(pdata, &return_value_node);
 	}
 	// identifier
 	else if (pdata->token.type == TOKEN_IDENTIFIER)
@@ -745,23 +749,27 @@ err_t statement(parser_data_t *pdata)
 			if (result)
 				return result;
 
-			return expression(pdata);
+			ast_node_t *assigned_value_node;
+			return expression(pdata, &assigned_value_node);
 		}
 
 		// <expression>
 		// The expression parser needs to have the id token seeded before the token in pdata
-		return expression_seeded(pdata, &id_token);
+		ast_node_t *expression_node;
+		return expression_seeded(pdata, &expression_node, &id_token);
 	}
 
 	// <expression>
-	return expression(pdata);
+	ast_node_t *expression_node;
+	return expression(pdata, &expression_node);
 	// TODO: Remove suppression
 	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
-err_t expression_opt(parser_data_t *pdata)
+err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value)
 {
 	// TODO:
+	(void)return_value;
 	(void)pdata;
 	return ERR_SYNTAX;
 }
@@ -807,7 +815,8 @@ err_t else_if_opt(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		result = expression(pdata);
+		ast_node_t *condition_node;
+		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
 
@@ -851,6 +860,7 @@ err_t for_generator(parser_data_t *pdata)
 	{
 		err_t result;
 
+		// to
 		if (!strcmp(pdata->token.attribute.string, "to"))
 		{
 			result = get_next_token(&pdata->token, EOL_FORBIDDEN);
@@ -858,13 +868,15 @@ err_t for_generator(parser_data_t *pdata)
 				return result;
 
 			// <expression>
-			result = expression(pdata);
+			ast_node_t *to_node;
+			result = expression(pdata, &to_node);
 			if (result)
 				return result;
 
 			// <for-by>
 			return for_by(pdata);
 		}
+		// until
 		else if (!strcmp(pdata->token.attribute.string, "until"))
 		{
 			result = get_next_token(&pdata->token, EOL_FORBIDDEN);
@@ -872,7 +884,8 @@ err_t for_generator(parser_data_t *pdata)
 				return result;
 
 			// <expression>
-			return expression(pdata);
+			ast_node_t *until_node;
+			return expression(pdata, &until_node);
 		}
 	}
 
@@ -898,7 +911,8 @@ err_t for_by(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		return expression(pdata);
+		ast_node_t *by_node;
+		return expression(pdata, &by_node);
 	}
 
 	// Epsilon rule
@@ -923,7 +937,8 @@ err_t for_guard(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		result = expression(pdata);
+		ast_node_t *condition_node;
+		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
 
@@ -970,7 +985,8 @@ err_t val_var_def(parser_data_t *pdata)
 			return result;
 
 		// <expression
-		return expression(pdata);
+		ast_node_t *assigned_value_node;
+		return expression(pdata, &assigned_value_node);
 	}
 
 	// =
@@ -980,7 +996,8 @@ err_t val_var_def(parser_data_t *pdata)
 		if (result)
 			return result;
 
-		return expression(pdata);
+		ast_node_t *assigned_value_node;
+		return expression(pdata, &assigned_value_node);
 	}
 
 	print_err_l("Expected a type declaration or an assignment operator after identifier", ERR_SYNTAX,
