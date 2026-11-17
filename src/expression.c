@@ -70,9 +70,11 @@ prec_table_operator_t prec_table[PREC_TABLE_SIZE][PREC_TABLE_SIZE] = {
  *
  * @param token Currently parsed token
  * @param stack_item Stack item which will be filled
+ * @param expect_unary Pointer to a variable which is used to determine between unary and binary +/-.
+ * 					   Value of this variable is changed based on the token type.
  * @return err_t Error code
  */
-err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item)
+err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item, bool *expect_unary)
 {
 	if (!token || !stack_item)
 	{
@@ -90,6 +92,7 @@ err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item)
 	case TOKEN_IDENTIFIER:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_I;
+		*expect_unary = false;
 		break;
 	case TOKEN_KEYWORD:
 		item.type = STACKITEM_TYPE_TERMINAL;
@@ -98,26 +101,32 @@ err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item)
 	case TOKEN_OPENING_BRACKET:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_LEFT_BRACKET;
+		*expect_unary = true;
 		break;
 	case TOKEN_CLOSING_BRACKET:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_RIGHT_BRACKET;
+		*expect_unary = false;
 		break;
 	case TOKEN_BOOLEAN:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_I;
+		*expect_unary = false;
 		break;
 	case TOKEN_INT:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_I;
+		*expect_unary = false;
 		break;
 	case TOKEN_DOUBLE:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_I;
+		*expect_unary = false;
 		break;
 	case TOKEN_STRING:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_I;
+		*expect_unary = false;
 		break;
 	case TOKEN_EOF:
 		item.type = STACKITEM_TYPE_TERMINAL;
@@ -130,6 +139,7 @@ err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item)
 	case TOKEN_DOT:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_DOT;
+		*expect_unary = false;
 		break;
 	case TOKEN_COMMA:
 		item.type = STACKITEM_TYPE_TERMINAL;
@@ -145,19 +155,23 @@ err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item)
 		break;
 	case TOKEN_PLUS:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = TERMINAL_ADD; // TODO: Figure out if it is a unary or binary plus
+		item.data.terminal = *expect_unary ? TERMINAL_U_PLUS : TERMINAL_ADD;
+		*expect_unary = true;
 		break;
 	case TOKEN_MINUS:
 		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = TERMINAL_SUB; // TODO: Figure out if it is a unary or binary minus
+		item.data.terminal = *expect_unary ? TERMINAL_U_MINUS : TERMINAL_SUB;
+		*expect_unary = true;
 		break;
 	case TOKEN_ASTERISK:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_MUL;
+		*expect_unary = true;
 		break;
 	case TOKEN_DIV:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_DIV;
+		*expect_unary = true;
 		break;
 	case TOKEN_ASSIGN:
 		item.type = STACKITEM_TYPE_TERMINAL;
@@ -166,38 +180,47 @@ err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item)
 	case TOKEN_EQUAL:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_EQ;
+		*expect_unary = true;
 		break;
 	case TOKEN_NOT_EQUAL:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_NE;
+		*expect_unary = true;
 		break;
 	case TOKEN_GREATER:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_GT;
+		*expect_unary = true;
 		break;
 	case TOKEN_GREATER_EQUAL:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_GET;
+		*expect_unary = true;
 		break;
 	case TOKEN_LESS:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_LT;
+		*expect_unary = true;
 		break;
 	case TOKEN_LESS_EQUAL:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_LET;
+		*expect_unary = true;
 		break;
 	case TOKEN_AND:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_AND;
+		*expect_unary = true;
 		break;
 	case TOKEN_OR:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_OR;
+		*expect_unary = true;
 		break;
 	case TOKEN_NEG:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_U_NEG;
+		*expect_unary = true;
 		break;
 	default:
 		print_err_l("Invalid token type in expression.", ERR_SYNTAX, token->line);
@@ -819,6 +842,8 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 
 	symstack_t stack;
 	unsigned expression_start_line;
+	bool expect_unary = true;
+
 	err_t result = symstack_init(&stack);
 	if (result)
 		return result;
@@ -832,12 +857,12 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 
 	if (use_seed)
 	{
-		result = token_to_stack_item(seed_token, b);
+		result = token_to_stack_item(seed_token, b, &expect_unary);
 		expression_start_line = seed_token->line;
 	}
 	else
 	{
-		result = token_to_stack_item(&pdata->token, b);
+		result = token_to_stack_item(&pdata->token, b, &expect_unary);
 		expression_start_line = pdata->token.line;
 	}
 	if (result)
@@ -863,7 +888,7 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 				return result;
 
 			b = symstack_create_item();
-			result = token_to_stack_item(&pdata->token, b);
+			result = token_to_stack_item(&pdata->token, b, &expect_unary);
 			if (result)
 				return result;
 
@@ -889,7 +914,7 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 				return result;
 
 			b = symstack_create_item();
-			result = token_to_stack_item(&pdata->token, b);
+			result = token_to_stack_item(&pdata->token, b, &expect_unary);
 			if (result)
 				return result;
 
