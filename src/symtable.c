@@ -10,6 +10,20 @@
 #include "symtable.h"
 #include <stdlib.h>
 
+static void destroy_node(symbol_node_t *node)
+{
+	if (node == NULL)
+	{
+		return;
+	}
+
+	destroy_node(node->left);
+	destroy_node(node->right);
+
+	free(node->key);
+	free(node);
+}
+
 err_t symtable_destroy(symbol_tree_t *tree)
 {
     if (tree == NULL)
@@ -18,7 +32,7 @@ err_t symtable_destroy(symbol_tree_t *tree)
         return ERR_INTERNAL;
     }
 
-    destroy_tree(tree->root);
+    destroy_node(tree->root);
     tree->root = NULL;
 
     return ERR_OK;
