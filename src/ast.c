@@ -135,6 +135,23 @@ ast_node_t *ast_make_binary_op(ast_node_t *operand_left, ast_node_t *operand_rig
 	}
 }
 
+ast_node_t *ast_make_int_to_double(ast_node_t *operand)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	// Setting values
+	node->eval_type = TYPE_DOUBLE;
+	node->node_type = AST_INT_TO_DOUBLE;
+	node->ast_node_value.operand = operand;
+	return node;
+}
+
 ast_node_t *ast_make_assign(char *i, data_type_t i_type, ast_node_t *expression)
 {
 	ast_node_t *node;
@@ -391,7 +408,7 @@ void destruct(ast_node_t *root)
 		free(root->ast_node_value.func_def.params);
 		break;
 
-	case AST_BOOL_TO_INT:
+	case AST_INT_TO_DOUBLE:
 		destruct(root->ast_node_value.operand);
 		break;
 

@@ -74,7 +74,7 @@ typedef enum
 	AST_LITERAL_STRING,
 	AST_LITERAL_UNIT,
 	AST_LITERAL_BOOLEAN,
-	AST_BOOL_TO_INT
+	AST_INT_TO_DOUBLE
 } node_type_t;
 
 /**
@@ -195,7 +195,7 @@ struct ast_node
 			ast_node_t *block;
 		} while_loop;
 
-		// Bool to int
+		// Double to int
 		ast_node_t *operand;
 	} ast_node_value;
 };
@@ -235,6 +235,14 @@ ast_node_t *ast_make_unary_op(ast_node_t *operand, operator_type_t op);
  * @return ast_node_t* Pointer to node of the operation
  */
 ast_node_t *ast_make_binary_op(ast_node_t *operand_left, ast_node_t *operand_right, operator_type_t op);
+
+/**
+ * @brief Makes a node for converting an int to double
+ *
+ * @param operand Node containing number to be converted
+ * @return ast_node_t* Pointer to node with the operation
+ */
+ast_node_t *ast_make_int_to_double(ast_node_t *operand);
 
 /**
  * @brief Function to make tree containing variable assignment
