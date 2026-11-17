@@ -10,7 +10,39 @@
 #include "symtable.h"
 #include <stdlib.h>
 
-static void destroy_node(symbol_node_t *node)
+tree_node_t *symtable_create_node()
+{
+	tree_node_t *node = malloc(sizeof(tree_node_t));
+	if (node == NULL)
+		return NULL;
+
+	node->key = NULL;
+	node->data.type = NULL;
+	return node;
+}
+
+err_t symtable_init(tree_node_t **tree)
+{
+	if (tree == NULL)
+	{
+		print_err("NULL pointer in symtable_inti().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	*tree = NULL;
+
+	return ERR_OK;
+}
+
+symbol_data_t *symtable_search(tree_node_t *tree, const char *key)
+{
+	if (tree == NULL)
+	{
+		return tree->data.defined = false;
+	}
+
+}
+
+static void destroy_node(tree_node_t *node)
 {
 	if (node == NULL)
 	{
@@ -24,7 +56,7 @@ static void destroy_node(symbol_node_t *node)
 	free(node);
 }
 
-err_t symtable_destroy(symbol_tree_t *tree)
+err_t symtable_destroy(tree_node_t **tree)
 {
 	if (tree == NULL)
 	{
@@ -32,8 +64,8 @@ err_t symtable_destroy(symbol_tree_t *tree)
 		return ERR_INTERNAL;
 	}
 
-	destroy_node(tree->root);
-	tree->root = NULL;
+	destroy_node(tree);
+	tree = NULL;
 
 	return ERR_OK;
 }

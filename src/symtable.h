@@ -11,44 +11,64 @@
 
 #include "error.h"
 #include <stdbool.h>
+#include <stddef.h>
 
+/**
+ * @brief Type of symbol
+ *
+ */
 typedef enum
 {
 	SYMBOL_VARIABLE,
 	SYMBOL_FUNCTION,
 } symbol_type_t;
 
+/**
+ * @brief Additional data of the symbol
+ *
+ */
 typedef struct symbol_data
 {
 	symbol_type_t type;
 	bool defined;
-	int params;
+	size_t params;
 
 	// TODO: additional data
-} *symbol_data_t;
+} symbol_data_t;
 
-typedef struct symbol_node
+/**
+ * @brief Node of the binary search tree
+ *
+ */
+typedef struct tree_node
 {
 	char *key;
 	symbol_data_t data;
-	struct symbol_node *left;
-	struct symbol_node *right;
-} symbol_node_t;
+	struct tree_node *left;
+	struct tree_node *right;
+} tree_node_t;
 
-typedef struct symbol_tree
-{
-	symbol_node_t *root;
-} symbol_tree_t;
-
+/**
+ * @brief Scope containing its own symbol table
+ *
+ */
 typedef struct scope
 {
-	symbol_tree_t symbols;
+	tree_node_t *symbols;
 	struct scope *parent;
-} *scope_t;
+} scope_t;
 
 // TODO:
 //	symGetData?
 //	scope stuff
+
+
+/**
+ * @brief Creates a new symbol tree node
+ *
+ * @return tree_node_t Pointer to created node, NULL if allocation fails
+ */
+tree_node_t *symtable_create_node();
 
 /**
  * @brief Initializes symbol tree
@@ -56,7 +76,7 @@ typedef struct scope
  * @param tree Pointer to the symbol tree which will be initialized
  * @return err_t Error code
  */
-err_t symtable_init(symbol_tree_t *tree);
+err_t symtable_init(tree_node_t **tree);
 
 /**
  * @brief Inserts a symbol into the symbol tree
@@ -66,7 +86,7 @@ err_t symtable_init(symbol_tree_t *tree);
  * @param data Data of inserted symbol
  * @return err_t Error code
  */
-err_t symtable_insert(symbol_tree_t *tree, const char *key, symbol_data_t data);
+err_t symtable_insert(tree_node_t **tree, const char *key, symbol_data_t data);
 
 /**
  * @brief Searches for a symbol in the symbol tree
@@ -75,8 +95,7 @@ err_t symtable_insert(symbol_tree_t *tree, const char *key, symbol_data_t data);
  * @param key Key of the symbol
  * @return symbol_data_t Pointer to the symbol data if found, NULL if not found
  */
-symbol_data_t symtable_search(symbol_tree_t tree, const char *key);
-
+symbol_data_t *symtable_search(tree_node_t *tree, const char *key);
 /**
  * @brief Removes a symbol from the symbol tree
  *
@@ -84,7 +103,7 @@ symbol_data_t symtable_search(symbol_tree_t tree, const char *key);
  * @param key Key of the symbol to be removed
  * @return err_t Error code
  */
-err_t symtable_remove(symbol_tree_t *tree, const char *key);
+err_t symtable_remove(tree_node_t **tree, const char *key);
 
 /**
  * @brief Destroys all symbols of the symbol tree
@@ -92,4 +111,4 @@ err_t symtable_remove(symbol_tree_t *tree, const char *key);
  * @param tree Pointer to the symbol tree which will be destroyed
  * @return err_t Error code
  */
-err_t symtable_destroy(symbol_tree_t *tree);
+err_t symtable_destroy(tree_node_t **tree);
