@@ -938,9 +938,13 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 		}
 	}
 
+<<<<<<< HEAD
 	// TODO: Give back to the parser
 	ast_node_t *return_node = stack.top->data.expression_node;
 	(void)return_node;
+=======
+	*return_node = stack.top->data.expression_node;
+>>>>>>> d07f3fc (expression: Fix whitespace formatting)
 
 	symstack_destroy(&stack);
 	free(b);
