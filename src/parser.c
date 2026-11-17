@@ -16,7 +16,7 @@
 err_t prologue(parser_data_t *pdata);
 err_t func_list(parser_data_t *pdata);
 err_t ext_def(parser_data_t *pdata);
-err_t ext_def_list(parser_data_t *pdata);
+err_t ext_def_list(parser_data_t *pdata, unsigned list_indent);
 err_t func_annotation(parser_data_t *pdata);
 err_t func_def(parser_data_t *pdata);
 err_t func_params(parser_data_t *pdata);
@@ -50,6 +50,12 @@ err_t prologue(parser_data_t *pdata)
 	err_t result = get_next_token(&pdata->token, EOL_OPTIONAL);
 	if (result)
 		return result;
+
+	if (pdata->token.indent != 0)
+	{
+		print_err_l("The program prologue must be at indentation level 0.", ERR_SYNTAX, pdata->token.line);
+		return ERR_SYNTAX;
+	}
 
 	if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_IMPORT)
 	{
@@ -159,6 +165,13 @@ err_t ext_def(parser_data_t *pdata)
 		print_err_l("Expected a type extension block declaration", ERR_SYNTAX, pdata->token.line);
 		return ERR_SYNTAX;
 	}
+
+	if (pdata->token.indent != 0)
+	{
+		print_err_l("Extension block header must be at indent level 0.", ERR_SYNTAX, pdata->token.line);
+		return ERR_SYNTAX;
+	}
+
 	result = get_next_token(&pdata->token, EOL_FORBIDDEN);
 	if (result)
 		return result;
@@ -188,13 +201,20 @@ err_t ext_def(parser_data_t *pdata)
 	if (result)
 		return result;
 
+	unsigned extension_list_indent = pdata->token.indent;
+	if (extension_list_indent == 0)
+	{
+		print_err_l("Extensions methods must be indented.", ERR_SYNTAX, pdata->token.line);
+		return ERR_SYNTAX;
+	}
+
 	// <func-def>
 	result = func_def(pdata);
 	if (result)
 		return result;
 
 	// <ext-def-list>
-	return ext_def_list(pdata);
+	return ext_def_list(pdata, extension_list_indent);
 }
 
 /**
@@ -203,8 +223,17 @@ err_t ext_def(parser_data_t *pdata)
  * @param pdata Parser data
  * @return err_t Error code
  */
-err_t ext_def_list(parser_data_t *pdata)
+err_t ext_def_list(parser_data_t *pdata, unsigned list_indent)
 {
+	if (pdata->token.indent > list_indent)
+	{
+		print_err_l("All extension method definitions must be at the same indent level.", ERR_SYNTAX,
+					pdata->token.line);
+		return ERR_SYNTAX;
+	}
+	else if (pdata->token.indent < list_indent)
+		return ERR_OK;
+
 	// def
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_DEF)
 	{
@@ -218,7 +247,7 @@ err_t ext_def_list(parser_data_t *pdata)
 			return result;
 
 		// <ext-def-list>
-		return ext_def_list(pdata);
+		return ext_def_list(pdata, list_indent);
 	}
 
 	// Epsilon rule
@@ -236,6 +265,12 @@ err_t func_annotation(parser_data_t *pdata)
 	// @main, go to <func-def>
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_MAIN)
 	{
+		if (pdata->token.indent != 0)
+		{
+			print_err_l("Function annotation must be at indent level 0.", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
+
 		err_t result;
 
 		result = get_next_token(&pdata->token, EOL_OPTIONAL);
@@ -246,6 +281,12 @@ err_t func_annotation(parser_data_t *pdata)
 	// def, go to <func-def>
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_DEF)
 	{
+		if (pdata->token.indent != 0)
+		{
+			print_err_l("Function definition must be at indent level 0.", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
+
 		return func_def(pdata);
 	}
 
