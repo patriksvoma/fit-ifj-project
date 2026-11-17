@@ -659,6 +659,11 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 		return result;
 
 	symstack_item_t *b = symstack_create_item();
+	if (!b)
+	{
+		print_err("Failed to create an item inside parse_expression().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
 
 	if (use_seed)
 	{
