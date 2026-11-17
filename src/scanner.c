@@ -47,6 +47,33 @@ typedef enum
 } state_t;
 
 /**
+ * @brief Keyword texts indexed by keyword_t
+ *
+ * Used to tell keywords apart from identifiers.
+ */
+const char *const keywords[] = {
+	[KW_NONE] = NULL,
+	[KW_DEF] = "def",
+	[KW_DO] = "do",
+	[KW_DOUBLE] = "Double",
+	[KW_ELSE] = "else",
+	[KW_IF] = "if",
+	[KW_IMPORT] = "import",
+	[KW_INT] = "Int",
+	[KW_MAIN] = "@main",
+	[KW_RETURN] = "return",
+	[KW_STRING] = "String",
+	[KW_THEN] = "then",
+	[KW_UNIT] = "Unit",
+	[KW_VAL] = "val",
+	[KW_VAR] = "var",
+	[KW_WHILE] = "while",
+	[KW_BOOLEAN] = "Boolean",
+	[KW_EXTENSION] = "extension",
+	[KW_FOR] = "for",
+};
+
+/**
  * @brief Get the next token object
  *
  * @param token
