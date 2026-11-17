@@ -560,8 +560,6 @@ err_t type(parser_data_t *pdata)
  */
 err_t statement(parser_data_t *pdata)
 {
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	err_t result;
 
 	// val
@@ -762,8 +760,6 @@ err_t statement(parser_data_t *pdata)
 	// <expression>
 	ast_node_t *expression_node;
 	return expression(pdata, &expression_node);
-	// TODO: Remove suppression
-	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value)
@@ -805,8 +801,6 @@ err_t else_opt(parser_data_t *pdata)
  */
 err_t else_if_opt(parser_data_t *pdata)
 {
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	// if (makes for an else if with the previous rule)
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_IF)
 	{
@@ -841,8 +835,6 @@ err_t else_if_opt(parser_data_t *pdata)
 
 	// <block_start>
 	return block_start(pdata);
-	// TODO: Remove suppression
-	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 /**
@@ -853,8 +845,6 @@ err_t else_if_opt(parser_data_t *pdata)
  */
 err_t for_generator(parser_data_t *pdata)
 {
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	// identifier
 	if (pdata->token.type == TOKEN_IDENTIFIER)
 	{
@@ -891,8 +881,6 @@ err_t for_generator(parser_data_t *pdata)
 
 	print_err_l("Expected \"to\" or \"until\" as a for statement generator.", ERR_SYNTAX, pdata->token.line);
 	return ERR_SYNTAX;
-	// TODO: Remove suppression
-	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 /**
@@ -927,8 +915,6 @@ err_t for_by(parser_data_t *pdata)
  */
 err_t for_guard(parser_data_t *pdata)
 {
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	// if
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_IF)
 	{
@@ -948,8 +934,6 @@ err_t for_guard(parser_data_t *pdata)
 
 	// Epsilon rule
 	return ERR_OK;
-	// TODO: Remove suppression
-	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 /**
