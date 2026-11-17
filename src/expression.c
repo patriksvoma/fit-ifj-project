@@ -918,6 +918,7 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 	(void)return_node;
 
 	symstack_destroy(&stack);
+	free(b);
 
 	return ERR_OK;
 }
