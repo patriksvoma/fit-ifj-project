@@ -3,7 +3,7 @@
 # Authors:
 #	xsvomap00 (Patrik Švoma)
 
-.PHONY: build check build-check format clean
+.PHONY: build check build-check test format clean
 
 CC = gcc-14
 CFLAGS = -Wall -Wextra -Werror -MMD -MP
@@ -13,6 +13,10 @@ HEADERS = $(wildcard src/*.h)
 OBJ = $(SRC:.c=.o)
 DEP = $(OBJ:.o=.d)
 TARGET = ifj-project
+
+TEST_SRC = $(wildcard tests/*.c)
+TEST_BIN = tests/test_runner
+UNITY_DIR = third-party/Unity/src
 
 # Builds the project without any checks
 build: $(TARGET)
@@ -33,10 +37,17 @@ check:
 # Builds the project, but only if the code passes the check target
 build-check: check build
 
+# Run tests
+test: $(TEST_BIN)
+	./$(TEST_BIN)
+
+$(TEST_BIN): $(TEST_SRC) $(filter-out src/main.c,$(SRC)) $(UNITY_DIR)/unity.c
+	$(CC) $(CFLAGS) -D UNITY_OUTPUT_COLOR -Isrc -I$(UNITY_DIR) $^ -o $@
+
 # Formats all .c and .h files
 format:
 	clang-format -i $(SRC) $(HEADERS)
 
 # Cleans files created during a build
 clean:
-	rm -f $(OBJ) $(DEP) $(TARGET)
+	rm -f $(OBJ) $(DEP) $(TARGET) $(TEST_BIN) "tests/test_runner.d"
