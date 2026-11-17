@@ -937,11 +937,11 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **r
 			return ERR_SYNTAX;
 		}
 	}
-  
-  *return_node = stack.top->data.expression_node;
-  
-  symstack_destroy(&stack);
+
+	*return_node = stack.top->data.expression_node;
+
+	symstack_destroy(&stack);
 	free(b);
-  
+
 	return ERR_OK;
 }
