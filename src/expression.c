@@ -330,25 +330,20 @@ prec_rule_t find_rule(const symstack_t *stack)
  *
  * @param rule Rule to apply
  * @param stack Symbol stack
+ * @param line Line on which the expression is located
  * @return err_t Error code
  */
-err_t apply_rule(prec_rule_t rule, symstack_t *stack)
+err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 {
 	err_t result;
 
-	symstack_item_t *item = symstack_create_item();
-	if (!item)
-	{
-		print_err("Failed to create an item inside apply_rule().", ERR_INTERNAL);
-		return ERR_INTERNAL;
-	}
-
-	item->type = STACKITEM_TYPE_EXPRESSION;
-
-	ast_node_t *node;
+	data_type_t op1_type = TYPE_NONE;
+	data_type_t op2_type = TYPE_NONE;
+	ast_node_t *node = NULL;
 
 	switch (rule)
 	{
+	// i
 	case RULE_I:
 		token_t token = stack->top->source_token;
 		if (token.type == TOKEN_BOOLEAN)
@@ -398,6 +393,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// (E)
 	case RULE_PARENTHESIS:
 		result = symstack_pop(stack);
 		if (result)
@@ -409,31 +405,79 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E.E
 	case RULE_DOT:
 		// TODO: Implement
 		break;
+	// !E
 	case RULE_NEG:
+		// Type check
+		op2_type = stack->top->data.expression_node->eval_type;
+		if (op2_type != TYPE_BOOLEAN)
+		{
+			print_err_l("Invalid operand type for unary operator \"!\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node = ast_add_unary_op(stack->top->data.expression_node, OP_NEG);
 
 		result = symstack_pop_multiple(stack, 3);
 		if (result)
 			return result;
 		break;
+	// +E
 	case RULE_UPLUS:
+		// Type check
+		op2_type = stack->top->data.expression_node->eval_type;
+		if (op2_type != TYPE_INT && op2_type != TYPE_DOUBLE)
+		{
+			print_err_l("Invalid operand type for unary operator \"+\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node = ast_add_unary_op(stack->top->data.expression_node, OP_UPLUS);
 
 		result = symstack_pop_multiple(stack, 3);
 		if (result)
 			return result;
 		break;
+	// -E
 	case RULE_UMINUS:
+		// Type check
+		op2_type = stack->top->data.expression_node->eval_type;
+		if (op2_type != TYPE_INT && op2_type != TYPE_DOUBLE)
+		{
+			print_err_l("Invalid operand type for unary operator \"-\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node = ast_add_unary_op(stack->top->data.expression_node, OP_UMINUS);
 
 		result = symstack_pop_multiple(stack, 3);
 		if (result)
 			return result;
 		break;
+	// E*E
 	case RULE_MUL:
+		// Type check
+		op1_type = stack->top->next->next->data.expression_node->eval_type;
+		op2_type = stack->top->data.expression_node->eval_type;
+
+		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
+		{
+			// TODO: Create a int2double node for operand 1
+		}
+		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
+		{
+			// TODO: Create a int2double node for operand 2
+		}
+		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
+				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE))
+		{
+			print_err_l("Invalid operand type for binary operator \"*\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_ASTERISK);
 
@@ -441,7 +485,27 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E/E
 	case RULE_DIV:
+		// Type check
+		op1_type = stack->top->next->next->data.expression_node->eval_type;
+		op2_type = stack->top->data.expression_node->eval_type;
+
+		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
+		{
+			// TODO: Create a int2double node for operand 1
+		}
+		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
+		{
+			// TODO: Create a int2double node for operand 2
+		}
+		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
+				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE))
+		{
+			print_err_l("Invalid operand type for binary operator \"/\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node =
 			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_DIV);
 
@@ -449,7 +513,28 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E+E
 	case RULE_ADD:
+		// Type check
+		op1_type = stack->top->next->next->data.expression_node->eval_type;
+		op2_type = stack->top->data.expression_node->eval_type;
+
+		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
+		{
+			// TODO: Create a int2double node for operand 1
+		}
+		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
+		{
+			// TODO: Create a int2double node for operand 2
+		}
+		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
+				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
+				 !(op1_type == TYPE_STRING && op2_type == TYPE_STRING))
+		{
+			print_err_l("Invalid operand type for binary operator \"+\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node =
 			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_PLUS);
 
@@ -457,7 +542,27 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E-E
 	case RULE_SUB:
+		// Type check
+		op1_type = stack->top->next->next->data.expression_node->eval_type;
+		op2_type = stack->top->data.expression_node->eval_type;
+
+		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
+		{
+			// TODO: Create a int2double node for operand 1
+		}
+		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
+		{
+			// TODO: Create a int2double node for operand 2
+		}
+		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
+				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE))
+		{
+			print_err_l("Invalid operand type for binary operator \"-\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node =
 			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_MINUS);
 
@@ -465,7 +570,28 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E<E
 	case RULE_LT:
+		// Type check
+		op1_type = stack->top->next->next->data.expression_node->eval_type;
+		op2_type = stack->top->data.expression_node->eval_type;
+
+		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
+		{
+			// TODO: Create a int2double node for operand 1
+		}
+		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
+		{
+			// TODO: Create a int2double node for operand 2
+		}
+		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
+				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
+				 !(op1_type == TYPE_STRING && op2_type == TYPE_STRING))
+		{
+			print_err_l("Invalid operand type for binary operator \"<\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node =
 			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_LESS);
 
@@ -473,7 +599,28 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E<=E
 	case RULE_LE:
+		// Type check
+		op1_type = stack->top->next->next->data.expression_node->eval_type;
+		op2_type = stack->top->data.expression_node->eval_type;
+
+		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
+		{
+			// TODO: Create a int2double node for operand 1
+		}
+		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
+		{
+			// TODO: Create a int2double node for operand 2
+		}
+		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
+				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
+				 !(op1_type == TYPE_STRING && op2_type == TYPE_STRING))
+		{
+			print_err_l("Invalid operand type for binary operator \"<=\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_LESS_EQUAL);
 
@@ -481,7 +628,28 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E>E
 	case RULE_GT:
+		// Type check
+		op1_type = stack->top->next->next->data.expression_node->eval_type;
+		op2_type = stack->top->data.expression_node->eval_type;
+
+		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
+		{
+			// TODO: Create a int2double node for operand 1
+		}
+		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
+		{
+			// TODO: Create a int2double node for operand 2
+		}
+		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
+				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
+				 !(op1_type == TYPE_STRING && op2_type == TYPE_STRING))
+		{
+			print_err_l("Invalid operand type for binary operator \">\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_GREATER);
 
@@ -489,7 +657,28 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E>=E
 	case RULE_GE:
+		// Type check
+		op1_type = stack->top->next->next->data.expression_node->eval_type;
+		op2_type = stack->top->data.expression_node->eval_type;
+
+		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
+		{
+			// TODO: Create a int2double node for operand 1
+		}
+		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
+		{
+			// TODO: Create a int2double node for operand 2
+		}
+		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
+				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
+				 !(op1_type == TYPE_STRING && op2_type == TYPE_STRING))
+		{
+			print_err_l("Invalid operand type for binary operator \">=\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_GREATER_EQUAL);
 
@@ -497,7 +686,30 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E==E
 	case RULE_EQ:
+		// Type check
+		op1_type = stack->top->next->next->data.expression_node->eval_type;
+		op2_type = stack->top->data.expression_node->eval_type;
+
+		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
+		{
+			// TODO: Create a int2double node for operand 1
+		}
+		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
+		{
+			// TODO: Create a int2double node for operand 2
+		}
+		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
+				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
+				 !(op1_type == TYPE_STRING && op2_type == TYPE_STRING) &&
+				 !(op1_type == TYPE_BOOLEAN && op2_type == TYPE_BOOLEAN) &&
+				 !(op1_type == TYPE_UNIT && op2_type == TYPE_UNIT))
+		{
+			print_err_l("Invalid operand type for binary operator \"==\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node =
 			ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, OP_EQUAL);
 
@@ -505,7 +717,30 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E!=E
 	case RULE_NE:
+		// Type check
+		op1_type = stack->top->next->next->data.expression_node->eval_type;
+		op2_type = stack->top->data.expression_node->eval_type;
+
+		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
+		{
+			// TODO: Create a int2double node for operand 1
+		}
+		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
+		{
+			// TODO: Create a int2double node for operand 2
+		}
+		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
+				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
+				 !(op1_type == TYPE_STRING && op2_type == TYPE_STRING) &&
+				 !(op1_type == TYPE_BOOLEAN && op2_type == TYPE_BOOLEAN) &&
+				 !(op1_type == TYPE_UNIT && op2_type == TYPE_UNIT))
+		{
+			print_err_l("Invalid operand type for binary operator \"!=\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_NOT_EQUAL);
 
@@ -513,7 +748,18 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E&&E
 	case RULE_AND:
+		// Type check
+		op1_type = stack->top->next->next->data.expression_node->eval_type;
+		op2_type = stack->top->data.expression_node->eval_type;
+
+		if (!(op1_type == TYPE_BOOLEAN && op2_type == TYPE_BOOLEAN))
+		{
+			print_err_l("Invalid operand type for binary operator \"&&\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_LOGIC_AND);
 
@@ -521,7 +767,18 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		if (result)
 			return result;
 		break;
+	// E||E
 	case RULE_OR:
+		// Type check
+		op1_type = stack->top->next->next->data.expression_node->eval_type;
+		op2_type = stack->top->data.expression_node->eval_type;
+
+		if (!(op1_type == TYPE_BOOLEAN && op2_type == TYPE_BOOLEAN))
+		{
+			print_err_l("Invalid operand type for binary operator \"||\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_LOGIC_OR);
 
@@ -539,6 +796,15 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack)
 		return ERR_INTERNAL;
 	}
 
+	symstack_item_t *item = symstack_create_item();
+	if (!item)
+	{
+		print_err("Failed to create an item inside apply_rule().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	item->type = STACKITEM_TYPE_EXPRESSION;
+
 	item->data.expression_node = node;
 	result = symstack_push(stack, item);
 	if (result)
@@ -552,16 +818,28 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 	bool use_seed = seed_token;
 
 	symstack_t stack;
+	unsigned expression_start_line;
 	err_t result = symstack_init(&stack);
 	if (result)
 		return result;
 
 	symstack_item_t *b = symstack_create_item();
+	if (!b)
+	{
+		print_err("Failed to create an item inside parse_expression().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
 
 	if (use_seed)
+	{
 		result = token_to_stack_item(seed_token, b);
+		expression_start_line = seed_token->line;
+	}
 	else
+	{
 		result = token_to_stack_item(&pdata->token, b);
+		expression_start_line = pdata->token.line;
+	}
 	if (result)
 		return result;
 
@@ -625,7 +903,7 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token)
 				return ERR_SYNTAX;
 			}
 
-			result = apply_rule(rule, &stack);
+			result = apply_rule(rule, &stack, expression_start_line);
 			if (result)
 				return result;
 			break;
