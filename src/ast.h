@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include "scanner.h"
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -333,3 +332,11 @@ ast_node_t *ast_make_program();
  * @return void
  */
 void destruct(ast_node_t *root);
+
+/**
+ * @brief Adds node to the end of an array
+ *
+ * @param node Node that contains the array
+ * @param elem Node to be appended
+ */
+void ast_array_append(ast_node_t *node, ast_node_t *elem);

@@ -8,6 +8,7 @@
  */
 
 #include "ast.h"
+#include "error.h"
 
 ast_node_t *ast_make_literal(literal_t *literal)
 {
@@ -254,6 +255,7 @@ ast_node_t *ast_make_call(char *i)
 	node->node_type = AST_CALL;
 	node->ast_node_value.call.identifier = i;
 	node->ast_node_value.call.arg_count = 0;
+	node->ast_node_value.call.arguments = NULL;
 	return node;
 }
 
@@ -272,6 +274,9 @@ ast_node_t *ast_make_func_def(bool is_main)
 	node->node_type = AST_FUNC_DEF;
 	node->ast_node_value.func_def.is_main = is_main;
 	node->ast_node_value.func_def.param_count = 0;
+	node->ast_node_value.func_def.params = NULL;
+	node->ast_node_value.func_def.block = NULL;
+	node->ast_node_value.func_def.return_type = TYPE_NONE;
 	return node;
 }
 
@@ -288,6 +293,7 @@ ast_node_t *ast_make_block()
 	node->eval_type = TYPE_NONE;
 	node->node_type = AST_BLOCK;
 	node->ast_node_value.code_block.exp_count = 0;
+	node->ast_node_value.code_block.expression = NULL;
 	return node;
 }
 
@@ -304,6 +310,7 @@ ast_node_t *ast_make_program()
 	node->eval_type = TYPE_NONE;
 	node->node_type = AST_PROGRAM;
 	node->ast_node_value.code_block.exp_count = 0;
+	node->ast_node_value.code_block.expression = NULL;
 	return node;
 }
 
@@ -314,50 +321,44 @@ void destruct(ast_node_t *root)
 		return;
 	}
 
+	// Recursively callíng the function until it comes into a leaf and then calling free
 	node_type_t type = root->node_type;
 	switch (type)
 	{
-	case (AST_RETURN):
-		if (root->ast_node_value.expression == NULL)
-		{
-			free(root);
-		}
-		else
-		{
-			destruct(root->ast_node_value.expression);
-		}
+	case AST_RETURN:
+		destruct(root->ast_node_value.expression);
 		break;
 
-	case (AST_UN_OPERATOR):
+	case AST_UN_OPERATOR:
 		destruct(root->ast_node_value.un_operator.operand);
 		break;
 
-	case (AST_BIN_OPERATOR):
+	case AST_BIN_OPERATOR:
 		destruct(root->ast_node_value.bin_operator.operand_left);
 		destruct(root->ast_node_value.bin_operator.operand_right);
 		break;
 
-	case (AST_ASSIGN):
+	case AST_ASSIGN:
 		destruct(root->ast_node_value.assign.expression);
 		break;
 
-	case (AST_VAR_DEF):
+	case AST_VAR_DEF:
 		destruct(root->ast_node_value.var_def.expression);
 		break;
 
-	case (AST_WHILE):
+	case AST_WHILE:
 		destruct(root->ast_node_value.while_loop.block);
 		destruct(root->ast_node_value.while_loop.condition);
 		break;
 
-	case (AST_IF):
+	case AST_IF:
 		destruct(root->ast_node_value.if_statement.condition);
 		destruct(root->ast_node_value.if_statement.else_block);
 		destruct(root->ast_node_value.if_statement.if_block);
 		break;
 
-	case (AST_PROGRAM):
-	case (AST_BLOCK):
+	case AST_PROGRAM:
+	case AST_BLOCK:
 		for (size_t i = 0; i < root->ast_node_value.code_block.exp_count; i++)
 		{
 			destruct(root->ast_node_value.code_block.expression[i]);
@@ -365,7 +366,7 @@ void destruct(ast_node_t *root)
 		free(root->ast_node_value.code_block.expression);
 		break;
 
-	case (AST_CALL):
+	case AST_CALL:
 		for (size_t i = 0; i < root->ast_node_value.call.arg_count; i++)
 		{
 			destruct(root->ast_node_value.call.arguments[i]);
@@ -373,7 +374,7 @@ void destruct(ast_node_t *root)
 		free(root->ast_node_value.call.arguments);
 		break;
 
-	case (AST_FUNC_DEF):
+	case AST_FUNC_DEF:
 		destruct(root->ast_node_value.func_def.block);
 		for (size_t i = 0; i < root->ast_node_value.func_def.param_count; i++)
 		{
@@ -382,12 +383,124 @@ void destruct(ast_node_t *root)
 		free(root->ast_node_value.func_def.params);
 		break;
 
+	case AST_BOOL_TO_INT:
+		destruct(root->ast_node_value.operand);
+		break;
+
 	// Leaf nodes
 	default:
-		free(root);
 		break;
 	}
 
 	free(root);
+	return;
+}
+
+void ast_array_append(ast_node_t *node, ast_node_t *elem)
+{
+	ast_node_t **temp;
+
+	if (!node || !elem)
+		return;
+
+	// Get the node type
+	switch (node->node_type)
+	{
+	case AST_FUNC_DEF:
+		if (node->ast_node_value.func_def.param_count == 0) // If the array is empty add first element with malloc
+		{
+			node->ast_node_value.func_def.params = malloc(sizeof(ast_node_t *));
+
+			if (node->ast_node_value.func_def.params == NULL)
+			{
+				print_err("Failed to allocate memory in ast_array_append()", ERR_INTERNAL);
+				return;
+			}
+		}
+		else // Else use realloc to add room for one more element
+		{
+			temp = realloc(node->ast_node_value.func_def.params,
+						   (node->ast_node_value.func_def.param_count + 1) * sizeof(ast_node_t *));
+
+			if (temp == NULL)
+			{
+				free(node->ast_node_value.func_def.params);
+				print_err("Failed to allocate memory in ast_array_append()", ERR_INTERNAL);
+				return;
+			}
+			node->ast_node_value.func_def.params = temp;
+		}
+
+		// Saving pointer to the element at the end
+		node->ast_node_value.func_def.params[node->ast_node_value.func_def.param_count] = elem;
+		node->ast_node_value.func_def.param_count++;
+		break;
+
+	case AST_CALL:
+		if (node->ast_node_value.call.arg_count == 0) // If the array is empty add first element with malloc
+		{
+			node->ast_node_value.call.arguments = malloc(sizeof(ast_node_t *));
+
+			if (node->ast_node_value.call.arguments == NULL)
+			{
+				print_err("Failed to allocate memory in ast_array_append()", ERR_INTERNAL);
+				return;
+			}
+		}
+
+		else // Else use realloc to add room for one more element
+		{
+			temp = realloc(node->ast_node_value.call.arguments,
+						   (node->ast_node_value.call.arg_count + 1) * sizeof(ast_node_t *));
+
+			if (temp == NULL)
+			{
+				free(node->ast_node_value.call.arguments);
+				print_err("Failed to allocate memory in ast_array_append()", ERR_INTERNAL);
+				return;
+			}
+			node->ast_node_value.call.arguments = temp;
+		}
+
+		// Saving pointer to the element at the end
+		node->ast_node_value.call.arguments[node->ast_node_value.call.arg_count] = elem;
+		node->ast_node_value.call.arg_count++;
+		break;
+
+	case AST_BLOCK:
+	case AST_PROGRAM:
+		if (node->ast_node_value.code_block.exp_count == 0) // If the array is empty add first element with malloc
+		{
+			node->ast_node_value.code_block.expression = malloc(sizeof(ast_node_t *));
+
+			if (node->ast_node_value.code_block.expression == NULL)
+			{
+				print_err("Failed to allocate memory in ast_array_append()", ERR_INTERNAL);
+				return;
+			}
+		}
+		else // Else use realloc to add room for one more element
+		{
+			temp = realloc(node->ast_node_value.code_block.expression,
+						   (node->ast_node_value.code_block.exp_count + 1) * sizeof(ast_node_t *));
+
+			if (temp == NULL)
+			{
+				free(node->ast_node_value.code_block.expression);
+				print_err("Failed to allocate memory in ast_array_append()", ERR_INTERNAL);
+				return;
+			}
+			node->ast_node_value.code_block.expression = temp;
+		}
+
+		// Saving pointer to the element at the end
+		node->ast_node_value.code_block.expression[node->ast_node_value.code_block.exp_count] = elem;
+		node->ast_node_value.code_block.exp_count++;
+		break;
+
+	// Wrong node type
+	default:
+		break;
+	}
 	return;
 }
