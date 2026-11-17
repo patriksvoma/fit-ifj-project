@@ -23,7 +23,7 @@ typedef struct symbol_data
 	bool defined;
 	int params;
 
-	// additional data
+	// TODO: additional data
 } *symbol_data_t;
 
 typedef struct symbol_tree
@@ -33,6 +33,13 @@ typedef struct symbol_tree
 	struct symbol_tree *left;
 	struct symbol_tree *right;
 } *symbol_tree_t;
+
+typedef struct scope
+{
+	symbol_tree_t symbols;
+	struct scope *parent;
+} *scope_t;
+
 
 // TODO:
 //	symGetData?
