@@ -74,7 +74,9 @@ typedef enum
 	AST_LITERAL_STRING,
 	AST_LITERAL_UNIT,
 	AST_LITERAL_BOOLEAN,
-	AST_INT_TO_DOUBLE
+	AST_INT_TO_DOUBLE,
+	AST_EXTENSION_DEF,
+	AST_EXTENSION_USE
 } node_type_t;
 
 /**
@@ -197,6 +199,21 @@ struct ast_node
 
 		// Double to int
 		ast_node_t *operand;
+
+		// Extension definition
+		struct
+		{
+			char *identifier;
+			ast_node_t *block;
+			ast_node_t **params;
+			size_t param_count;
+			data_type_t return_type;
+			data_type_t base_type;
+		} extension_def;
+
+		// Extension use
+		ast_node_t *base; // TODO: Domluvit se, možná spojit s double to int?
+
 	} ast_node_value;
 };
 
@@ -332,6 +349,21 @@ ast_node_t *ast_make_block();
  * @return ast_node_t* Pointer to node of the program
  */
 ast_node_t *ast_make_program();
+
+/**
+ * @brief Makes an empty node for extension definition
+ *
+ * @return ast_node_t*
+ */
+ast_node_t *ast_make_extension_def(); // TODO: Domluvit se co všechno je možné předat
+
+/**
+ * @brief Makes a node with the base its used on
+ *
+ * @param base Node containg what should be the extension used on
+ * @return ast_node_t* Pointer to node containing the use of the extension
+ */
+ast_node_t *ast_make_extension_use(ast_node_t *base);
 
 /**
  * @brief Function to destruct the tree
