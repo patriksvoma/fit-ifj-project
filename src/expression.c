@@ -740,6 +740,16 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		break;
 	// E&&E
 	case RULE_AND:
+		// Type check
+		op1_type = stack->top->next->next->data.expression_node->eval_type;
+		op2_type = stack->top->data.expression_node->eval_type;
+
+		if (!(op1_type == TYPE_BOOLEAN && op2_type == TYPE_BOOLEAN))
+		{
+			print_err_l("Invalid operand type for binary operator \"&&\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_LOGIC_AND);
 
@@ -749,6 +759,16 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		break;
 	// E||E
 	case RULE_OR:
+		// Type check
+		op1_type = stack->top->next->next->data.expression_node->eval_type;
+		op2_type = stack->top->data.expression_node->eval_type;
+
+		if (!(op1_type == TYPE_BOOLEAN && op2_type == TYPE_BOOLEAN))
+		{
+			print_err_l("Invalid operand type for binary operator \"||\".", ERR_SEMANTIC_INVALID_TYPE, line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		node = ast_add_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
 								 OP_LOGIC_OR);
 
