@@ -35,8 +35,8 @@ err_t for_generator(parser_data_t *pdata);
 err_t for_by(parser_data_t *pdata);
 err_t for_guard(parser_data_t *pdata);
 err_t val_var_def(parser_data_t *pdata);
-err_t expression(parser_data_t *pdata);
-err_t expression_seeded(parser_data_t *pdata, token_t *seed_token);
+err_t expression(parser_data_t *pdata, ast_node_t **return_node);
+err_t expression_seeded(parser_data_t *pdata, ast_node_t **return_node, token_t *seed_token);
 
 /**
  * @brief The entry rule of syntax analysis | <prologue>
@@ -560,8 +560,6 @@ err_t type(parser_data_t *pdata)
  */
 err_t statement(parser_data_t *pdata)
 {
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	err_t result;
 
 	// val
@@ -762,8 +760,6 @@ err_t statement(parser_data_t *pdata)
 	// <expression>
 	ast_node_t *expression_node;
 	return expression(pdata, &expression_node);
-	// TODO: Remove suppression
-	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value)
@@ -805,8 +801,6 @@ err_t else_opt(parser_data_t *pdata)
  */
 err_t else_if_opt(parser_data_t *pdata)
 {
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	// if (makes for an else if with the previous rule)
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_IF)
 	{
@@ -841,8 +835,6 @@ err_t else_if_opt(parser_data_t *pdata)
 
 	// <block_start>
 	return block_start(pdata);
-	// TODO: Remove suppression
-	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 /**
@@ -853,8 +845,6 @@ err_t else_if_opt(parser_data_t *pdata)
  */
 err_t for_generator(parser_data_t *pdata)
 {
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	// identifier
 	if (pdata->token.type == TOKEN_IDENTIFIER)
 	{
@@ -891,8 +881,6 @@ err_t for_generator(parser_data_t *pdata)
 
 	print_err_l("Expected \"to\" or \"until\" as a for statement generator.", ERR_SYNTAX, pdata->token.line);
 	return ERR_SYNTAX;
-	// TODO: Remove suppression
-	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 /**
@@ -927,8 +915,6 @@ err_t for_by(parser_data_t *pdata)
  */
 err_t for_guard(parser_data_t *pdata)
 {
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	// if
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_IF)
 	{
@@ -948,8 +934,6 @@ err_t for_guard(parser_data_t *pdata)
 
 	// Epsilon rule
 	return ERR_OK;
-	// TODO: Remove suppression
-	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 /**
@@ -1009,24 +993,26 @@ err_t val_var_def(parser_data_t *pdata)
  * @brief Expression rule | <expression>
  *
  * @param pdata Parser data
+ * @param return_node Address to which the address of the created AST note should be written
  * @return err_t Error code
  */
-err_t expression(parser_data_t *pdata)
+err_t expression(parser_data_t *pdata, ast_node_t **return_node)
 {
-	return parse_expression(pdata, NULL);
+	return parse_expression(pdata, NULL, return_node);
 }
 
 /**
  * @brief Expression rule with a seeded token at the beginning | <expression>
  *
  * @param pdata Parser data
+ * @param return_node Address to which the address of the created AST note should be written
  * @param seed_token If specified, this token is used as the first token in the expression.
  * 					 If NULL, works the same as expression().
  * @return err_t Error code
  */
-err_t expression_seeded(parser_data_t *pdata, token_t *seed_token)
+err_t expression_seeded(parser_data_t *pdata, ast_node_t **return_node, token_t *seed_token)
 {
-	return parse_expression(pdata, seed_token);
+	return parse_expression(pdata, seed_token, return_node);
 }
 
 err_t parse()

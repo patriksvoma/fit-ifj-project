@@ -8,8 +8,9 @@
  */
 
 #include "ast.h"
+#include "error.h"
 
-ast_node_t *ast_add_literal(literal_t *literal)
+ast_node_t *ast_make_literal(literal_t *literal)
 {
 	ast_node_t *leaf;
 	leaf = malloc(sizeof(ast_node_t));
@@ -55,7 +56,7 @@ ast_node_t *ast_add_literal(literal_t *literal)
 	return leaf;
 }
 
-ast_node_t *ast_add_identifier(char *i, data_type_t i_type)
+ast_node_t *ast_make_identifier(char *i, data_type_t i_type)
 {
 	ast_node_t *leaf;
 	leaf = malloc(sizeof(ast_node_t));
@@ -73,7 +74,7 @@ ast_node_t *ast_add_identifier(char *i, data_type_t i_type)
 	return leaf;
 }
 
-ast_node_t *ast_add_unary_op(ast_node_t *operand, operator_type_t op)
+ast_node_t *ast_make_unary_op(ast_node_t *operand, operator_type_t op)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -99,7 +100,7 @@ ast_node_t *ast_add_unary_op(ast_node_t *operand, operator_type_t op)
 	}
 }
 
-ast_node_t *ast_add_binary_op(ast_node_t *operand_left, ast_node_t *operand_right, operator_type_t op)
+ast_node_t *ast_make_binary_op(ast_node_t *operand_left, ast_node_t *operand_right, operator_type_t op)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -112,7 +113,15 @@ ast_node_t *ast_add_binary_op(ast_node_t *operand_left, ast_node_t *operand_righ
 	if (op != OP_NEG && op != OP_UMINUS && op != OP_UPLUS)
 	{
 		// Setting values
-		node->eval_type = operand_left->eval_type; // TODO: Vyresit zmeny typu po vyhodnocovani
+
+		if (op == OP_CONCATENATION || op == OP_MUL || op == OP_DIV || op == OP_MINUS || op == OP_PLUS)
+		{
+			node->eval_type = operand_left->eval_type;
+		}
+		else // Type canges for comparing operations
+		{
+			node->eval_type = TYPE_BOOLEAN;
+		}
 		node->node_type = AST_BIN_OPERATOR;
 		node->ast_node_value.bin_operator.operand_left = operand_left;
 		node->ast_node_value.bin_operator.operand_right = operand_right;
@@ -126,7 +135,24 @@ ast_node_t *ast_add_binary_op(ast_node_t *operand_left, ast_node_t *operand_righ
 	}
 }
 
-ast_node_t *ast_add_assign(char *i, data_type_t i_type, ast_node_t *expression)
+ast_node_t *ast_make_int_to_double(ast_node_t *operand)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	// Setting values
+	node->eval_type = TYPE_DOUBLE;
+	node->node_type = AST_INT_TO_DOUBLE;
+	node->ast_node_value.operand = operand;
+	return node;
+}
+
+ast_node_t *ast_make_assign(char *i, data_type_t i_type, ast_node_t *expression)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -144,7 +170,7 @@ ast_node_t *ast_add_assign(char *i, data_type_t i_type, ast_node_t *expression)
 	return node;
 }
 
-ast_node_t *ast_add_var_def(char *i, data_type_t i_type, ast_node_t *expression, bool non_modifiable)
+ast_node_t *ast_make_var_def(char *i, data_type_t i_type, ast_node_t *expression, bool non_modifiable)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -164,7 +190,7 @@ ast_node_t *ast_add_var_def(char *i, data_type_t i_type, ast_node_t *expression,
 	return node;
 }
 
-ast_node_t *ast_add_return(ast_node_t *expression)
+ast_node_t *ast_make_return(ast_node_t *expression)
 {
 	if (!expression)
 		return NULL;
@@ -184,7 +210,7 @@ ast_node_t *ast_add_return(ast_node_t *expression)
 	return node;
 }
 
-ast_node_t *ast_add_param(char *i, data_type_t i_type)
+ast_node_t *ast_make_param(char *i, data_type_t i_type)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -202,7 +228,7 @@ ast_node_t *ast_add_param(char *i, data_type_t i_type)
 	return node;
 }
 
-ast_node_t *ast_add_while(ast_node_t *condition, ast_node_t *block)
+ast_node_t *ast_make_while(ast_node_t *condition, ast_node_t *block)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -220,7 +246,7 @@ ast_node_t *ast_add_while(ast_node_t *condition, ast_node_t *block)
 	return node;
 }
 
-ast_node_t *ast_add_if(ast_node_t *condition, ast_node_t *if_block, ast_node_t *else_block)
+ast_node_t *ast_make_if(ast_node_t *condition, ast_node_t *if_block, ast_node_t *else_block)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -239,7 +265,7 @@ ast_node_t *ast_add_if(ast_node_t *condition, ast_node_t *if_block, ast_node_t *
 	return node;
 }
 
-ast_node_t *ast_add_call(char *i, ast_node_t **args, size_t args_count)
+ast_node_t *ast_make_call(char *i)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -252,14 +278,13 @@ ast_node_t *ast_add_call(char *i, ast_node_t **args, size_t args_count)
 	// Setting values
 	node->eval_type = TYPE_NONE;
 	node->node_type = AST_CALL;
-	node->ast_node_value.call.arg_count = args_count;
-	node->ast_node_value.call.arguments = args;
 	node->ast_node_value.call.identifier = i;
+	node->ast_node_value.call.arg_count = 0;
+	node->ast_node_value.call.arguments = NULL;
 	return node;
 }
 
-ast_node_t *ast_add_func_def(char *i, bool is_main, ast_node_t *block, ast_node_t **params, size_t param_count,
-							 data_type_t return_type)
+ast_node_t *ast_make_func_def(bool is_main)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -272,16 +297,16 @@ ast_node_t *ast_add_func_def(char *i, bool is_main, ast_node_t *block, ast_node_
 	// Setting values
 	node->eval_type = TYPE_NONE;
 	node->node_type = AST_FUNC_DEF;
-	node->ast_node_value.func_def.block = block;
-	node->ast_node_value.func_def.identifier = i;
 	node->ast_node_value.func_def.is_main = is_main;
-	node->ast_node_value.func_def.param_count = param_count;
-	node->ast_node_value.func_def.params = params;
-	node->ast_node_value.func_def.return_type = return_type;
+	node->ast_node_value.func_def.param_count = 0;
+	node->ast_node_value.func_def.params = NULL;
+	node->ast_node_value.func_def.block = NULL;
+	node->ast_node_value.func_def.return_type = TYPE_NONE;
 	return node;
 }
 
-ast_node_t *ast_add_block(ast_node_t **expressions, size_t exp_count, bool is_root)
+// TODO: Tady to taky bude potřeba popřípadě dodělat
+ast_node_t *ast_make_extension_def()
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -293,22 +318,64 @@ ast_node_t *ast_add_block(ast_node_t **expressions, size_t exp_count, bool is_ro
 
 	// Setting values
 	node->eval_type = TYPE_NONE;
-	if (is_root)
-	{
-		node->node_type = AST_PROGRAM;
-	}
-	else
-	{
-		node->node_type = AST_BLOCK;
-	}
-	node->ast_node_value.code_block.expression = expressions;
-	node->ast_node_value.code_block.exp_count = exp_count;
+	node->node_type = AST_EXTENSION_DEF;
+	node->ast_node_value.extension_def.param_count = 0;
+	node->ast_node_value.extension_def.params = NULL;
+	node->ast_node_value.extension_def.block = NULL;
+	node->ast_node_value.extension_def.return_type = TYPE_NONE;
+	node->ast_node_value.extension_def.base_type = TYPE_NONE;
 	return node;
 }
 
-/*
-	AST_FUNC_DEF,
-*/
+ast_node_t *ast_make_extension_use(ast_node_t *base)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_EXTENSION_USE;
+	node->ast_node_value.base = base;
+	return node;
+}
+
+ast_node_t *ast_make_block()
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_BLOCK;
+	node->ast_node_value.code_block.exp_count = 0;
+	node->ast_node_value.code_block.expression = NULL;
+	return node;
+}
+
+ast_node_t *ast_make_program()
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_PROGRAM;
+	node->ast_node_value.code_block.exp_count = 0;
+	node->ast_node_value.code_block.expression = NULL;
+	return node;
+}
 
 void destruct(ast_node_t *root)
 {
@@ -317,50 +384,44 @@ void destruct(ast_node_t *root)
 		return;
 	}
 
+	// Recursively callíng the function until it comes into a leaf and then calling free
 	node_type_t type = root->node_type;
 	switch (type)
 	{
-	case (AST_RETURN):
-		if (root->ast_node_value.expression == NULL)
-		{
-			free(root);
-		}
-		else
-		{
-			destruct(root->ast_node_value.expression);
-		}
+	case AST_RETURN:
+		destruct(root->ast_node_value.expression);
 		break;
 
-	case (AST_UN_OPERATOR):
+	case AST_UN_OPERATOR:
 		destruct(root->ast_node_value.un_operator.operand);
 		break;
 
-	case (AST_BIN_OPERATOR):
+	case AST_BIN_OPERATOR:
 		destruct(root->ast_node_value.bin_operator.operand_left);
 		destruct(root->ast_node_value.bin_operator.operand_right);
 		break;
 
-	case (AST_ASSIGN):
+	case AST_ASSIGN:
 		destruct(root->ast_node_value.assign.expression);
 		break;
 
-	case (AST_VAR_DEF):
+	case AST_VAR_DEF:
 		destruct(root->ast_node_value.var_def.expression);
 		break;
 
-	case (AST_WHILE):
+	case AST_WHILE:
 		destruct(root->ast_node_value.while_loop.block);
 		destruct(root->ast_node_value.while_loop.condition);
 		break;
 
-	case (AST_IF):
+	case AST_IF:
 		destruct(root->ast_node_value.if_statement.condition);
 		destruct(root->ast_node_value.if_statement.else_block);
 		destruct(root->ast_node_value.if_statement.if_block);
 		break;
 
-	case (AST_PROGRAM):
-	case (AST_BLOCK):
+	case AST_PROGRAM:
+	case AST_BLOCK:
 		for (size_t i = 0; i < root->ast_node_value.code_block.exp_count; i++)
 		{
 			destruct(root->ast_node_value.code_block.expression[i]);
@@ -368,7 +429,7 @@ void destruct(ast_node_t *root)
 		free(root->ast_node_value.code_block.expression);
 		break;
 
-	case (AST_CALL):
+	case AST_CALL:
 		for (size_t i = 0; i < root->ast_node_value.call.arg_count; i++)
 		{
 			destruct(root->ast_node_value.call.arguments[i]);
@@ -376,7 +437,7 @@ void destruct(ast_node_t *root)
 		free(root->ast_node_value.call.arguments);
 		break;
 
-	case (AST_FUNC_DEF):
+	case AST_FUNC_DEF:
 		destruct(root->ast_node_value.func_def.block);
 		for (size_t i = 0; i < root->ast_node_value.func_def.param_count; i++)
 		{
@@ -385,12 +446,164 @@ void destruct(ast_node_t *root)
 		free(root->ast_node_value.func_def.params);
 		break;
 
+	case AST_EXTENSION_DEF:
+		destruct(root->ast_node_value.extension_def.block);
+		for (size_t i = 0; i < root->ast_node_value.extension_def.param_count; i++)
+		{
+			destruct(root->ast_node_value.extension_def.params[i]);
+		}
+		free(root->ast_node_value.extension_def.params);
+		break;
+
+	case AST_INT_TO_DOUBLE:
+		destruct(root->ast_node_value.operand);
+		break;
+
+	case AST_EXTENSION_USE:
+		destruct(root->ast_node_value.base);
+		break;
+
 	// Leaf nodes
 	default:
-		free(root);
 		break;
 	}
 
 	free(root);
+	return;
+}
+
+void ast_array_append(ast_node_t *node, ast_node_t *elem)
+{
+	ast_node_t **temp;
+
+	if (!node || !elem)
+		return;
+
+	// Get the node type
+	switch (node->node_type)
+	{
+	case AST_FUNC_DEF:
+		if (node->ast_node_value.func_def.param_count == 0) // If the array is empty add first element with malloc
+		{
+			node->ast_node_value.func_def.params = malloc(sizeof(ast_node_t *));
+
+			if (node->ast_node_value.func_def.params == NULL)
+			{
+				print_err("Failed to allocate memory in ast_array_append()", ERR_INTERNAL);
+				return;
+			}
+		}
+		else // Else use realloc to add room for one more element
+		{
+			temp = realloc(node->ast_node_value.func_def.params,
+						   (node->ast_node_value.func_def.param_count + 1) * sizeof(ast_node_t *));
+
+			if (temp == NULL)
+			{
+				print_err("Failed to allocate memory in ast_array_append()", ERR_INTERNAL);
+				return;
+			}
+			node->ast_node_value.func_def.params = temp;
+		}
+
+		// Saving pointer to the element at the end
+		node->ast_node_value.func_def.params[node->ast_node_value.func_def.param_count] = elem;
+		node->ast_node_value.func_def.param_count++;
+		break;
+
+	case AST_CALL:
+		if (node->ast_node_value.call.arg_count == 0) // If the array is empty add first element with malloc
+		{
+			node->ast_node_value.call.arguments = malloc(sizeof(ast_node_t *));
+
+			if (node->ast_node_value.call.arguments == NULL)
+			{
+				print_err("Failed to allocate memory in ast_array_append()", ERR_INTERNAL);
+				return;
+			}
+		}
+
+		else // Else use realloc to add room for one more element
+		{
+			temp = realloc(node->ast_node_value.call.arguments,
+						   (node->ast_node_value.call.arg_count + 1) * sizeof(ast_node_t *));
+
+			if (temp == NULL)
+			{
+				print_err("Failed to allocate memory in ast_array_append()", ERR_INTERNAL);
+				return;
+			}
+			node->ast_node_value.call.arguments = temp;
+		}
+
+		// Saving pointer to the element at the end
+		node->ast_node_value.call.arguments[node->ast_node_value.call.arg_count] = elem;
+		node->ast_node_value.call.arg_count++;
+		break;
+
+	case AST_EXTENSION_DEF:
+		if (node->ast_node_value.extension_def.param_count == 0) // If the array is empty add first element with malloc
+		{
+			node->ast_node_value.extension_def.params = malloc(sizeof(ast_node_t *));
+
+			if (node->ast_node_value.extension_def.params == NULL)
+			{
+				print_err("Failed to allocate memory in ast_array_append()", ERR_INTERNAL);
+				return;
+			}
+		}
+
+		else // Else use realloc to add room for one more element
+		{
+			temp = realloc(node->ast_node_value.extension_def.params,
+						   (node->ast_node_value.extension_def.param_count + 1) * sizeof(ast_node_t *));
+
+			if (temp == NULL)
+			{
+				print_err("Failed to allocate memory in ast_array_append()", ERR_INTERNAL);
+				return;
+			}
+			node->ast_node_value.extension_def.params = temp;
+		}
+
+		// Saving pointer to the element at the end
+		node->ast_node_value.extension_def.params[node->ast_node_value.extension_def.param_count] = elem;
+		node->ast_node_value.extension_def.param_count++;
+		break;
+
+	case AST_BLOCK:
+	case AST_PROGRAM:
+		if (node->ast_node_value.code_block.exp_count == 0) // If the array is empty add first element with malloc
+		{
+			node->ast_node_value.code_block.expression = malloc(sizeof(ast_node_t *));
+
+			if (node->ast_node_value.code_block.expression == NULL)
+			{
+				print_err("Failed to allocate memory in ast_array_append()", ERR_INTERNAL);
+				return;
+			}
+		}
+		else // Else use realloc to add room for one more element
+		{
+			temp = realloc(node->ast_node_value.code_block.expression,
+						   (node->ast_node_value.code_block.exp_count + 1) * sizeof(ast_node_t *));
+
+			if (temp == NULL)
+			{
+				print_err("Failed to allocate memory in ast_array_append()", ERR_INTERNAL);
+				return;
+			}
+			node->ast_node_value.code_block.expression = temp;
+		}
+
+		// Saving pointer to the element at the end
+		node->ast_node_value.code_block.expression[node->ast_node_value.code_block.exp_count] = elem;
+		node->ast_node_value.code_block.exp_count++;
+		break;
+
+	// Wrong node type
+	default:
+		break;
+	}
 	return;
 }

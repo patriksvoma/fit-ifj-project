@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "ast.h"
 #include "error.h"
 #include "scanner.h"
 
