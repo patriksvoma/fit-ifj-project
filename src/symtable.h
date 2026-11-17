@@ -10,6 +10,7 @@
 #pragma once
 
 #include "error.h"
+#include <stdbool.h>
 
 typedef enum
 {
@@ -26,13 +27,18 @@ typedef struct symbol_data
 	// TODO: additional data
 } *symbol_data_t;
 
+typedef struct symbol_node
+{
+    char *key;
+    symbol_data_t data;
+    struct symbol_node *left;
+    struct symbol_node *right;
+} symbol_node_t;
+
 typedef struct symbol_tree
 {
-	char *key;
-	symbol_data_t data;
-	struct symbol_tree *left;
-	struct symbol_tree *right;
-} *symbol_tree_t;
+    symbol_node_t *root;
+} symbol_tree_t;
 
 typedef struct scope
 {
@@ -40,9 +46,9 @@ typedef struct scope
 	struct scope *parent;
 } *scope_t;
 
-
 // TODO:
 //	symGetData?
+//	scope stuff
 
 /**
  * @brief Initializes symbol tree
