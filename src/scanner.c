@@ -210,10 +210,56 @@ void buf_free(buffer_t *buf)
  */
 err_t get_next_token(token_t *token, eol_rule_t eol)
 {
-	// TODO: This placeholder code is here just to pass code checks
-	token->attribute.integer = 0;
-	(void)eol;
-	(void)find_keyword;
+	buffer_t buf = {0};
+	state_t state = S_START;
+	bool newline_seen = false;
+	int c;
 
+	memset(token, 0, sizeof(*token));
+
+	while (true)
+	{
+		c = next_char();
+
+		switch (state)
+		{
+		case S_START:
+			if (c == '\n')
+			{
+				newline_seen = true;
+				break;
+			}
+			if (c == ' ' || c == '\r')
+				break;
+
+			token->line = scanner_line;
+			token->starts_logical_line = newline_seen;
+
+			switch (c)
+			{
+			case EOF: token->type = TOKEN_EOF; goto accept;
+			case '(': token->type = TOKEN_OPENING_BRACKET; goto accept;
+			case ')': token->type = TOKEN_CLOSING_BRACKET; goto accept;
+			case ',': token->type = TOKEN_COMMA; goto accept;
+			case ':': token->type = TOKEN_COLON; goto accept;
+			case '+': token->type = TOKEN_PLUS; goto accept;
+			case '-': token->type = TOKEN_MINUS; goto accept;
+			case '*': token->type = TOKEN_ASTERISK; goto accept;
+			default:
+				goto fail;
+			}
+
+		default:
+			break;
+		}
+	}
+
+accept:
+	buf_free(&buf);
+	(void)eol; // TODO: check EOL
+	return ERR_OK;
+
+fail:
+	buf_free(&buf);
 	return ERR_SCANNER;
 }
