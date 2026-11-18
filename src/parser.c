@@ -793,7 +793,7 @@ err_t statement(parser_data_t *pdata)
 	// return
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_RETURN)
 	{
-		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		result = get_next_token(&pdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
 
@@ -837,12 +837,32 @@ err_t statement(parser_data_t *pdata)
 	return expression(pdata, &expression_node);
 }
 
-err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value)
+/**
+ * @brief Parses the statement in a return call. If there is no statement returns a node with the Unit type
+ *
+ * @param pdata Parser data
+ * @param return_node Address to which the address of the created node will be saved
+ * @return err_t Erroc code
+ */
+err_t expression_opt(parser_data_t *pdata, ast_node_t **return_node)
 {
-	// TODO:
-	(void)return_value;
-	(void)pdata;
-	return ERR_SYNTAX;
+	// If the token after return is on another line, the return is empty
+	if (pdata->token.starts_logical_line || pdata->token.type == TOKEN_EOF)
+	{
+		literal_t lit;
+		lit.literal_type = TYPE_UNIT;
+
+		*return_node = ast_make_literal(&lit);
+		if (*return_node == NULL)
+		{
+			print_err_l("Failed to create an AST node inside expression_opt()", ERR_INTERNAL, pdata->token.line);
+			return ERR_INTERNAL;
+		}
+
+		return ERR_OK;
+	}
+
+	return expression(pdata, return_node);
 }
 
 /**
