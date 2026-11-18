@@ -87,7 +87,7 @@ typedef struct
 {
 	data_type_t literal_type;
 	union {
-		int integer;
+		long long int integer;
 		double decimal;
 		char *string;
 		bool boolean;
@@ -114,7 +114,7 @@ struct ast_node
 		} code_block;
 
 		// Literals
-		int int_literal;
+		long long int int_literal;
 		double double_literal;
 		char *string_literal;
 		bool boolean_literal;

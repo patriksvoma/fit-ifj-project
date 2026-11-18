@@ -125,18 +125,53 @@ void print_ord()
 }
 
 /**
+ * @brief Function to generate code for a specific node
+ *
+ * @param node Node for wich the code should be generated
+ */
+void generate_node(const ast_node_t *node)
+{
+	node_type_t type = node->node_type;
+
+	switch (type)
+	{
+	case AST_LITERAL_INT:
+		printf("PUSHS %lli", node->ast_node_value.int_literal);
+		break;
+
+	case AST_LITERAL_DOUBLE:
+		printf("PUSHS %a", node->ast_node_value.double_literal);
+		break;
+
+	case AST_LITERAL_STRING:
+		printf("PUSHS"); // TODO: Escape sekvence
+		break;
+
+	case AST_LITERAL_BOOLEAN:
+		printf("PUSHS %d", node->ast_node_value.boolean_literal);
+		break;
+
+	case AST_LITERAL_UNIT:
+		break;
+
+	default:
+		break;
+	}
+}
+
+/**
  * @brief Function for code generation
  *
  * @param root Pointer to node of ast containing the root
  */
-void generate_code(ast_node_t *root)
+void generate_code(const ast_node_t *root)
 {
-	// TODO: remove
-	(void)root;
-
 	printf(".IFJcode26\n");
 
 	printf("JUMP main\n");
 
 	print_substr();
+	print_ord();
+
+	generate_node(root);
 }
