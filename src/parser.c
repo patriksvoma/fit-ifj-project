@@ -13,11 +13,11 @@
 #include <string.h>
 
 // Forward declarations of parser rules
-err_t prologue(parser_data_t *pdata, ast_node_t *root_node);
-err_t func_list(parser_data_t *pdata, ast_node_t *root_node);
+err_t prologue(parser_data_t *pdata, ast_node_t *program_node);
+err_t func_list(parser_data_t *pdata, ast_node_t *program_node);
 err_t ext_def(parser_data_t *pdata);
 err_t ext_def_list(parser_data_t *pdata, unsigned list_indent);
-err_t func_annotation(parser_data_t *pdata, ast_node_t *root_node);
+err_t func_annotation(parser_data_t *pdata, ast_node_t *program_node);
 err_t func_def(parser_data_t *pdata, ast_node_t *func_def_node);
 err_t func_params(parser_data_t *pdata);
 err_t param_first(parser_data_t *pdata);
@@ -42,10 +42,10 @@ err_t expression_seeded(parser_data_t *pdata, ast_node_t **return_node, token_t 
  * @brief The entry rule of syntax analysis | <prologue>
  *
  * @param pdata Parser data
- * @param root_node AST program node
+ * @param program_node AST program node
  * @return err_t Error code
  */
-err_t prologue(parser_data_t *pdata, ast_node_t *root_node)
+err_t prologue(parser_data_t *pdata, ast_node_t *program_node)
 {
 	// Keyword import
 	err_t result = get_next_token(&pdata->token, EOL_OPTIONAL);
@@ -107,17 +107,17 @@ err_t prologue(parser_data_t *pdata, ast_node_t *root_node)
 	if (result)
 		return result;
 
-	return func_list(pdata, root_node);
+	return func_list(pdata, program_node);
 }
 
 /**
  * @brief List of global functions or extension definitons | <func-list>
  *
  * @param pdata Parser data
- * @param root_node AST program node
+ * @param program_node AST program node
  * @return err_t Error code
  */
-err_t func_list(parser_data_t *pdata, ast_node_t *root_node)
+err_t func_list(parser_data_t *pdata, ast_node_t *program_node)
 {
 	err_t result;
 
@@ -125,11 +125,11 @@ err_t func_list(parser_data_t *pdata, ast_node_t *root_node)
 	if (pdata->token.type == TOKEN_KEYWORD &&
 		(pdata->token.attribute.keyword == KW_MAIN || pdata->token.attribute.keyword == KW_DEF))
 	{
-		result = func_annotation(pdata, root_node);
+		result = func_annotation(pdata, program_node);
 		if (result)
 			return result;
 
-		return func_list(pdata, root_node);
+		return func_list(pdata, program_node);
 	}
 	// extension
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_EXTENSION)
@@ -140,7 +140,7 @@ err_t func_list(parser_data_t *pdata, ast_node_t *root_node)
 			return result;
 
 		// <func-list>
-		return func_list(pdata, root_node);
+		return func_list(pdata, program_node);
 	}
 	// If EOF is received, end the function list
 	else if (pdata->token.type == TOKEN_EOF)
@@ -264,10 +264,10 @@ err_t ext_def_list(parser_data_t *pdata, unsigned list_indent)
  * @brief Rule for the main function annotiation | <func-annotation>
  *
  * @param pdata Parser data
- * @param root_node AST program node
+ * @param program_node AST program node
  * @return err_t Error code
  */
-err_t func_annotation(parser_data_t *pdata, ast_node_t *root_node)
+err_t func_annotation(parser_data_t *pdata, ast_node_t *program_node)
 {
 	ast_node_t *func_node;
 
@@ -288,7 +288,7 @@ err_t func_annotation(parser_data_t *pdata, ast_node_t *root_node)
 
 		// TODO: Create an entry in the symbol table
 		func_node = ast_make_func_def(true);
-		ast_array_append(root_node, func_node);
+		ast_array_append(program_node, func_node);
 
 		return func_def(pdata, func_node);
 	}
@@ -303,7 +303,7 @@ err_t func_annotation(parser_data_t *pdata, ast_node_t *root_node)
 
 		// TODO: Create an entry in the symbol table
 		func_node = ast_make_func_def(true);
-		ast_array_append(root_node, func_node);
+		ast_array_append(program_node, func_node);
 
 		return func_def(pdata, func_node);
 	}
@@ -1144,11 +1144,11 @@ err_t expression_seeded(parser_data_t *pdata, ast_node_t **return_node, token_t 
 	return parse_expression(pdata, seed_token, return_node);
 }
 
-err_t parse(ast_node_t *ast_root)
+err_t parse(ast_node_t *program_node)
 {
 	parser_data_t pdata = {};
 
-	err_t result = prologue(&pdata, ast_root);
+	err_t result = prologue(&pdata, program_node);
 
 	return result;
 }
