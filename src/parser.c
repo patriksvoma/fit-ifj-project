@@ -269,7 +269,7 @@ err_t ext_def_list(parser_data_t *pdata, unsigned list_indent)
  */
 err_t func_annotation(parser_data_t *pdata, ast_node_t *program_node)
 {
-	ast_node_t *func_node;
+	ast_node_t *func_node; // FIXME:
 
 	// @main, go to <func-def>
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_MAIN)
@@ -287,8 +287,8 @@ err_t func_annotation(parser_data_t *pdata, ast_node_t *program_node)
 			return result;
 
 		// TODO: Create an entry in the symbol table
-		func_node = ast_make_func_def(true);
-		ast_array_append(program_node, func_node);
+		func_node = ast_make_func_def(true);	   // FIXME:
+		ast_array_append(program_node, func_node); // FIXME:
 
 		return func_def(pdata, func_node);
 	}
@@ -302,8 +302,8 @@ err_t func_annotation(parser_data_t *pdata, ast_node_t *program_node)
 		}
 
 		// TODO: Create an entry in the symbol table
-		func_node = ast_make_func_def(true);
-		ast_array_append(program_node, func_node);
+		func_node = ast_make_func_def(true);	   // FIXME:
+		ast_array_append(program_node, func_node); // FIXME:
 
 		return func_def(pdata, func_node);
 	}
@@ -340,7 +340,7 @@ err_t func_def(parser_data_t *pdata, ast_node_t *func_def_node)
 	// Save the identificator
 	// TODO: Check if the identificator already exists
 	// TODO: Save into the symbol table
-	result = ast_func_def_set_id(func_def_node, pdata->token.attribute.string);
+	result = ast_func_def_set_id(func_def_node, pdata->token.attribute.string); // FIXME:
 	if (result)
 		return result;
 
@@ -716,7 +716,7 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		ast_node_t *condition_node;
+		ast_node_t *condition_node; // FIXME:
 		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
@@ -747,7 +747,7 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		ast_node_t *condition_node;
+		ast_node_t *condition_node; // FIXME:
 		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
@@ -793,7 +793,7 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		ast_node_t *iterator_node;
+		ast_node_t *iterator_node; // FIXME:
 		result = expression(pdata, &iterator_node);
 		if (result)
 			return result;
@@ -829,7 +829,7 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		ast_node_t *return_value_node;
+		ast_node_t *return_value_node; // FIXME:
 		return expression_opt(pdata, &return_value_node);
 	}
 	// identifier
@@ -853,18 +853,18 @@ err_t statement(parser_data_t *pdata)
 			if (result)
 				return result;
 
-			ast_node_t *assigned_value_node;
+			ast_node_t *assigned_value_node; // FIXME:
 			return expression(pdata, &assigned_value_node);
 		}
 
 		// <expression>
 		// The expression parser needs to have the id token seeded before the token in pdata
-		ast_node_t *expression_node;
+		ast_node_t *expression_node; // FIXME:
 		return expression_seeded(pdata, &expression_node, &id_token);
 	}
 
 	// <expression>
-	ast_node_t *expression_node;
+	ast_node_t *expression_node; // FIXME:
 	return expression(pdata, &expression_node);
 }
 
@@ -883,7 +883,7 @@ err_t expression_opt(parser_data_t *pdata, ast_node_t **return_node)
 		literal_t lit;
 		lit.literal_type = TYPE_UNIT;
 
-		*return_node = ast_make_literal(&lit);
+		*return_node = ast_make_literal(&lit); // FIXME:
 		if (*return_node == NULL)
 		{
 			print_err_l("Failed to create an AST node inside expression_opt()", ERR_INTERNAL, pdata->token.line);
@@ -938,7 +938,7 @@ err_t else_if_opt(parser_data_t *pdata, unsigned header_indent_level)
 			return result;
 
 		// <expression>
-		ast_node_t *condition_node;
+		ast_node_t *condition_node; // FIXME:
 		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
@@ -987,7 +987,7 @@ err_t for_generator(parser_data_t *pdata)
 				return result;
 
 			// <expression>
-			ast_node_t *to_node;
+			ast_node_t *to_node; // FIXME:
 			result = expression(pdata, &to_node);
 			if (result)
 				return result;
@@ -1003,7 +1003,7 @@ err_t for_generator(parser_data_t *pdata)
 				return result;
 
 			// <expression>
-			ast_node_t *until_node;
+			ast_node_t *until_node; // FIXME:
 			return expression(pdata, &until_node);
 		}
 	}
@@ -1028,7 +1028,7 @@ err_t for_by(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		ast_node_t *by_node;
+		ast_node_t *by_node; // FIXME:
 		return expression(pdata, &by_node);
 	}
 
@@ -1052,7 +1052,7 @@ err_t for_guard(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		ast_node_t *condition_node;
+		ast_node_t *condition_node; // FIXME:
 		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
@@ -1098,7 +1098,7 @@ err_t val_var_def(parser_data_t *pdata)
 			return result;
 
 		// <expression
-		ast_node_t *assigned_value_node;
+		ast_node_t *assigned_value_node; // FIXME:
 		return expression(pdata, &assigned_value_node);
 	}
 
@@ -1109,7 +1109,7 @@ err_t val_var_def(parser_data_t *pdata)
 		if (result)
 			return result;
 
-		ast_node_t *assigned_value_node;
+		ast_node_t *assigned_value_node; // FIXME:
 		return expression(pdata, &assigned_value_node);
 	}
 
