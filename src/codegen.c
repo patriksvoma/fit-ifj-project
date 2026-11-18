@@ -123,6 +123,53 @@ void print_ord()
 	printf("POPFRAME\n");
 	printf("RETURN\n");
 }
+/*
+	AST_PROGRAM,
+	AST_FUNC_DEF,
+	AST_PARAM,
+	AST_RETURN,
+	AST_BLOCK,
+	AST_IF,
+	AST_WHILE,
+	AST_VAR_DEF,
+
+	AST_BIN_OPERATOR,
+	AST_UN_OPERATOR,
+	AST_ASSIGN,
+	AST_CALL,
+
+	AST_INT_TO_DOUBLE,
+	AST_EXTENSION_DEF,
+	AST_EXTENSION_USE
+*/
+
+/**
+ * @brief Prints string with chars that need escape sequence
+ *
+ * @param str String to be printed
+ */
+void print_string(const char *str)
+{
+	if (str == NULL)
+	{
+		return;
+	}
+
+	for (int i = 0; str[i] != '\0'; i++)
+	{
+		unsigned char j = (unsigned char)str[i];
+		if (j <= 32 || j == 35 || j == 92 || j >= 127)
+		{
+			printf("\\03%d", j);
+		}
+		else
+		{
+			printf("%c", str[i]);
+		}
+	}
+	printf("\n");
+	return;
+}
 
 /**
  * @brief Function to generate code for a specific node
@@ -136,22 +183,27 @@ void generate_node(const ast_node_t *node)
 	switch (type)
 	{
 	case AST_LITERAL_INT:
-		printf("PUSHS %lli", node->ast_node_value.int_literal);
+		printf("PUSHS int@%lli", node->ast_node_value.int_literal);
 		break;
 
 	case AST_LITERAL_DOUBLE:
-		printf("PUSHS %a", node->ast_node_value.double_literal);
+		printf("PUSHS float@%a", node->ast_node_value.double_literal);
 		break;
 
 	case AST_LITERAL_STRING:
-		printf("PUSHS"); // TODO: Escape sekvence
+		printf("PUSHS string@");
+		print_string(node->ast_node_value.string_literal);
 		break;
 
 	case AST_LITERAL_BOOLEAN:
-		printf("PUSHS %d", node->ast_node_value.boolean_literal);
+		printf("PUSHS bool@%d", node->ast_node_value.boolean_literal);
 		break;
 
 	case AST_LITERAL_UNIT:
+		break;
+
+	case AST_IDENTIFIER:
+		printf("PUSHS LF@%s", node->ast_node_value.identifier);
 		break;
 
 	default:
