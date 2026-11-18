@@ -517,8 +517,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_make_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
-								  OP_MUL); // FIXME:
+		node =
+			ast_binary_op_make(OP_MUL, stack->top->next->next->data.expression_node, stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -556,8 +556,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_make_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
-								  OP_DIV); // FIXME:
+		node =
+			ast_binary_op_make(OP_DIV, stack->top->next->next->data.expression_node, stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -596,8 +596,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_make_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
-								  OP_PLUS); // FIXME:
+		node =
+			ast_binary_op_make(OP_PLUS, stack->top->next->next->data.expression_node, stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -635,9 +635,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node =
-			ast_make_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, // FIXME:
-							   OP_MINUS);
+		node = ast_binary_op_make(OP_MINUS, stack->top->next->next->data.expression_node,
+								  stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -676,8 +675,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_make_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node,
-								  OP_LESS); // FIXME:
+		node =
+			ast_binary_op_make(OP_LESS, stack->top->next->next->data.expression_node, stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -716,9 +715,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node =
-			ast_make_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, // FIXME:
-							   OP_LESS_EQUAL);
+		node = ast_binary_op_make(OP_LESS_EQUAL, stack->top->next->next->data.expression_node,
+								  stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -757,9 +755,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node =
-			ast_make_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, // FIXME:
-							   OP_GREATER);
+		node = ast_binary_op_make(OP_GREATER, stack->top->next->next->data.expression_node,
+								  stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -798,9 +795,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node =
-			ast_make_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, // FIXME:
-							   OP_GREATER_EQUAL);
+		node = ast_binary_op_make(OP_GREATER_EQUAL, stack->top->next->next->data.expression_node,
+								  stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -841,9 +837,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node =
-			ast_make_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, // FIXME:
-							   OP_EQUAL);
+		node = ast_binary_op_make(OP_EQUAL, stack->top->next->next->data.expression_node,
+								  stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -884,9 +879,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node =
-			ast_make_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, // FIXME:
-							   OP_NOT_EQUAL);
+		node = ast_binary_op_make(OP_NOT_EQUAL, stack->top->next->next->data.expression_node,
+								  stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -904,9 +898,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node =
-			ast_make_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, // FIXME:
-							   OP_LOGIC_AND);
+		node = ast_binary_op_make(OP_LOGIC_AND, stack->top->next->next->data.expression_node,
+								  stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -924,9 +917,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node =
-			ast_make_binary_op(stack->top->next->next->data.expression_node, stack->top->data.expression_node, // FIXME:
-							   OP_LOGIC_OR);
+		node = ast_binary_op_make(OP_LOGIC_OR, stack->top->next->next->data.expression_node,
+								  stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -959,7 +951,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	return ERR_OK;
 }
 
-err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **return_node) // FIXME:
+err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **return_node)
 {
 	bool use_seed = seed_token;
 
