@@ -1,6 +1,6 @@
 /**
  * @file parser.h
- * @brief Syntax analyzer for the IFJ26 compiler
+ * @brief Recursive (top-down) part of the syntax analyzer for the IFJ26 compiler
  *
  * @author Patrik Švoma (xsvomap00@stud.fit.vut.cz)
  *
@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "ast.h"
 #include "error.h"
 #include "scanner.h"
 

@@ -1,6 +1,6 @@
 /**
  * @file parser.c
- * @brief Syntax analyzer for the IFJ26 compiler
+ * @brief Recursive (top-down) part of the syntax analyzer for the IFJ26 compiler
  *
  * @author Patrik Švoma (xsvomap00@stud.fit.vut.cz)
  *
@@ -9,6 +9,7 @@
 
 #include "parser.h"
 #include "error.h"
+#include "expression.h"
 #include <string.h>
 
 // Forward declarations of parser rules
@@ -27,15 +28,15 @@ err_t block_start(parser_data_t *pdata);
 err_t block(parser_data_t *pdata);
 err_t type(parser_data_t *pdata);
 err_t statement(parser_data_t *pdata);
-err_t expression_opt(parser_data_t *pdata);
+err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value);
 err_t else_opt(parser_data_t *pdata);
 err_t else_if_opt(parser_data_t *pdata);
 err_t for_generator(parser_data_t *pdata);
 err_t for_by(parser_data_t *pdata);
 err_t for_guard(parser_data_t *pdata);
 err_t val_var_def(parser_data_t *pdata);
-err_t expression(parser_data_t *pdata);
-err_t expression_seeded(parser_data_t *pdata, token_t *seed_token);
+err_t expression(parser_data_t *pdata, ast_node_t **return_node);
+err_t expression_seeded(parser_data_t *pdata, ast_node_t **return_node, token_t *seed_token);
 
 /**
  * @brief The entry rule of syntax analysis | <prologue>
@@ -455,6 +456,9 @@ err_t return_type(parser_data_t *pdata)
 			print_err_l("Expected a block start delimiter (=).", ERR_SYNTAX, pdata->token.line);
 			return ERR_SYNTAX;
 		}
+		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		if (result)
+			return result;
 
 		// <block-start>
 		return block_start(pdata);
@@ -489,6 +493,9 @@ err_t block_start(parser_data_t *pdata)
  */
 err_t block(parser_data_t *pdata)
 {
+	if (pdata->token.type == TOKEN_EOF)
+		return ERR_OK;
+
 	err_t result = statement(pdata);
 	if (result)
 		return result;
@@ -553,8 +560,6 @@ err_t type(parser_data_t *pdata)
  */
 err_t statement(parser_data_t *pdata)
 {
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	err_t result;
 
 	// val
@@ -605,7 +610,8 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		result = expression(pdata);
+		ast_node_t *condition_node;
+		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
 
@@ -635,7 +641,8 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		result = expression(pdata);
+		ast_node_t *condition_node;
+		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
 
@@ -680,7 +687,8 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		result = expression(pdata);
+		ast_node_t *iterator_node;
+		result = expression(pdata, &iterator_node);
 		if (result)
 			return result;
 
@@ -715,7 +723,8 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		return expression_opt(pdata);
+		ast_node_t *return_value_node;
+		return expression_opt(pdata, &return_value_node);
 	}
 	// identifier
 	else if (pdata->token.type == TOKEN_IDENTIFIER)
@@ -738,23 +747,25 @@ err_t statement(parser_data_t *pdata)
 			if (result)
 				return result;
 
-			return expression(pdata);
+			ast_node_t *assigned_value_node;
+			return expression(pdata, &assigned_value_node);
 		}
 
 		// <expression>
 		// The expression parser needs to have the id token seeded before the token in pdata
-		return expression_seeded(pdata, &id_token);
+		ast_node_t *expression_node;
+		return expression_seeded(pdata, &expression_node, &id_token);
 	}
 
 	// <expression>
-	return expression(pdata);
-	// TODO: Remove suppression
-	// cppcheck-suppress-end knownConditionTrueFalse
+	ast_node_t *expression_node;
+	return expression(pdata, &expression_node);
 }
 
-err_t expression_opt(parser_data_t *pdata)
+err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value)
 {
 	// TODO:
+	(void)return_value;
 	(void)pdata;
 	return ERR_SYNTAX;
 }
@@ -775,7 +786,7 @@ err_t else_opt(parser_data_t *pdata)
 			return result;
 
 		// <else-if-opt>
-		else_if_opt(pdata);
+		return else_if_opt(pdata);
 	}
 
 	// Epsilon rule
@@ -790,8 +801,6 @@ err_t else_opt(parser_data_t *pdata)
  */
 err_t else_if_opt(parser_data_t *pdata)
 {
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	// if (makes for an else if with the previous rule)
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_IF)
 	{
@@ -800,7 +809,8 @@ err_t else_if_opt(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		result = expression(pdata);
+		ast_node_t *condition_node;
+		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
 
@@ -825,8 +835,6 @@ err_t else_if_opt(parser_data_t *pdata)
 
 	// <block_start>
 	return block_start(pdata);
-	// TODO: Remove suppression
-	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 /**
@@ -837,13 +845,12 @@ err_t else_if_opt(parser_data_t *pdata)
  */
 err_t for_generator(parser_data_t *pdata)
 {
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	// identifier
 	if (pdata->token.type == TOKEN_IDENTIFIER)
 	{
 		err_t result;
 
+		// to
 		if (!strcmp(pdata->token.attribute.string, "to"))
 		{
 			result = get_next_token(&pdata->token, EOL_FORBIDDEN);
@@ -851,13 +858,15 @@ err_t for_generator(parser_data_t *pdata)
 				return result;
 
 			// <expression>
-			result = expression(pdata);
+			ast_node_t *to_node;
+			result = expression(pdata, &to_node);
 			if (result)
 				return result;
 
 			// <for-by>
 			return for_by(pdata);
 		}
+		// until
 		else if (!strcmp(pdata->token.attribute.string, "until"))
 		{
 			result = get_next_token(&pdata->token, EOL_FORBIDDEN);
@@ -865,14 +874,13 @@ err_t for_generator(parser_data_t *pdata)
 				return result;
 
 			// <expression>
-			return expression(pdata);
+			ast_node_t *until_node;
+			return expression(pdata, &until_node);
 		}
 	}
 
 	print_err_l("Expected \"to\" or \"until\" as a for statement generator.", ERR_SYNTAX, pdata->token.line);
 	return ERR_SYNTAX;
-	// TODO: Remove suppression
-	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 /**
@@ -891,7 +899,8 @@ err_t for_by(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		return expression(pdata);
+		ast_node_t *by_node;
+		return expression(pdata, &by_node);
 	}
 
 	// Epsilon rule
@@ -906,8 +915,6 @@ err_t for_by(parser_data_t *pdata)
  */
 err_t for_guard(parser_data_t *pdata)
 {
-	// TODO: Remove suppression
-	// cppcheck-suppress-begin knownConditionTrueFalse
 	// if
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_IF)
 	{
@@ -916,7 +923,8 @@ err_t for_guard(parser_data_t *pdata)
 			return result;
 
 		// <expression>
-		result = expression(pdata);
+		ast_node_t *condition_node;
+		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
 
@@ -926,8 +934,6 @@ err_t for_guard(parser_data_t *pdata)
 
 	// Epsilon rule
 	return ERR_OK;
-	// TODO: Remove suppression
-	// cppcheck-suppress-end knownConditionTrueFalse
 }
 
 /**
@@ -963,7 +969,8 @@ err_t val_var_def(parser_data_t *pdata)
 			return result;
 
 		// <expression
-		return expression(pdata);
+		ast_node_t *assigned_value_node;
+		return expression(pdata, &assigned_value_node);
 	}
 
 	// =
@@ -973,7 +980,8 @@ err_t val_var_def(parser_data_t *pdata)
 		if (result)
 			return result;
 
-		return expression(pdata);
+		ast_node_t *assigned_value_node;
+		return expression(pdata, &assigned_value_node);
 	}
 
 	print_err_l("Expected a type declaration or an assignment operator after identifier", ERR_SYNTAX,
@@ -981,19 +989,30 @@ err_t val_var_def(parser_data_t *pdata)
 	return ERR_SYNTAX;
 }
 
-err_t expression(parser_data_t *pdata)
+/**
+ * @brief Expression rule | <expression>
+ *
+ * @param pdata Parser data
+ * @param return_node Address to which the address of the created AST note should be written
+ * @return err_t Error code
+ */
+err_t expression(parser_data_t *pdata, ast_node_t **return_node)
 {
-	// TODO:
-	(void)pdata;
-	return ERR_SYNTAX;
+	return parse_expression(pdata, NULL, return_node);
 }
 
-err_t expression_seeded(parser_data_t *pdata, token_t *seed_token)
+/**
+ * @brief Expression rule with a seeded token at the beginning | <expression>
+ *
+ * @param pdata Parser data
+ * @param return_node Address to which the address of the created AST note should be written
+ * @param seed_token If specified, this token is used as the first token in the expression.
+ * 					 If NULL, works the same as expression().
+ * @return err_t Error code
+ */
+err_t expression_seeded(parser_data_t *pdata, ast_node_t **return_node, token_t *seed_token)
 {
-	// TODO:
-	(void)pdata;
-	(void)seed_token;
-	return ERR_SYNTAX;
+	return parse_expression(pdata, seed_token, return_node);
 }
 
 err_t parse()
