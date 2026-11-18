@@ -11,6 +11,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+// TODO:
+//	scope stuff
+//	item_create
+//	item_exists
+//	item_find
+//	destroy
+
 /**
  * @brief Creates a new symbol tree node
  *
@@ -63,18 +70,27 @@ err_t symtable_init(tree_node_t **root)
 	return ERR_OK;
 }
 
-// replace with symtable_item_find()
-symbol_data_t *symtable_search(tree_node_t *root, const char *key)
+symbol_data_t *symtable_item_find(symtable_t *table, const char *key)
 {
-	if (key == NULL || root == NULL)
+	if (key == NULL || table == NULL || table->root_node == NULL)
 		return NULL;
 
-	if (strcmp(key, root->key) == 0)
-		return &root->data;
-	else if (strcmp(key, root->key) < 0)
-		symtable_search(root->left, key);
-
-	return symtable_search(root->right, key);
+	if (strcmp(key, table->root_node->key) == 0)
+	{
+		return &table->root_node->data;
+	}
+	else if (strcmp(key, table->root_node->key) < 0)
+	{
+		symtable_t left_table = *table;
+		left_table.root_node = table->root_node->left;
+		return symtable_item_find(&left_table, key);
+	}
+	else
+	{
+		symtable_t right_table = *table;
+		right_table.root_node = table->root_node->right;
+		return symtable_item_find(&right_table, key);
+	}
 }
 
 static int height(const tree_node_t *node)

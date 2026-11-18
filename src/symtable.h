@@ -99,13 +99,6 @@ typedef struct symtable
 
 } symtable_t;
 
-// TODO:
-//	scope stuff
-//	item_create
-//	item_exists
-//	item_find
-//	destroy
-
 /**
  * @brief Creates a symbol into symbol tree
  *
