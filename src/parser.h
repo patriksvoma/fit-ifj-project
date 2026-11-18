@@ -25,6 +25,7 @@ typedef struct
 /**
  * @brief Main parsing function
  *
+ * @param root_node AST root node
  * @return err_t Error code
  */
-err_t parse();
+err_t parse(ast_node_t *root_node);

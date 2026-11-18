@@ -11,7 +11,9 @@
 
 int main()
 {
-	int err_code = parse();
+	ast_node_t *ast_root = ast_make_program();
+
+	int err_code = parse(ast_root);
 
 	return err_code;
 }
