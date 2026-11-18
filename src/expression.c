@@ -61,8 +61,8 @@ prec_table_operator_t prec_table[PREC_TABLE_SIZE][PREC_TABLE_SIZE] = {
 	{S, S, R, S, S, S, S, S, S, S, S, N, N, N, N, R, R, R, R, R},
 	{S, S, R, S, S, S, S, S, S, S, S, S, S, S, S, N, N, R, R, R},
 	{S, S, R, S, S, S, S, S, S, S, S, S, S, S, S, N, N, R, R, R},
-	{S, S, R, S, S, S, S, S, S, S, S, S, S, S, S, S, S, N, R, R},
-	{S, S, R, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, N, R},
+	{S, S, R, S, S, S, S, S, S, S, S, S, S, S, S, S, S, R, R, R},
+	{S, S, R, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, R, R},
 	{S, S, N, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, N}};
 
 /**
