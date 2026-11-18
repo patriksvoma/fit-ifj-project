@@ -152,6 +152,44 @@ void print_string(const char *str)
 	return;
 }
 
+/**
+ * @brief Prints code for correct operation
+ *
+ * @param operator Type of operation
+ * @param data_type Data type of operation
+ */
+void print_bin_operation(operator_type_t operator, data_type_t data_type)
+{
+	switch (operator)
+	{
+	case OP_MUL:
+		printf("MULS\n");
+		break;
+
+	case OP_DIV:
+		if (data_type == TYPE_INT)
+		{
+			printf("IDIVS\n");
+		}
+		else
+		{
+			printf("DIVS\n");
+		}
+		break;
+
+	case OP_PLUS:
+		printf("ADDS\n");
+		break;
+
+	case OP_MINUS:
+		printf("SUBS\n");
+		break;
+
+	default:
+		break;
+	}
+}
+
 /*
 	AST_PROGRAM,
 	AST_FUNC_DEF,
@@ -227,6 +265,10 @@ void generate_nodes(const ast_node_t *node)
 			printf("NOTS\n");
 		}
 		break; // For unary + value stays the same
+
+	case AST_BIN_OPERATOR:
+		generate_nodes(node->ast_node_value.bin_operator.operand_left);
+		generate_nodes(node->ast_node_value.bin_operator.operand_right);
 
 	default:
 		break;
