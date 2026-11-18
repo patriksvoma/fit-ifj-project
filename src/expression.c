@@ -366,7 +366,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 
 	data_type_t op1_type = TYPE_NONE;
 	data_type_t op2_type = TYPE_NONE;
-	ast_node_t *node = NULL; // FIXME:
+	ast_node_t *node = NULL;
 
 	switch (rule)
 	{
@@ -379,7 +379,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			lit.literal_type = TYPE_BOOLEAN;
 			lit.value.boolean = token.attribute.boolean;
 
-			node = ast_make_literal(&lit); // FIXME:
+			node = ast_literal_make(&lit);
 		}
 		else if (token.type == TOKEN_INT)
 		{
@@ -387,7 +387,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			lit.literal_type = TYPE_INT;
 			lit.value.integer = token.attribute.integer;
 
-			node = ast_make_literal(&lit); // FIXME:
+			node = ast_literal_make(&lit);
 		}
 		else if (token.type == TOKEN_DOUBLE)
 		{
@@ -395,7 +395,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			lit.literal_type = TYPE_DOUBLE;
 			lit.value.decimal = token.attribute.decimal;
 
-			node = ast_make_literal(&lit); // FIXME:
+			node = ast_literal_make(&lit);
 		}
 		else if (token.type == TOKEN_STRING)
 		{
@@ -403,7 +403,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			lit.literal_type = TYPE_STRING;
 			lit.value.string = token.attribute.string;
 
-			node = ast_make_literal(&lit); // FIXME:
+			node = ast_literal_make(&lit);
 		}
 		else if (token.type == TOKEN_IDENTIFIER)
 		{
