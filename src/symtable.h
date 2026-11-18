@@ -113,6 +113,7 @@ err_t symtable_insert(tree_node_t **tree, const char *key, symbol_data_t data);
  * @return symbol_data_t Pointer to the symbol data if found, NULL if not found
  */
 symbol_data_t *symtable_search(tree_node_t *tree, const char *key);
+
 /**
  * @brief Removes a symbol from the symbol tree
  *
