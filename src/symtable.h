@@ -74,8 +74,6 @@ typedef struct scope
 	struct scope *parent;
 } scope_t;
 
-
-
 // TODO:
 //	symGetData?
 //	scope stuff
