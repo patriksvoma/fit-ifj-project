@@ -519,8 +519,16 @@ err_t return_type(parser_data_t *pdata)
  */
 err_t block_start(parser_data_t *pdata, unsigned header_indent_level)
 {
+	bool is_inline = !pdata->token.starts_logical_line;
+
+	// If the first statement is on the same line as the header, there is only one statement allowed
+	if (is_inline)
+	{
+		return statement(pdata);
+	}
+
 	unsigned statement_indent_level = pdata->token.indent;
-	if (statement_indent_level <= header_indent_level)
+	if (pdata->token.starts_logical_line && statement_indent_level <= header_indent_level)
 	{
 		print_err_l("Start of a block must be on a higher indentation level than the header.", ERR_SYNTAX,
 					pdata->token.line);
