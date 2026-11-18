@@ -413,7 +413,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			// before generating output code, as the function can be declared later
 			//
 			// Probably will need lookahead to be implemented into the scanner to support calls without parameter lists
-			node = ast_make_identifier(token.attribute.string, TYPE_INT); // FIXME:
+			node = ast_var_use_make(token.attribute.string, TYPE_INT);
 		}
 
 		result = symstack_pop_multiple(stack, 2);
@@ -434,6 +434,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		break;
 	// E.E
 	case RULE_DOT:
+
 		// TODO: Implement
 		break;
 	// !E
@@ -446,7 +447,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_make_unary_op(stack->top->data.expression_node, OP_NEG); // FIXME:
+		node = ast_unary_op_make(OP_NEG, stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 3);
 		if (result)
@@ -462,7 +463,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_make_unary_op(stack->top->data.expression_node, OP_UPLUS); // FIXME:
+		node = ast_unary_op_make(OP_UPLUS, stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 3);
 		if (result)
@@ -478,7 +479,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_make_unary_op(stack->top->data.expression_node, OP_UMINUS); // FIXME:
+		node = ast_unary_op_make(OP_UMINUS, stack->top->data.expression_node);
 
 		result = symstack_pop_multiple(stack, 3);
 		if (result)
