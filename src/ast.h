@@ -133,8 +133,8 @@ struct ast_node
 		struct
 		{
 			operator_type_t operator_type;
-			ast_node_t *operand_right;
 			ast_node_t *operand_left;
+			ast_node_t *operand_right;
 		} bin_operator;
 
 		// Assign
