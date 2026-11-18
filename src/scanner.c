@@ -9,6 +9,7 @@
 
 #include "scanner.h"
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -217,6 +218,7 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 	buffer_t buf = {0};
 	state_t state = S_START;
 	bool newline_seen = false;
+	err_t err = ERR_SCANNER;
 	int c;
 
 	memset(token, 0, sizeof(*token));
@@ -238,6 +240,28 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 
 			token->line = scanner_line;
 			token->starts_logical_line = newline_seen;
+
+			if (isalpha(c) || c == '@')
+			{
+				if (!buf_append(&buf, (char)c))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				state = S_IDENTIFIER;
+				break;
+			}
+
+			if (c == '_')
+			{
+				if (!buf_append(&buf, (char)c))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				state = S_UNDERSCORE;
+				break;
+			}
 
 			switch (c)
 			{
@@ -296,6 +320,56 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				goto fail;
 			}
 
+		case S_IDENTIFIER:
+			if (isalnum(c) || c == '_')
+			{
+				if (!buf_append(&buf, (char)c))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				break;
+			}
+
+			unread_char(c);
+
+			if (find_keyword(buf.data, &token->attribute.keyword))
+			{
+				token->type = TOKEN_KEYWORD;
+				goto accept;
+			}
+
+			if (buf.data[0] == '@')
+				goto fail;
+
+			if (strcmp(buf.data, "true") == 0 || strcmp(buf.data, "false") == 0)
+			{
+				token->type = TOKEN_BOOLEAN;
+				token->attribute.boolean = (buf.data[0] == 't');
+				goto accept;
+			}
+
+			token->type = TOKEN_IDENTIFIER;
+			token->attribute.string = buf.data;
+			buf.data = NULL;
+			goto accept;
+
+		case S_UNDERSCORE:
+			if (isalnum(c) || c == '_')
+			{
+				if (!buf_append(&buf, (char)c))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				state = S_IDENTIFIER;
+				break;
+			}
+
+			unread_char(c);
+			token->type = TOKEN_UNDERSCORE;
+			goto accept;
+
 		default:
 			break;
 		}
@@ -308,5 +382,5 @@ accept:
 
 fail:
 	buf_free(&buf);
-	return ERR_SCANNER;
+	return err;
 }
