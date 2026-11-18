@@ -476,7 +476,7 @@ err_t return_type(parser_data_t *pdata)
 	// =, go to <block-start>
 	if (pdata->token.type == TOKEN_ASSIGN)
 	{
-		result = get_next_token(&pdata->token, EOL_REQUIRED);
+		result = get_next_token(&pdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
 
@@ -500,7 +500,7 @@ err_t return_type(parser_data_t *pdata)
 			print_err_l("Expected a block start delimiter (=).", ERR_SYNTAX, pdata->token.line);
 			return ERR_SYNTAX;
 		}
-		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		result = get_next_token(&pdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
 
