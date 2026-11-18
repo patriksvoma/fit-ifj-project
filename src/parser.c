@@ -16,7 +16,7 @@
 err_t prologue(parser_data_t *pdata);
 err_t func_list(parser_data_t *pdata);
 err_t ext_def(parser_data_t *pdata);
-err_t ext_def_list(parser_data_t *pdata);
+err_t ext_def_list(parser_data_t *pdata, unsigned list_indent);
 err_t func_annotation(parser_data_t *pdata);
 err_t func_def(parser_data_t *pdata);
 err_t func_params(parser_data_t *pdata);
@@ -24,13 +24,13 @@ err_t param_first(parser_data_t *pdata);
 err_t param_list(parser_data_t *pdata);
 err_t param(parser_data_t *pdata);
 err_t return_type(parser_data_t *pdata);
-err_t block_start(parser_data_t *pdata);
-err_t block(parser_data_t *pdata);
+err_t block_start(parser_data_t *pdata, unsigned header_indent_level);
+err_t block(parser_data_t *pdata, unsigned block_indent_level);
 err_t type(parser_data_t *pdata);
 err_t statement(parser_data_t *pdata);
 err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value);
-err_t else_opt(parser_data_t *pdata);
-err_t else_if_opt(parser_data_t *pdata);
+err_t else_opt(parser_data_t *pdata, unsigned header_indent_level);
+err_t else_if_opt(parser_data_t *pdata, unsigned header_indent_level);
 err_t for_generator(parser_data_t *pdata);
 err_t for_by(parser_data_t *pdata);
 err_t for_guard(parser_data_t *pdata);
@@ -50,6 +50,12 @@ err_t prologue(parser_data_t *pdata)
 	err_t result = get_next_token(&pdata->token, EOL_OPTIONAL);
 	if (result)
 		return result;
+
+	if (pdata->token.indent != 0)
+	{
+		print_err_l("The program prologue must be at indentation level 0.", ERR_SYNTAX, pdata->token.line);
+		return ERR_SYNTAX;
+	}
 
 	if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_IMPORT)
 	{
@@ -159,6 +165,13 @@ err_t ext_def(parser_data_t *pdata)
 		print_err_l("Expected a type extension block declaration", ERR_SYNTAX, pdata->token.line);
 		return ERR_SYNTAX;
 	}
+
+	if (pdata->token.indent != 0)
+	{
+		print_err_l("Extension block header must be at indent level 0.", ERR_SYNTAX, pdata->token.line);
+		return ERR_SYNTAX;
+	}
+
 	result = get_next_token(&pdata->token, EOL_FORBIDDEN);
 	if (result)
 		return result;
@@ -188,23 +201,40 @@ err_t ext_def(parser_data_t *pdata)
 	if (result)
 		return result;
 
+	unsigned extension_list_indent = pdata->token.indent;
+	if (extension_list_indent == 0)
+	{
+		print_err_l("Extensions methods must be indented.", ERR_SYNTAX, pdata->token.line);
+		return ERR_SYNTAX;
+	}
+
 	// <func-def>
 	result = func_def(pdata);
 	if (result)
 		return result;
 
 	// <ext-def-list>
-	return ext_def_list(pdata);
+	return ext_def_list(pdata, extension_list_indent);
 }
 
 /**
  * @brief Rule for lists of extension function declarations | <ext-def-list>
  *
  * @param pdata Parser data
+ * @param list_indent Indentation level of the first extension definition, which all the others have to match
  * @return err_t Error code
  */
-err_t ext_def_list(parser_data_t *pdata)
+err_t ext_def_list(parser_data_t *pdata, unsigned list_indent)
 {
+	if (pdata->token.indent > list_indent)
+	{
+		print_err_l("All extension method definitions must be at the same indent level.", ERR_SYNTAX,
+					pdata->token.line);
+		return ERR_SYNTAX;
+	}
+	else if (pdata->token.indent < list_indent)
+		return ERR_OK;
+
 	// def
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_DEF)
 	{
@@ -218,7 +248,7 @@ err_t ext_def_list(parser_data_t *pdata)
 			return result;
 
 		// <ext-def-list>
-		return ext_def_list(pdata);
+		return ext_def_list(pdata, list_indent);
 	}
 
 	// Epsilon rule
@@ -236,6 +266,12 @@ err_t func_annotation(parser_data_t *pdata)
 	// @main, go to <func-def>
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_MAIN)
 	{
+		if (pdata->token.indent != 0)
+		{
+			print_err_l("Function annotation must be at indent level 0.", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
+
 		err_t result;
 
 		result = get_next_token(&pdata->token, EOL_OPTIONAL);
@@ -246,6 +282,12 @@ err_t func_annotation(parser_data_t *pdata)
 	// def, go to <func-def>
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_DEF)
 	{
+		if (pdata->token.indent != 0)
+		{
+			print_err_l("Function definition must be at indent level 0.", ERR_SYNTAX, pdata->token.line);
+			return ERR_SYNTAX;
+		}
+
 		return func_def(pdata);
 	}
 
@@ -429,6 +471,8 @@ err_t return_type(parser_data_t *pdata)
 {
 	err_t result;
 
+	unsigned header_indentation = pdata->token.indent;
+
 	// =, go to <block-start>
 	if (pdata->token.type == TOKEN_ASSIGN)
 	{
@@ -436,7 +480,7 @@ err_t return_type(parser_data_t *pdata)
 		if (result)
 			return result;
 
-		return block_start(pdata);
+		return block_start(pdata, header_indentation);
 	}
 	// :
 	else if (pdata->token.type == TOKEN_COLON)
@@ -461,7 +505,7 @@ err_t return_type(parser_data_t *pdata)
 			return result;
 
 		// <block-start>
-		return block_start(pdata);
+		return block_start(pdata, header_indentation);
 	}
 
 	print_err_l("Expected a return type definiton, or a block start delimiter (=).", ERR_SYNTAX, pdata->token.line);
@@ -472,28 +516,58 @@ err_t return_type(parser_data_t *pdata)
  * @brief Statement block start | <block-start>
  *
  * @param pdata Parser data
+ * @param header_indent_level Indentation level of the block header
  * @return err_t Error code
  */
-err_t block_start(parser_data_t *pdata)
+err_t block_start(parser_data_t *pdata, unsigned header_indent_level)
 {
+	bool is_inline = !pdata->token.starts_logical_line;
+
+	// If the first statement is on the same line as the header, there is only one statement allowed
+	if (is_inline)
+	{
+		return statement(pdata);
+	}
+
+	unsigned statement_indent_level = pdata->token.indent;
+	if (pdata->token.starts_logical_line && statement_indent_level <= header_indent_level)
+	{
+		print_err_l("Start of a block must be on a higher indentation level than the header.", ERR_SYNTAX,
+					pdata->token.line);
+		return ERR_SYNTAX;
+	}
+
 	// <statement>
 	err_t result = statement(pdata);
 	if (result)
 		return result;
 
 	// <block>
-	return block(pdata);
+	return block(pdata, statement_indent_level);
 }
 
 /**
  * @brief Statement block | <block>
  *
  * @param pdata Parser data
+ * @param block_indent_level Indentation level every statement in the block must match
  * @return err_t Error code
  */
-err_t block(parser_data_t *pdata)
+err_t block(parser_data_t *pdata, unsigned block_indent_level)
 {
 	if (pdata->token.type == TOKEN_EOF)
+		return ERR_OK;
+
+	unsigned statement_indent_level = pdata->token.indent;
+	// Invalid
+	if (statement_indent_level > block_indent_level)
+	{
+		print_err_l("All statements within a block must be on the same indentation level.", ERR_SYNTAX,
+					pdata->token.line);
+		return ERR_SYNTAX;
+	}
+	// End of the block
+	else if (statement_indent_level < block_indent_level)
 		return ERR_OK;
 
 	err_t result = statement(pdata);
@@ -501,7 +575,7 @@ err_t block(parser_data_t *pdata)
 		return result;
 
 	// TODO: End blocks by checking indentation
-	return block(pdata);
+	return block(pdata, block_indent_level);
 }
 
 /**
@@ -561,6 +635,7 @@ err_t type(parser_data_t *pdata)
 err_t statement(parser_data_t *pdata)
 {
 	err_t result;
+	unsigned statement_indent_level = pdata->token.indent;
 
 	// val
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_VAL)
@@ -626,12 +701,12 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <block-start>
-		result = block_start(pdata);
+		result = block_start(pdata, statement_indent_level);
 		if (result)
 			return result;
 
 		// <else-opt>
-		return else_opt(pdata);
+		return else_opt(pdata, statement_indent_level);
 	}
 	// while
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_WHILE)
@@ -657,7 +732,7 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <block-start>
-		return block_start(pdata);
+		return block_start(pdata, statement_indent_level);
 	}
 	// for
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_FOR)
@@ -713,7 +788,7 @@ err_t statement(parser_data_t *pdata)
 			return result;
 
 		// <block-start>
-		return block_start(pdata);
+		return block_start(pdata, statement_indent_level);
 	}
 	// return
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_RETURN)
@@ -774,19 +849,21 @@ err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value)
  * @brief Optional else branch of an if, later can be made into an else if branch | <else-opt>
  *
  * @param pdata Parser data
+ * @param header_indent_level Indentation level of the if statement headers (if, else if, else)
  * @return err_t Error code
  */
-err_t else_opt(parser_data_t *pdata)
+err_t else_opt(parser_data_t *pdata, unsigned header_indent_level)
 {
 	// else
-	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_ELSE)
+	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_ELSE &&
+		pdata->token.indent == header_indent_level)
 	{
 		err_t result = get_next_token(&pdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
 
 		// <else-if-opt>
-		return else_if_opt(pdata);
+		return else_if_opt(pdata, header_indent_level);
 	}
 
 	// Epsilon rule
@@ -797,9 +874,10 @@ err_t else_opt(parser_data_t *pdata)
  * @brief Else, or else if branch of an if statement | <else-if-opt>
  *
  * @param pdata Parser data
+ * @param header_indent_level Indentation level of the if statement headers (if, else if, else)
  * @return err_t Error code
  */
-err_t else_if_opt(parser_data_t *pdata)
+err_t else_if_opt(parser_data_t *pdata, unsigned header_indent_level)
 {
 	// if (makes for an else if with the previous rule)
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_IF)
@@ -825,16 +903,16 @@ err_t else_if_opt(parser_data_t *pdata)
 			return result;
 
 		// <block-start>
-		result = block_start(pdata);
+		result = block_start(pdata, header_indent_level);
 		if (result)
 			return result;
 
 		// <else-opt>
-		return else_opt(pdata);
+		return else_opt(pdata, header_indent_level);
 	}
 
 	// <block_start>
-	return block_start(pdata);
+	return block_start(pdata, header_indent_level);
 }
 
 /**
