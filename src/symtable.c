@@ -71,7 +71,7 @@ symbol_data_t *symtable_search(tree_node_t *tree, const char *key)
  * @param node Pointer to the node
  * @return int Height of node
  */
-static int height(tree_node_t *node)
+static int height(const tree_node_t *node)
 {
 	if (node == NULL)
 		return 0;
@@ -100,7 +100,7 @@ static int max(int a, int b)
  * @param node Pointer to the node
  * @return int Balance factor of the node
  */
-static int get_balance(tree_node_t *node)
+static int get_balance(const tree_node_t *node)
 {
 	if (node == NULL)
 		return 0;
@@ -162,7 +162,7 @@ static tree_node_t *insert_node(tree_node_t *root, const char *key, symbol_data_
 		root->left = rotate_left(root->left);
 		return rotate_right(root);
 	}
-	else if (balance < -1 && strcmp(key, root->key) < 0) //RL
+	else if (balance < -1 && strcmp(key, root->key) < 0) // RL
 	{
 		root->right = rotate_right(root->right);
 		return rotate_left(root);
@@ -179,5 +179,4 @@ err_t symtable_insert(tree_node_t **tree, const char *key, symbol_data_t data)
 	*tree = insert_node(*tree, key, data);
 
 	return ERR_OK;
-
 }
