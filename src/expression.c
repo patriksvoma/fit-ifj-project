@@ -488,11 +488,22 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			// TODO: Create a int2double node for operand 1
+			stack->top->next->next->data.expression_node =
+				ast_make_int_to_double(stack->top->next->next->data.expression_node);
+			if (stack->top->next->next->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			// TODO: Create a int2double node for operand 2
+			stack->top->data.expression_node = ast_make_int_to_double(stack->top->data.expression_node);
+			if (stack->top->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
 				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE))
@@ -516,11 +527,22 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			// TODO: Create a int2double node for operand 1
+			stack->top->next->next->data.expression_node =
+				ast_make_int_to_double(stack->top->next->next->data.expression_node);
+			if (stack->top->next->next->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			// TODO: Create a int2double node for operand 2
+			stack->top->data.expression_node = ast_make_int_to_double(stack->top->data.expression_node);
+			if (stack->top->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
 				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE))
@@ -544,11 +566,22 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			// TODO: Create a int2double node for operand 1
+			stack->top->next->next->data.expression_node =
+				ast_make_int_to_double(stack->top->next->next->data.expression_node);
+			if (stack->top->next->next->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			// TODO: Create a int2double node for operand 2
+			stack->top->data.expression_node = ast_make_int_to_double(stack->top->data.expression_node);
+			if (stack->top->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
 				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
@@ -573,11 +606,22 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			// TODO: Create a int2double node for operand 1
+			stack->top->next->next->data.expression_node =
+				ast_make_int_to_double(stack->top->next->next->data.expression_node);
+			if (stack->top->next->next->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			// TODO: Create a int2double node for operand 2
+			stack->top->data.expression_node = ast_make_int_to_double(stack->top->data.expression_node);
+			if (stack->top->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
 				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE))
@@ -601,11 +645,22 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			// TODO: Create a int2double node for operand 1
+			stack->top->next->next->data.expression_node =
+				ast_make_int_to_double(stack->top->next->next->data.expression_node);
+			if (stack->top->next->next->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			// TODO: Create a int2double node for operand 2
+			stack->top->data.expression_node = ast_make_int_to_double(stack->top->data.expression_node);
+			if (stack->top->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
 				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
@@ -630,11 +685,22 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			// TODO: Create a int2double node for operand 1
+			stack->top->next->next->data.expression_node =
+				ast_make_int_to_double(stack->top->next->next->data.expression_node);
+			if (stack->top->next->next->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			// TODO: Create a int2double node for operand 2
+			stack->top->data.expression_node = ast_make_int_to_double(stack->top->data.expression_node);
+			if (stack->top->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
 				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
@@ -659,11 +725,22 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			// TODO: Create a int2double node for operand 1
+			stack->top->next->next->data.expression_node =
+				ast_make_int_to_double(stack->top->next->next->data.expression_node);
+			if (stack->top->next->next->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			// TODO: Create a int2double node for operand 2
+			stack->top->data.expression_node = ast_make_int_to_double(stack->top->data.expression_node);
+			if (stack->top->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
 				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
@@ -688,11 +765,22 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			// TODO: Create a int2double node for operand 1
+			stack->top->next->next->data.expression_node =
+				ast_make_int_to_double(stack->top->next->next->data.expression_node);
+			if (stack->top->next->next->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			// TODO: Create a int2double node for operand 2
+			stack->top->data.expression_node = ast_make_int_to_double(stack->top->data.expression_node);
+			if (stack->top->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
 				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
@@ -717,11 +805,22 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			// TODO: Create a int2double node for operand 1
+			stack->top->next->next->data.expression_node =
+				ast_make_int_to_double(stack->top->next->next->data.expression_node);
+			if (stack->top->next->next->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			// TODO: Create a int2double node for operand 2
+			stack->top->data.expression_node = ast_make_int_to_double(stack->top->data.expression_node);
+			if (stack->top->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
 				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
@@ -748,11 +847,22 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			// TODO: Create a int2double node for operand 1
+			stack->top->next->next->data.expression_node =
+				ast_make_int_to_double(stack->top->next->next->data.expression_node);
+			if (stack->top->next->next->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			// TODO: Create a int2double node for operand 2
+			stack->top->data.expression_node = ast_make_int_to_double(stack->top->data.expression_node);
+			if (stack->top->data.expression_node == NULL)
+			{
+				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
+				return ERR_INTERNAL;
+			}
 		}
 		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
 				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
