@@ -56,6 +56,22 @@ void test_push_empty()
 	TEST_ASSERT_EQUAL(stack.top, item);
 }
 
+void test_push_nonempty()
+{
+	TEST_ASSERT_EQUAL(ERR_OK, symstack_init(&stack));
+
+	symstack_item_t *item1 = symstack_create_item();
+	TEST_ASSERT_NOT_NULL(item1);
+	TEST_ASSERT_EQUAL(ERR_OK, symstack_push(&stack, item1));
+
+	TEST_ASSERT_EQUAL(stack.top, item1);
+
+	symstack_item_t *item2 = symstack_create_item();
+	TEST_ASSERT_NOT_NULL(item2);
+	TEST_ASSERT_EQUAL(ERR_OK, symstack_push(&stack, item2));
+
+	TEST_ASSERT_EQUAL(stack.top, item2);
+	TEST_ASSERT_EQUAL(stack.top->next, item1);
 }
 
 void test_insert_before()
@@ -90,6 +106,7 @@ int main()
 	RUN_TEST(test_init);
 	RUN_TEST(test_destroy);
 	RUN_TEST(test_push_empty);
+	RUN_TEST(test_push_nonempty);
 
 	return UNITY_END();
 }
