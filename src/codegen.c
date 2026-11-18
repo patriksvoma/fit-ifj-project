@@ -123,25 +123,6 @@ void print_ord()
 	printf("POPFRAME\n");
 	printf("RETURN\n");
 }
-/*
-	AST_PROGRAM,
-	AST_FUNC_DEF,
-	AST_PARAM,
-	AST_RETURN,
-	AST_BLOCK,
-	AST_IF,
-	AST_WHILE,
-	AST_VAR_DEF,
-
-	AST_BIN_OPERATOR,
-	AST_UN_OPERATOR,
-	AST_ASSIGN,
-	AST_CALL,
-
-	AST_INT_TO_DOUBLE,
-	AST_EXTENSION_DEF,
-	AST_EXTENSION_USE
-*/
 
 /**
  * @brief Prints string with chars that need escape sequence
@@ -157,7 +138,7 @@ void print_string(const char *str)
 
 	for (int i = 0; str[i] != '\0'; i++)
 	{
-		unsigned char j = (unsigned char)str[i];
+		unsigned char j = (unsigned char)str[i]; // Number after \ can be 000 - 255
 		if (j <= 32 || j == 35 || j == 92 || j >= 127)
 		{
 			printf("\\03%d", j);
@@ -171,23 +152,42 @@ void print_string(const char *str)
 	return;
 }
 
+/*
+	AST_PROGRAM,
+	AST_FUNC_DEF,
+	AST_PARAM,
+	AST_RETURN,
+	AST_BLOCK,
+	AST_IF,
+	AST_WHILE,
+	AST_VAR_DEF,
+
+	AST_BIN_OPERATOR,
+	AST_ASSIGN,
+	AST_CALL,
+
+	AST_INT_TO_DOUBLE,
+	AST_EXTENSION_DEF,
+	AST_EXTENSION_USE
+*/
+
 /**
  * @brief Function to generate code for a specific node
  *
  * @param node Node for wich the code should be generated
  */
-void generate_node(const ast_node_t *node)
+void generate_nodes(const ast_node_t *node)
 {
 	node_type_t type = node->node_type;
 
 	switch (type)
 	{
 	case AST_LITERAL_INT:
-		printf("PUSHS int@%lli", node->ast_node_value.int_literal);
+		printf("PUSHS int@%lli\n", node->ast_node_value.int_literal);
 		break;
 
 	case AST_LITERAL_DOUBLE:
-		printf("PUSHS float@%a", node->ast_node_value.double_literal);
+		printf("PUSHS float@%a\n", node->ast_node_value.double_literal);
 		break;
 
 	case AST_LITERAL_STRING:
@@ -196,19 +196,42 @@ void generate_node(const ast_node_t *node)
 		break;
 
 	case AST_LITERAL_BOOLEAN:
-		printf("PUSHS bool@%d", node->ast_node_value.boolean_literal);
+		if (node->ast_node_value.boolean_literal)
+		{
+			printf("PUSHS bool@true\n");
+		}
+		else
+		{
+			printf("PUSHS bool@false\n");
+		}
 		break;
 
 	case AST_LITERAL_UNIT:
 		break;
 
 	case AST_IDENTIFIER:
-		printf("PUSHS LF@%s", node->ast_node_value.identifier);
+		printf("PUSHS LF@%s\n", node->ast_node_value.identifier);
 		break;
+
+	case AST_UN_OPERATOR:
+		generate_nodes(node->ast_node_value.un_operator.operand);
+
+		// Multiply by -1
+		if (node->ast_node_value.un_operator.operator_type == OP_UMINUS)
+		{
+			printf("PUSHS int@-1\n");
+			printf("MULS\n");
+		}
+		else if (node->ast_node_value.un_operator.operator_type == OP_NEG)
+		{
+			printf("NOTS\n");
+		}
+		break; // For unary + value stays the same
 
 	default:
 		break;
 	}
+	return;
 }
 
 /**
@@ -225,5 +248,5 @@ void generate_code(const ast_node_t *root)
 	print_substr();
 	print_ord();
 
-	generate_node(root);
+	generate_nodes(root);
 }
