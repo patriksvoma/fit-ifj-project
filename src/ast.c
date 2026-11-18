@@ -305,6 +305,15 @@ ast_node_t *ast_make_func_def(bool is_main)
 	return node;
 }
 
+err_t ast_func_def_set_id(ast_node_t *func_def_node, const char *newId)
+{
+	// TODO: Implement
+	(void)func_def_node;
+	(void)newId;
+	print_err("ast_func_def_set_id() called, but not yet implemented!", ERR_INTERNAL);
+	return ERR_OK;
+}
+
 // TODO: Tady to taky bude potřeba popřípadě dodělat
 ast_node_t *ast_make_extension_def()
 {
