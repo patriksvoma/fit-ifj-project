@@ -189,6 +189,23 @@ void buf_free(buffer_t *buf)
 }
 
 /**
+ * @brief Consume the next character if it matches the expected one
+ *
+ * @param expected Expected character
+ * @return true if the character matched and was consumed, false otherwise
+ */
+bool next_is(int expected)
+{
+	int c = next_char();
+
+	if (c == expected)
+		return true;
+
+	unread_char(c);
+	return false;
+}
+
+/**
  * @brief Get the next token object
  *
  * @param token
@@ -247,6 +264,33 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				goto accept;
 			case '*':
 				token->type = TOKEN_ASTERISK;
+				goto accept;
+			case '=':
+				token->type = next_is('=') ? TOKEN_EQUAL : TOKEN_ASSIGN;
+				goto accept;
+			case '!':
+				token->type = next_is('=') ? TOKEN_NOT_EQUAL : TOKEN_NEG;
+				goto accept;
+			case '<':
+				if (next_is('='))
+					token->type = TOKEN_LESS_EQUAL;
+				else if (next_is('-'))
+					token->type = TOKEN_FOR_GEN_ASSIGN;
+				else
+					token->type = TOKEN_LESS;
+				goto accept;
+			case '>':
+				token->type = next_is('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER;
+				goto accept;
+			case '&':
+				if (!next_is('&'))
+					goto fail;
+				token->type = TOKEN_AND;
+				goto accept;
+			case '|':
+				if (!next_is('|'))
+					goto fail;
+				token->type = TOKEN_OR;
 				goto accept;
 			default:
 				goto fail;
