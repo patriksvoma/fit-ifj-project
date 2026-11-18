@@ -1,5 +1,5 @@
 /**
- * @file scanner.h
+ * @file scanner.c
  * @brief Scanner module for the IFJ26 compiler
  *
  * @author Patrik Švoma (xsvomap00@stud.fit.vut.cz)
@@ -8,6 +8,8 @@
  */
 
 #include "scanner.h"
+
+#include <string.h>
 
 /**
  * @brief States of the scanner
@@ -94,6 +96,56 @@ bool find_keyword(const char *word, keyword_t *keyword)
 	}
 
 	return false;
+}
+
+unsigned scanner_line = 1;        // Line of the last read character
+unsigned scanner_column = 0;      // Column of the last read character
+unsigned scanner_prev_column = 0; // Column before the last newline, used by unread_char
+
+/**
+ * @brief Read the next character from the input and update the position
+ *
+ * @return int The character or EOF
+ */
+int next_char(void)
+{
+	int c = getc(stdin);
+
+	if (c == '\n')
+	{
+		scanner_prev_column = scanner_column;
+		scanner_line++;
+		scanner_column = 0;
+	}
+	else if (c != EOF)
+	{
+		scanner_column++;
+	}
+
+	return c;
+}
+
+/**
+ * @brief Return one character back to the input and restore the position
+ *
+ * @param c The character to return
+ */
+void unread_char(int c)
+{
+	if (c == EOF)
+		return;
+
+	ungetc(c, stdin);
+
+	if (c == '\n')
+	{
+		scanner_line--;
+		scanner_column = scanner_prev_column;
+	}
+	else
+	{
+		scanner_column--;
+	}
 }
 
 /**
