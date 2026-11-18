@@ -221,6 +221,7 @@ err_t ext_def(parser_data_t *pdata)
  * @brief Rule for lists of extension function declarations | <ext-def-list>
  *
  * @param pdata Parser data
+ * @param list_indent Indentation level of the first extension definition, which all the others have to match
  * @return err_t Error code
  */
 err_t ext_def_list(parser_data_t *pdata, unsigned list_indent)
@@ -515,6 +516,7 @@ err_t return_type(parser_data_t *pdata)
  * @brief Statement block start | <block-start>
  *
  * @param pdata Parser data
+ * @param header_indent_level Indentation level of the block header
  * @return err_t Error code
  */
 err_t block_start(parser_data_t *pdata, unsigned header_indent_level)
@@ -548,6 +550,7 @@ err_t block_start(parser_data_t *pdata, unsigned header_indent_level)
  * @brief Statement block | <block>
  *
  * @param pdata Parser data
+ * @param block_indent_level Indentation level every statement in the block must match
  * @return err_t Error code
  */
 err_t block(parser_data_t *pdata, unsigned block_indent_level)
@@ -846,6 +849,7 @@ err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value)
  * @brief Optional else branch of an if, later can be made into an else if branch | <else-opt>
  *
  * @param pdata Parser data
+ * @param header_indent_level Indentation level of the if statement headers (if, else if, else)
  * @return err_t Error code
  */
 err_t else_opt(parser_data_t *pdata, unsigned header_indent_level)
@@ -870,6 +874,7 @@ err_t else_opt(parser_data_t *pdata, unsigned header_indent_level)
  * @brief Else, or else if branch of an if statement | <else-if-opt>
  *
  * @param pdata Parser data
+ * @param header_indent_level Indentation level of the if statement headers (if, else if, else)
  * @return err_t Error code
  */
 err_t else_if_opt(parser_data_t *pdata, unsigned header_indent_level)
