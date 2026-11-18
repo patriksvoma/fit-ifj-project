@@ -10,6 +10,9 @@
 #include "scanner.h"
 
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 
 /**
  * @brief States of the scanner
@@ -146,6 +149,56 @@ void unread_char(int c)
 	{
 		scanner_column--;
 	}
+}
+
+/**
+ * @brief Buffer for the text of the token
+ *
+ */
+typedef struct
+{
+	char *data;
+	size_t len;
+	size_t cap;
+} buffer_t;
+
+/**
+ * @brief Append one character to the buffer
+ *
+ * @param buf Buffer
+ * @param c Character
+ * @return true on success, false on allocation failure
+ */
+bool buf_append(buffer_t *buf, char c)
+{
+	if (buf->len + 1 >= buf->cap)
+	{
+		size_t new_cap = buf->cap ? buf->cap * 2 : 32;
+		char *tmp = realloc(buf->data, new_cap);
+
+		if (tmp == NULL)
+			return false;
+
+		buf->data = tmp;
+		buf->cap = new_cap;
+	}
+
+	buf->data[buf->len++] = c;
+	buf->data[buf->len] = '\0';
+	return true;
+}
+
+/**
+ * @brief Free the buffer and reset it to empty
+ *
+ * @param buf Buffer
+ */
+void buf_free(buffer_t *buf)
+{
+	free(buf->data);
+	buf->data = NULL;
+	buf->len = 0;
+	buf->cap = 0;
 }
 
 /**
