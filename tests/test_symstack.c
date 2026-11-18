@@ -27,7 +27,22 @@ void test_init()
 
 void test_destroy()
 {
-	// TODO:
+	TEST_ASSERT_EQUAL(ERR_OK, symstack_init(&stack));
+
+	for (int i = 0; i < 2; i++)
+	{
+		symstack_item_t *item = symstack_create_item();
+		TEST_ASSERT_NOT_NULL(item);
+		TEST_ASSERT_EQUAL(ERR_OK, symstack_push(&stack, item));
+	}
+
+	TEST_ASSERT_NOT_NULL(stack.top);
+	TEST_ASSERT_NOT_NULL(stack.top->next);
+	TEST_ASSERT_NOT_NULL(stack.top->next->next);
+
+	symstack_destroy(&stack);
+
+	TEST_ASSERT_NULL(stack.top);
 }
 
 void test_push()
@@ -65,6 +80,7 @@ int main()
 	UNITY_BEGIN();
 
 	RUN_TEST(test_init);
+	RUN_TEST(test_destroy);
 
 	return UNITY_END();
 }
