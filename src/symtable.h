@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "ast.h"
 #include "error.h"
 #include <stdbool.h>
 #include <stddef.h>
@@ -19,8 +20,8 @@
  */
 typedef enum
 {
-	SYMBOL_VARIABLE,
-	SYMBOL_FUNCTION,
+	SYMBOL_VARIABLE, // TODO: save Type (int, ...), index of variable in struct
+	SYMBOL_FUNCTION, // TODO: save Type (return), parameters (I/O), if already defined (collision check)
 } symbol_type_t;
 
 /**
@@ -31,9 +32,21 @@ typedef struct symbol_data
 {
 	symbol_type_t type;
 	bool defined;
-	size_t params;
 
-	// TODO: additional data
+	union {
+		struct
+		{
+			data_type_t data_type;
+			size_t index;
+		} variable;
+
+		struct
+		{
+			size_t param_count;
+			data_type_t *param_types;
+			data_type_t return_type;
+		} function;
+	} data;
 } symbol_data_t;
 
 /**
@@ -44,6 +57,9 @@ typedef struct tree_node
 {
 	char *key;
 	symbol_data_t data;
+
+	int height;
+
 	struct tree_node *left;
 	struct tree_node *right;
 } tree_node_t;
@@ -62,13 +78,14 @@ typedef struct scope
 //	symGetData?
 //	scope stuff
 
-
 /**
  * @brief Creates a new symbol tree node
  *
+ * @param *key
+ * @param data
  * @return tree_node_t Pointer to created node, NULL if allocation fails
  */
-tree_node_t *symtable_create_node();
+tree_node_t *symtable_create_node(const char *key, symbol_data_t data);
 
 /**
  * @brief Initializes symbol tree
