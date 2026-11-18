@@ -92,9 +92,9 @@ typedef struct tree_node
  * @brief
  *
  */
-typedef struct symtable_t
+typedef struct symtable
 {
-	symtable_t *parent;
+	struct symtable *parent;
 	tree_node_t *root_node;
 
 } symtable_t;
