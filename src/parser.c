@@ -17,8 +17,8 @@ err_t prologue(parser_data_t *pdata, ast_node_t *root_node);
 err_t func_list(parser_data_t *pdata, ast_node_t *root_node);
 err_t ext_def(parser_data_t *pdata);
 err_t ext_def_list(parser_data_t *pdata, unsigned list_indent);
-err_t func_annotation(parser_data_t *pdata);
-err_t func_def(parser_data_t *pdata);
+err_t func_annotation(parser_data_t *pdata, ast_node_t *root_node);
+err_t func_def(parser_data_t *pdata, ast_node_t *func_def_node);
 err_t func_params(parser_data_t *pdata);
 err_t param_first(parser_data_t *pdata);
 err_t param_list(parser_data_t *pdata);
@@ -125,7 +125,7 @@ err_t func_list(parser_data_t *pdata, ast_node_t *root_node)
 	if (pdata->token.type == TOKEN_KEYWORD &&
 		(pdata->token.attribute.keyword == KW_MAIN || pdata->token.attribute.keyword == KW_DEF))
 	{
-		result = func_annotation(pdata);
+		result = func_annotation(pdata, root_node);
 		if (result)
 			return result;
 
@@ -212,7 +212,8 @@ err_t ext_def(parser_data_t *pdata)
 	}
 
 	// <func-def>
-	result = func_def(pdata);
+	// TODO: Pass the correct AST node
+	result = func_def(pdata, NULL);
 	if (result)
 		return result;
 
@@ -246,7 +247,8 @@ err_t ext_def_list(parser_data_t *pdata, unsigned list_indent)
 			return result;
 
 		// <func-def>
-		result = func_def(pdata);
+		// TODO: Pass the correct AST node
+		result = func_def(pdata, NULL);
 		if (result)
 			return result;
 
@@ -262,10 +264,13 @@ err_t ext_def_list(parser_data_t *pdata, unsigned list_indent)
  * @brief Rule for the main function annotiation | <func-annotation>
  *
  * @param pdata Parser data
+ * @param root_node AST program node
  * @return err_t Error code
  */
-err_t func_annotation(parser_data_t *pdata)
+err_t func_annotation(parser_data_t *pdata, ast_node_t *root_node)
 {
+	ast_node_t *func_node;
+
 	// @main, go to <func-def>
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_MAIN)
 	{
@@ -280,7 +285,12 @@ err_t func_annotation(parser_data_t *pdata)
 		result = get_next_token(&pdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
-		return func_def(pdata);
+
+		// TODO: Create an entry in the symbol table
+		func_node = ast_make_func_def(true);
+		ast_array_append(root_node, func_node);
+
+		return func_def(pdata, func_node);
 	}
 	// def, go to <func-def>
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_DEF)
@@ -291,7 +301,11 @@ err_t func_annotation(parser_data_t *pdata)
 			return ERR_SYNTAX;
 		}
 
-		return func_def(pdata);
+		// TODO: Create an entry in the symbol table
+		func_node = ast_make_func_def(true);
+		ast_array_append(root_node, func_node);
+
+		return func_def(pdata, func_node);
 	}
 
 	print_err_l("Expeced a function declaration.", ERR_SYNTAX, pdata->token.line);
@@ -302,9 +316,10 @@ err_t func_annotation(parser_data_t *pdata)
  * @brief Rule for function declarations | <func-def>
  *
  * @param pdata Parser data
+ * @param func_def_node AST function definition node
  * @return err_t Error code
  */
-err_t func_def(parser_data_t *pdata)
+err_t func_def(parser_data_t *pdata, ast_node_t *func_def_node)
 {
 	// def
 	if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_DEF)
@@ -322,6 +337,12 @@ err_t func_def(parser_data_t *pdata)
 		print_err_l("Expected an identifier in a function declaration.", ERR_SYNTAX, pdata->token.line);
 		return ERR_SYNTAX;
 	}
+	// Save the identificator
+	// TODO: Check if the identificator already exists
+	// TODO: Save into the symbol table
+	result = ast_func_def_set_id(func_def_node, pdata->token.attribute.string);
+	if (result)
+		return result;
 
 	result = get_next_token(&pdata->token, EOL_FORBIDDEN);
 	if (result)
