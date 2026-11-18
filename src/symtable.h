@@ -25,7 +25,7 @@ typedef enum
 } symbol_type_t;
 
 /**
- * @brief Additional data of the symbol
+ * @brief Additional data of the symbol differs if the symbol is function or variable
  *
  */
 typedef struct symbol_data
@@ -74,6 +74,8 @@ typedef struct scope
 	struct scope *parent;
 } scope_t;
 
+
+
 // TODO:
 //	symGetData?
 //	scope stuff
@@ -93,7 +95,7 @@ tree_node_t *symtable_create_node(const char *key, symbol_data_t data);
  * @param tree Pointer to the symbol tree which will be initialized
  * @return err_t Error code
  */
-err_t symtable_init(tree_node_t **tree);
+err_t symtable_init(tree_node_t **root);
 
 /**
  * @brief Inserts a symbol into the symbol tree
@@ -103,7 +105,7 @@ err_t symtable_init(tree_node_t **tree);
  * @param data Data of inserted symbol
  * @return err_t Error code
  */
-err_t symtable_insert(tree_node_t **tree, const char *key, symbol_data_t data);
+err_t symtable_insert(tree_node_t **root, const char *key, symbol_data_t data);
 
 /**
  * @brief Searches for a symbol in the symbol tree
@@ -112,16 +114,16 @@ err_t symtable_insert(tree_node_t **tree, const char *key, symbol_data_t data);
  * @param key Key of the symbol
  * @return symbol_data_t Pointer to the symbol data if found, NULL if not found
  */
-symbol_data_t *symtable_search(tree_node_t *tree, const char *key);
+symbol_data_t *symtable_search(tree_node_t *root, const char *key);
 
 /**
- * @brief Removes a symbol from the symbol tree
+ * @brief Deletes a symbol from the symbol tree
  *
  * @param tree Pointer to the symbol tree
  * @param key Key of the symbol to be removed
- * @return err_t Error code
+ * @return err_t Error code                            change
  */
-err_t symtable_remove(tree_node_t **tree, const char *key);
+tree_node_t symtable_delete(tree_node_t **root, const char *key);
 
 /**
  * @brief Destroys all symbols of the symbol tree
@@ -129,4 +131,4 @@ err_t symtable_remove(tree_node_t **tree, const char *key);
  * @param tree Pointer to the symbol tree which will be destroyed
  * @return err_t Error code
  */
-err_t symtable_destroy(tree_node_t **tree);
+err_t symtable_destroy(tree_node_t **root);
