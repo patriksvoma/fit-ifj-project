@@ -9,10 +9,9 @@
 
 #include "scanner.h"
 
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <string.h>
 
 /**
  * @brief States of the scanner
@@ -57,24 +56,12 @@ typedef enum
  * Used to tell keywords apart from identifiers.
  */
 const char *const keywords[] = {
-	[KW_NONE] = NULL,
-	[KW_DEF] = "def",
-	[KW_DO] = "do",
-	[KW_DOUBLE] = "Double",
-	[KW_ELSE] = "else",
-	[KW_IF] = "if",
-	[KW_IMPORT] = "import",
-	[KW_INT] = "Int",
-	[KW_MAIN] = "@main",
-	[KW_RETURN] = "return",
-	[KW_STRING] = "String",
-	[KW_THEN] = "then",
-	[KW_UNIT] = "Unit",
-	[KW_VAL] = "val",
-	[KW_VAR] = "var",
-	[KW_WHILE] = "while",
-	[KW_BOOLEAN] = "Boolean",
-	[KW_EXTENSION] = "extension",
+	[KW_NONE] = NULL,		[KW_DEF] = "def",		  [KW_DO] = "do",
+	[KW_DOUBLE] = "Double", [KW_ELSE] = "else",		  [KW_IF] = "if",
+	[KW_IMPORT] = "import", [KW_INT] = "Int",		  [KW_MAIN] = "@main",
+	[KW_RETURN] = "return", [KW_STRING] = "String",	  [KW_THEN] = "then",
+	[KW_UNIT] = "Unit",		[KW_VAL] = "val",		  [KW_VAR] = "var",
+	[KW_WHILE] = "while",	[KW_BOOLEAN] = "Boolean", [KW_EXTENSION] = "extension",
 	[KW_FOR] = "for",
 };
 
@@ -101,8 +88,8 @@ bool find_keyword(const char *word, keyword_t *keyword)
 	return false;
 }
 
-unsigned scanner_line = 1;        // Line of the last read character
-unsigned scanner_column = 0;      // Column of the last read character
+unsigned scanner_line = 1;		  // Line of the last read character
+unsigned scanner_column = 0;	  // Column of the last read character
 unsigned scanner_prev_column = 0; // Column before the last newline, used by unread_char
 
 /**
@@ -237,14 +224,30 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 
 			switch (c)
 			{
-			case EOF: token->type = TOKEN_EOF; goto accept;
-			case '(': token->type = TOKEN_OPENING_BRACKET; goto accept;
-			case ')': token->type = TOKEN_CLOSING_BRACKET; goto accept;
-			case ',': token->type = TOKEN_COMMA; goto accept;
-			case ':': token->type = TOKEN_COLON; goto accept;
-			case '+': token->type = TOKEN_PLUS; goto accept;
-			case '-': token->type = TOKEN_MINUS; goto accept;
-			case '*': token->type = TOKEN_ASTERISK; goto accept;
+			case EOF:
+				token->type = TOKEN_EOF;
+				goto accept;
+			case '(':
+				token->type = TOKEN_OPENING_BRACKET;
+				goto accept;
+			case ')':
+				token->type = TOKEN_CLOSING_BRACKET;
+				goto accept;
+			case ',':
+				token->type = TOKEN_COMMA;
+				goto accept;
+			case ':':
+				token->type = TOKEN_COLON;
+				goto accept;
+			case '+':
+				token->type = TOKEN_PLUS;
+				goto accept;
+			case '-':
+				token->type = TOKEN_MINUS;
+				goto accept;
+			case '*':
+				token->type = TOKEN_ASTERISK;
+				goto accept;
 			default:
 				goto fail;
 			}
