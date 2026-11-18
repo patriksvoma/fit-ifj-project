@@ -107,45 +107,35 @@ typedef struct symtable
 //	destroy
 
 /**
- * @brief Creates a new symbol tree node
+ * @brief Creates a symbol into symbol tree
  *
- * @param *key
- * @param data
- * @return tree_node_t Pointer to created node, NULL if allocation fails
+ * @param table Pointer to the symbol tree into which the symbol will be created
+ * @param key Identifier of inserted symbol
+ * @return symbol_data_t Pointer to data of the new item
  */
-tree_node_t *symtable_create_node(const char *key, symbol_data_t data);
-
-/**
- * @brief Initializes symbol tree
- *
- * @param tree Pointer to the symbol tree which will be initialized
- * @return err_t Error code
- */
-err_t symtable_init(tree_node_t **root);
-
-/**
- * @brief Inserts a symbol into the symbol tree
- *
- * @param tree Pointer to the symbol tree into which the symbol will be inserted
- * @param key Key of inserted symbol
- * @param data Data of inserted symbol
- * @return err_t Error code
- */
-err_t symtable_insert(tree_node_t **root, const char *key, symbol_data_t data);
+symbol_data_t *symtable_item_create(symtable_t *table, char *key);
 
 /**
  * @brief Searches for a symbol in the symbol tree
  *
- * @param tree Pointer to the symbol tree which will be searched
- * @param key Key of the symbol
+ * @param table Pointer to the symbol tree which will be searched
+ * @param key Identifier of the symbol
  * @return symbol_data_t Pointer to the symbol data if found, NULL if not found
  */
-symbol_data_t *symtable_search(tree_node_t *root, const char *key);
+symbol_data_t *symtable_item_find(symtable_t *table, const char *key);
+
+/**
+ * @brief Searches for a symbol in the symbol tree
+ *
+ * @param table Pointer to the symbol tree which will be searched
+ * @param key Identifier of the symbol
+ * @return bool If found True, False if not found
+ */
+bool symtable_item_exists(symtable_t *table, const char *key);
 
 /**
  * @brief Destroys all symbols of the symbol tree
  *
- * @param tree Pointer to the symbol tree which will be destroyed
- * @return err_t Error code
+ * @param table Pointer to the symbol tree which will be destroyed
  */
-err_t symtable_destroy(tree_node_t **root);
+void symtable_destroy(symtable_t **table);

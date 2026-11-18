@@ -11,6 +11,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @brief Creates a new symbol tree node
+ *
+ * @param *key
+ * @param data
+ * @return tree_node_t Pointer to created node, NULL if allocation fails
+ */
 tree_node_t *symtable_create_node(const char *key, symbol_data_t data)
 {
 	if (!key)
@@ -38,6 +45,12 @@ tree_node_t *symtable_create_node(const char *key, symbol_data_t data)
 	return new;
 }
 
+/**
+ * @brief Initializes symbol tree
+ *
+ * @param tree Pointer to the symbol tree which will be initialized
+ * @return err_t Error code
+ */
 err_t symtable_init(tree_node_t **root)
 {
 	if (root == NULL)
@@ -50,6 +63,7 @@ err_t symtable_init(tree_node_t **root)
 	return ERR_OK;
 }
 
+// replace with symtable_item_find()
 symbol_data_t *symtable_search(tree_node_t *root, const char *key)
 {
 	if (key == NULL || root == NULL)
@@ -154,6 +168,14 @@ static tree_node_t *insert_node(tree_node_t *root, const char *key, symbol_data_
 	return root;
 }
 
+/**
+ * @brief Inserts a symbol into the symbol tree
+ *
+ * @param tree Pointer to the symbol tree into which the symbol will be inserted
+ * @param key Key of inserted symbol
+ * @param data Data of inserted symbol
+ * @return err_t Error code
+ */
 err_t symtable_insert(tree_node_t **root, const char *key, symbol_data_t data)
 {
 	if (root == NULL || key == NULL)
