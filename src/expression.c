@@ -222,6 +222,10 @@ err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item, boo
 		item.data.terminal = TERMINAL_U_NEG;
 		*expect_unary = true;
 		break;
+	case TOKEN_SEMICOLON:
+		item.type = STACKITEM_TYPE_TERMINAL;
+		item.data.terminal = TERMINAL_DOLLAR;
+		break;
 	default:
 		print_err_l("Invalid token type in expression.", ERR_SYNTAX, token->line);
 		return ERR_SYNTAX;
@@ -953,6 +957,8 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **r
 	symstack_t stack;
 	unsigned expression_start_line;
 	bool expect_unary = true;
+	unsigned parenthesis_level = 0;
+	bool expression_started = false;
 
 	err_t result = symstack_init(&stack);
 	if (result)
@@ -982,6 +988,14 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **r
 			 (stack.top->type == STACKITEM_TYPE_EXPRESSION && stack.top->next->type == STACKITEM_TYPE_TERMINAL &&
 			  stack.top->next->data.terminal == TERMINAL_DOLLAR)))
 	{
+		// If the new token is the first one on a line, is not the first token of the expression,
+		// and is not inside parenthesis, it marks the end of the expression
+		if (expression_started && parenthesis_level == 0 && b->source_token.starts_logical_line)
+		{
+			b->type = STACKITEM_TYPE_TERMINAL;
+			b->data.terminal = TERMINAL_DOLLAR;
+		}
+
 		const symstack_item_t *a = symstack_top_terminal(&stack);
 
 		switch (prec_table[a->data.terminal][b->data.terminal])
@@ -989,7 +1003,13 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **r
 		case E:
 			symstack_push(&stack, b);
 
-			// FIXME: EOL should only be optional if inside parenthesis
+			// Keep track of parenthesis
+			expression_started = true;
+			if (b->source_token.type == TOKEN_OPENING_BRACKET)
+				parenthesis_level++;
+			else if (b->source_token.type == TOKEN_CLOSING_BRACKET && parenthesis_level > 0)
+				parenthesis_level--;
+
 			if (use_seed)
 				use_seed = false;
 			else
@@ -1015,7 +1035,13 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **r
 			if (result)
 				return result;
 
-			// FIXME: EOL should only be optional if inside parenthesis
+			// Keep track of parenthesis
+			expression_started = true;
+			if (b->source_token.type == TOKEN_OPENING_BRACKET)
+				parenthesis_level++;
+			else if (b->source_token.type == TOKEN_CLOSING_BRACKET && parenthesis_level > 0)
+				parenthesis_level--;
+
 			if (use_seed)
 				use_seed = false;
 			else
