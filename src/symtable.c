@@ -238,10 +238,9 @@ bool symtable_item_defined(symtable_t *table, const char *key)
 	if (table == NULL || key == NULL)
 		return NULL;
 
-	if (!symtable_item_exists(table, key))
-		return false;
-
 	symbol_data_t *data = symtable_item_find(table, key);
+	if (!data)
+		return false;
 
 	if (data->symbol_type == SYM_VARIABLE)
 	{
