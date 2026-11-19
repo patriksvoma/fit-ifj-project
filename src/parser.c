@@ -421,13 +421,34 @@ err_t func_def(parser_data_t *pdata, ast_node_t *program_node)
 	if (result)
 		return result;
 
+	// Create a symbol table for the function
+	pdata->local_var_table = local_table_create(NULL);
+	if (!pdata->local_var_table)
+	{
+		print_err_l("Failed to create a local symbol table.", ERR_INTERNAL, pdata->token.line);
+		return ERR_INTERNAL;
+	}
+
+	// TODO: Add parameters and extension base into the symbol table
+
 	// <func-params>
 	result = func_params(pdata, table_entry);
 	if (result)
 		return result;
 
 	// <return-type>
-	return return_type(pdata, def_node);
+	result = return_type(pdata, def_node);
+
+	// Destroy the local var table;
+	pdata->local_var_table = local_table_destroy(pdata->local_var_table);
+	if (pdata->local_var_table)
+	{
+		print_err_l("A symbol table destroyed in func_def() still has a parent, this should not happen.", ERR_INTERNAL,
+					pdata->token.line);
+		return ERR_INTERNAL;
+	}
+
+	return result;
 }
 
 /**
