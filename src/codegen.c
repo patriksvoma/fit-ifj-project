@@ -255,13 +255,11 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
 	AST_FUNC_CALL,
 	AST_EXT_DEF,
 	AST_EXT_CALL,
-	AST_BLOCK,
 
 	AST_RETURN_CALL,
 	AST_IF,
 	AST_WHILE,
 	AST_FOR,
-	AST_INT_TO_DOUBLE
 */
 
 /**
@@ -336,6 +334,30 @@ void generate_nodes(const ast_node_t *node)
 	case AST_VAR_ASSIGN:
 		generate_nodes(node->variable_assignment.assigned_value);
 		printf("POPS LF@%s\n", node->variable_assignment.unique_id);
+		break;
+
+	case AST_INT_TO_DOUBLE:
+		generate_nodes(node->int2double);
+		printf("INT2FLOATS\n");
+		break;
+
+	case AST_BLOCK:
+		for (size_t i = 0; i < node->block.statement_count; i++)
+		{
+			generate_nodes(node->block.statements[i]);
+		}
+		break;
+
+	case AST_PROGRAM:
+		for (size_t i = 0; i < node->program.func_def_count; i++)
+		{
+			generate_nodes(node->program.func_defs[i]);
+		}
+
+		for (size_t i = 0; i < node->program.ext_def_count; i++)
+		{
+			generate_nodes(node->program.ext_defs[i]);
+		}
 		break;
 
 	default:
