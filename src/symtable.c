@@ -256,3 +256,31 @@ bool symtable_item_defined(symtable_t *table, const char *key)
 	}
 	return false;
 }
+
+err_t symbol_add_param_list(symbol_data_t *symbol)
+{
+	(void)symbol;
+	print_err("symbol_add_param_list() called but not yet implemented!", ERR_INTERNAL);
+	return ERR_OK;
+}
+
+param_t *symbol_top_param(symbol_data_t *symbol)
+{
+	(void)symbol;
+	print_err("symbol_top_param() called but not yet implemented!", ERR_INTERNAL);
+	return NULL;
+}
+
+err_t symbol_add_param(symbol_data_t *symbol)
+{
+	(void)symbol;
+	print_err("symbol_add_param() called but not yet implemented!", ERR_INTERNAL);
+	return ERR_OK;
+}
+
+void symtable_destroy(symtable_t **table)
+{
+	(void)table;
+	print_err("symtable_destroy() called but not yet implemented!", ERR_INTERNAL);
+	return;
+}
