@@ -293,8 +293,8 @@ void print_func_def(char *identifier, const char *unique_id, symtable_t *symtabl
 	{
 		for (int j = func_params->data.function.param_lists[i]->param_count - 1; j >= 0; j--)
 		{
-			printf("DEFVAR LF@%s%s\n", unique_id, func_params->data.function.param_lists[i]->params[j]->identifier);
-			printf("POPS LF@%s%s\n", unique_id, func_params->data.function.param_lists[i]->params[j]->identifier);
+			printf("DEFVAR LF@%s$%s\n", unique_id, func_params->data.function.param_lists[i]->params[j]->identifier);
+			printf("POPS LF@%s$%s\n", unique_id, func_params->data.function.param_lists[i]->params[j]->identifier);
 		}
 	}
 }
@@ -424,8 +424,27 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		break;
 
 	case AST_IF:
+		unsigned curr = new_func_def->if_counter;
+		new_func_def->if_counter++;
+
 		generate_nodes(node->if_statement.condition, symtables, new_func_def);
 
+		// Condition evaluation
+		printf("PUSHS bool@true\n");
+		printf("JUMPIFNEQS %s$if$%u$else\n", new_func_def->func_name, curr);
+
+		// If block
+		generate_nodes(node->if_statement.if_block, symtables, new_func_def);
+		printf("JUMP %s$if$%u$end\n", new_func_def->func_name, curr);
+
+		// Else block
+		printf("LABEL %s$if$%u$else\n", new_func_def->func_name, curr);
+		if (node->if_statement.else_block != NULL)
+		{
+			generate_nodes(node->if_statement.else_block, symtables, new_func_def);
+		}
+
+		printf("LABEL %s$if$%u$end\n", new_func_def->func_name, curr);
 		break;
 
 	default:
