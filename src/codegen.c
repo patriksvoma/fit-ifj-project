@@ -328,14 +328,14 @@ void generate_nodes(const ast_node_t *node)
 		break;
 
 	case AST_VAR_DEF:
-		printf("DEFVAR LF@%s\n", node->variable_definition.identifier);
+		printf("DEFVAR LF@%s\n", node->variable_definition.unique_id);
 		generate_nodes(node->variable_definition.assigned_value);
-		printf("POPS LF@%s\n", node->variable_definition.identifier);
+		printf("POPS LF@%s\n", node->variable_definition.unique_id);
 		break;
 
 	case AST_VAR_ASSIGN:
 		generate_nodes(node->variable_assignment.assigned_value);
-		printf("POPS LF@%s\n", node->variable_assignment.identifier);
+		printf("POPS LF@%s\n", node->variable_assignment.unique_id);
 		break;
 
 	default:
