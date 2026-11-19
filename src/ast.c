@@ -623,6 +623,116 @@ err_t ast_while_set_block(ast_node_t *while_node, ast_node_t *block)
 	return ERR_OK;
 }
 
+ast_node_t *ast_for_make(char *iterator_identifier, ast_node_t *from_node)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_FOR;
+	node->for_loop.for_type = FOR_TO;
+
+	char *id;
+	id = save_identifier(iterator_identifier);
+	node->for_loop.iterator_identifier = id;
+	node->for_loop.from = from_node;
+	node->for_loop.to = NULL;
+	node->for_loop.until = NULL;
+	node->for_loop.by = NULL;
+	node->for_loop.guards = NULL;
+	node->for_loop.guard_count = 0;
+	node->for_loop.block = NULL;
+	return node;
+}
+
+err_t ast_for_set_type(ast_node_t *for_node, for_type_t type)
+{
+	if (for_node == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_for_set_type()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	for_node->for_loop.for_type = type;
+	return ERR_OK;
+}
+
+err_t ast_for_set_to(ast_node_t *for_node, ast_node_t *to_node)
+{
+	if (for_node == NULL || to_node == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_for_set_to()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	for_node->for_loop.to = to_node;
+	return ERR_OK;
+}
+
+err_t ast_for_set_until(ast_node_t *for_node, ast_node_t *until_node)
+{
+	if (for_node == NULL || until_node == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_for_set_until()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	for_node->for_loop.until = until_node;
+	return ERR_OK;
+}
+
+err_t ast_for_set_by(ast_node_t *for_node, ast_node_t *by_node)
+{
+	if (for_node == NULL || by_node == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_for_set_by()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	for_node->for_loop.by = by_node;
+	return ERR_OK;
+}
+
+err_t ast_for_add_guard(ast_node_t *for_node, ast_node_t *guard_node)
+{
+	if (for_node == NULL || guard_node == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_for_add_guard()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	ast_node_t **new_guard =
+		realloc(for_node->for_loop.guards, (for_node->for_loop.guard_count + 1) * sizeof(ast_node_t *));
+
+	if (new_guard == NULL)
+	{
+		print_err("Failed to allocate memory in ast_for_set_by()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	for_node->for_loop.guards = new_guard;
+	for_node->for_loop.guards[for_node->for_loop.guard_count] = guard_node;
+	for_node->for_loop.guard_count++;
+	return ERR_OK;
+}
+
+err_t ast_for_set_block(ast_node_t *for_node, ast_node_t *block)
+{
+	if (for_node == NULL || block == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_for_set_block()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	for_node->for_loop.block = block;
+	return ERR_OK;
+}
+
 ast_node_t *ast_make_int_to_double(ast_node_t *operand)
 {
 	ast_node_t *node;
@@ -637,78 +747,6 @@ ast_node_t *ast_make_int_to_double(ast_node_t *operand)
 	node->eval_type = TYPE_DOUBLE;
 	node->node_type = AST_INT_TO_DOUBLE;
 	node->ast_node_value.operand = operand;
-	return node;
-}
-
-ast_node_t *ast_make_assign(char *i, data_type_t i_type, ast_node_t *expression)
-{
-	ast_node_t *node;
-	node = malloc(sizeof(ast_node_t));
-
-	if (node == NULL)
-	{
-		return NULL;
-	}
-
-	// Setting values
-	node->eval_type = i_type;
-	node->node_type = AST_ASSIGN;
-	node->ast_node_value.assign.expression = expression;
-	node->ast_node_value.assign.identifier = i;
-	return node;
-}
-
-ast_node_t *ast_make_return(ast_node_t *expression)
-{
-	if (!expression)
-		return NULL;
-
-	ast_node_t *node;
-	node = malloc(sizeof(ast_node_t));
-
-	if (node == NULL)
-	{
-		return NULL;
-	}
-
-	// Setting values
-	node->eval_type = expression->eval_type;
-	node->node_type = AST_RETURN;
-	node->ast_node_value.expression = expression;
-	return node;
-}
-
-ast_node_t *ast_make_while(ast_node_t *condition, ast_node_t *block)
-{
-	ast_node_t *node;
-	node = malloc(sizeof(ast_node_t));
-
-	if (node == NULL)
-	{
-		return NULL;
-	}
-
-	// Setting values
-	node->eval_type = TYPE_NONE;
-	node->node_type = AST_WHILE;
-	node->ast_node_value.while_loop.block = block;
-	node->ast_node_value.while_loop.condition = condition;
-	return node;
-}
-
-ast_node_t *ast_make_extension_use(ast_node_t *base)
-{
-	ast_node_t *node;
-	node = malloc(sizeof(ast_node_t));
-
-	if (node == NULL)
-	{
-		return NULL;
-	}
-
-	node->eval_type = TYPE_NONE;
-	node->node_type = AST_EXTENSION_USE;
-	node->ast_node_value.base = base;
 	return node;
 }
 

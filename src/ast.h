@@ -506,7 +506,7 @@ ast_node_t *ast_for_make(char *iterator_identifier, ast_node_t *from_node);
  * @brief Sets the type of for loop
  *
  * @param for_node Node containing the for loop
- * @param type Type of the fpr loop
+ * @param type Type of the for loop
  * @return err_t Error code
  */
 err_t ast_for_set_type(ast_node_t *for_node, for_type_t type);
