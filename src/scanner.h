@@ -2,6 +2,7 @@
  * @file scanner.h
  * @brief Scanner module for the IFJ26 compiler
  *
+ * @author Jan Šerák (xserakj00@stud.fit.vut.cz)
  * @author Patrik Švoma (xsvomap00@stud.fit.vut.cz)
  *
  * @date 2026-11-10
@@ -122,3 +123,12 @@ typedef enum
  * @return err_t Error
  */
 err_t get_next_token(token_t *token, eol_rule_t eol);
+
+/**
+ * @brief Gets the next token object without consuming it
+ *
+ * @param token Pointer to where the accepted token should be saved
+ * @param eol Tells the scanner if a newline is required, option, or fobridden before the next token
+ * @return err_t Error
+ */
+err_t peek_next_token(token_t *token, eol_rule_t eol);
