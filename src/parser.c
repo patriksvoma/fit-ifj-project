@@ -819,9 +819,6 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 	// Create the node for the statement and add it to the block
 	// The node will be filled based on the rule
 	ast_node_t *statement_node;
-	result = ast_block_add_statement(block_node, statement_node);
-	if (result)
-		return result;
 
 	// val
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_VAL)
@@ -1008,18 +1005,36 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 			if (result)
 				return result;
 
-			ast_node_t *assigned_value_node; // FIXME:
-			return expression(pdata, &assigned_value_node);
+			// Create node with the assigned value, wrap it in an assignment node, then add it to the block
+			ast_node_t *assigned_expression_node;
+
+			result = expression(pdata, &assigned_expression_node);
+			if (result)
+				return result;
+
+			statement_node = ast_var_assign_make(id_token.attribute.string, assigned_expression_node);
+			if (!statement_node)
+			{
+				print_err_l("Failed to create an AST node in statement().", ERR_INTERNAL, pdata->token.line);
+				return ERR_INTERNAL;
+			}
+			return ast_block_add_statement(block_node, statement_node);
 		}
 
 		// <expression>
 		// The expression parser needs to have the id token seeded before the token in pdata
-		ast_node_t *expression_node; // FIXME:
-		return expression_seeded(pdata, &expression_node, &id_token);
+		result = expression_seeded(pdata, &statement_node, &id_token);
+		if (result)
+			return result;
+		return ast_block_add_statement(block_node, statement_node);
 	}
 
 	// <expression>
-	return expression(pdata, statement_node);
+	result = expression(pdata, &statement_node);
+	if (result)
+		return result;
+
+	return ast_block_add_statement(block_node, statement_node);
 }
 
 /**
