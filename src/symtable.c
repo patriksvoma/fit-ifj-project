@@ -438,12 +438,14 @@ param_t *symbol_top_param(symbol_data_t *symbol)
 
 symtable_t *local_table_create(const symtable_t *parent)
 {
+	(void)parent;
 	print_err("local_table_create() called but not implemented!", ERR_INTERNAL);
 	return NULL;
 }
 
 symtable_t *local_table_destroy(const symtable_t *table)
 {
+	(void)table;
 	print_err("local_table_destroy() called but not implemented!", ERR_INTERNAL);
 	return NULL;
 }

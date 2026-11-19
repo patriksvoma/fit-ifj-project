@@ -173,7 +173,7 @@ void symtable_destroy(symtable_t **table);
  * @param parent Symbol table to use as the parent
  * @return symtable_t* Pointer to a new child table
  */
-symtable_t *local_table_create(symtable_t *parent);
+symtable_t *local_table_create(const symtable_t *parent);
 
 /**
  * @brief Deallocates the local table and returns a pointer to its parent
@@ -181,4 +181,4 @@ symtable_t *local_table_create(symtable_t *parent);
  * @param table Table to destroy
  * @return symtable_t* Pointer to the parent table, if it exists
  */
-symtable_t *local_table_destroy(symtable_t *table);
+symtable_t *local_table_destroy(const symtable_t *table);
