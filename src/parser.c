@@ -872,7 +872,9 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 		}
 		entry->symbol_type = SYM_VARIABLE;
 		entry->data.variable.mutable = false;
-		symbol_generate_unique_id(pdata->token.attribute.string, entry, pdata->local_var_table);
+		result = symbol_generate_unique_id(pdata->token.attribute.string, entry, pdata->local_var_table);
+		if (result)
+			return result;
 
 		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
 		if (result)
@@ -886,6 +888,7 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 		if (result)
 			return result;
 
+		entry->data.variable.is_defined = true;
 		return ast_block_add_statement(block_node, statement_node);
 	}
 	// var
@@ -918,7 +921,9 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 		}
 		entry->symbol_type = SYM_VARIABLE;
 		entry->data.variable.mutable = true;
-		symbol_generate_unique_id(pdata->token.attribute.string, entry, pdata->local_var_table);
+		result = symbol_generate_unique_id(pdata->token.attribute.string, entry, pdata->local_var_table);
+		if (result)
+			return result;
 
 		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
 		if (result)
@@ -932,6 +937,7 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 		if (result)
 			return result;
 
+		entry->data.variable.is_defined = true;
 		return ast_block_add_statement(block_node, statement_node);
 	}
 	// if
