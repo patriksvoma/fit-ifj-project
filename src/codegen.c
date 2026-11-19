@@ -9,18 +9,7 @@
 
 #include "codegen.h"
 #include <stdio.h>
-
-/**
- * @brief Structure to help make labels for if, for and while
- *
- */
-typedef struct names_counter
-{
-	char *func_name;
-	unsigned if_counter;
-	unsigned for_counter;
-	unsigned while_counter;
-} names_counter;
+#include <string.h>
 
 /**
  * @brief Prints build-in function subStr
@@ -28,7 +17,7 @@ typedef struct names_counter
  */
 void print_substr()
 {
-	printf("LABEL substr\n");
+	printf("LABEL subStr\n");
 	printf("CREATEFRAME\n");
 	printf("PUSHFRAME\n");
 
@@ -66,27 +55,27 @@ void print_substr()
 	printf("OR LF@temp1 LF@temp2 LF@temp3\n");
 
 	// Wrong parameters (exit value 40)
-	printf("JUMPIFNEQ correct$params LF@temp1 bool@true\n");
+	printf("JUMPIFNEQ correct$params$subStr LF@temp1 bool@true\n");
 
 	printf("POPFRAME\n");
 	printf("EXIT int@40\n");
 
-	printf("LABEL correct$params\n");
+	printf("LABEL correct$params$subStr\n");
 	printf("MOVE LF@result string@\n");
 
 	// While condition
-	printf("LABEL substr$w$0\n");
+	printf("LABEL subStr$w$0\n");
 	printf("LT LF@temp1 LF@start LF@end\n");
-	printf("JUMPIFEQ substr$w$0$end LF@temp1 bool@false\n");
+	printf("JUMPIFEQ subStr$w$0$end LF@temp1 bool@false\n");
 
 	// While code block, going trough the sub string and adding each letter to the previous one
 	printf("GETCHAR LF@temp1 LF@value LF@start\n");
 	printf("CONCAT LF@result LF@result LF@temp1\n");
 	printf("ADD LF@start LF@start int@1\n");
-	printf("JUMP substr$w$0\n");
+	printf("JUMP subStr$w$0\n");
 
 	// Return value
-	printf("LABEL substr$w$0$end\n");
+	printf("LABEL subStr$w$0$end\n");
 	printf("PUSHS LF@result\n");
 	printf("POPFRAME\n");
 	printf("RETURN\n");
@@ -135,6 +124,19 @@ void print_ord()
 	printf("LABEL ord$end\n");
 	printf("PUSHS LF@result\n");
 	printf("POPFRAME\n");
+	printf("RETURN\n");
+}
+
+void print_bool2str()
+{
+	printf("LABEL bool2str\n");
+	printf("PUSHS bool@true\n");
+	printf("JUMPIFEQS bool2str$true\n");
+	printf("PUSHS string@false\n");
+	printf("JUMP bool2str$end\n");
+	printf("LABEL bool2str$true\n");
+	printf("PUSHS string@true\n");
+	printf("LABEL bool2str$end\n");
 	printf("RETURN\n");
 }
 
@@ -299,21 +301,83 @@ void print_func_def(char *identifier, const char *unique_id, symtable_t *symtabl
 	}
 }
 
+void print_func_call(const char *unique_id, param_node_list_t **param_lists, symtable_t *symtables,
+					 names_counter *new_func_def)
+{
+	const char *id = unique_id;
+
+	if (strcmp(id, "print") == 0)
+	{
+		if (param_lists[0]->param_count == 0)
+		{
+			printf("WRITE string@()\n");
+		}
+		else
+		{
+			generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+			printf("POPS GF@temp1\n");
+			printf("WRITE GF@temp1\n");
+		}
+		printf("PUSHS nil@nil\n");
+	}
+	// TODO: Nejspis bude potreba predelat
+	else if (strcmp(id, "readLine") == 0)
+	{
+		printf("READ GF@temp1 string\n");
+		printf("PUSHS GF@temp1\n");
+	}
+	else if (strcmp(id, "readInt") == 0)
+	{
+		printf("READ GF@temp1 int\n");
+		printf("PUSHS GF@temp1\n");
+	}
+	else if (strcmp(id, "readDouble") == 0)
+	{
+		printf("READ GF@temp1 float\n");
+		printf("PUSHS GF@temp1\n");
+	}
+	else if (strcmp(id, "readBoolean") == 0)
+	{
+		printf("READ GF@temp1 bool\n");
+		printf("PUSHS GF@temp1\n");
+	}
+	else if (strcmp(id, "toStr") == 0)
+	{
+		generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+		switch (param_lists[0]->param_node[0]->eval_type)
+		{
+		case TYPE_INT:
+			printf("INT2STRS\n");
+			break;
+
+		case TYPE_DOUBLE:
+			printf("FLOAT2STRS\n");
+			break;
+
+		case TYPE_BOOLEAN:
+			printf("CALL bool2str\n");
+			break;
+
+		case TYPE_UNIT:
+			printf("POPS GF@temp1\n");
+			printf("PUSHS string@()\n");
+			break;
+
+		default:
+			break;
+		}
+	}
+}
+
 /*
 	AST_FUNC_CALL,
 	AST_EXT_DEF,
 	AST_EXT_CALL,
 
-	AST_IF
 	AST_WHILE,
 	AST_FOR,
 */
 
-/**
- * @brief Function to generate code for a specific node
- *
- * @param node Node for wich the code should be generated
- */
 err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counter *new_func_def)
 {
 	node_type_t type = node->node_type;
@@ -423,6 +487,10 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		printf("RETURN\n");
 		break;
 
+	case AST_FUNC_CALL:
+		print_func_call(node->func_call.unique_id, node->func_call.param_lists, symtables, new_func_def);
+		break;
+
 	case AST_IF:
 		unsigned curr = new_func_def->if_counter;
 		new_func_def->if_counter++;
@@ -478,6 +546,7 @@ err_t generate_code(const ast_node_t *root, const parser_data_t *parser_data)
 
 	print_substr();
 	print_ord();
+	print_bool2str();
 
 	generate_nodes(root, symtables, new_func_def);
 
