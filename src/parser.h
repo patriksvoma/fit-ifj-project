@@ -35,4 +35,4 @@ typedef struct
  * @param program_node AST root node
  * @return err_t Error code
  */
-err_t parse(ast_node_t *program_node);
+err_t parse(ast_node_t *program_node, parser_data_t pdata);
