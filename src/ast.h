@@ -227,7 +227,7 @@ typedef struct ast_node
 		{
 			for_type_t for_type;
 
-			char *iterator_identifier;
+			char *iterator_unique_id;
 			ast_node_t *from;
 			ast_node_t *to;
 			ast_node_t *until;

@@ -641,7 +641,7 @@ ast_node_t *ast_for_make(const char *iterator_identifier, ast_node_t *from_node)
 
 	char *id;
 	id = save_identifier(iterator_identifier);
-	node->for_loop.iterator_identifier = id;
+	node->for_loop.iterator_unique_id = id;
 	node->for_loop.from = from_node;
 	node->for_loop.to = NULL;
 	node->for_loop.until = NULL;
@@ -873,7 +873,7 @@ void destruct(ast_node_t *root)
 		destruct(root->for_loop.until);
 		destruct(root->for_loop.by);
 		destruct(root->for_loop.block);
-		free(root->for_loop.iterator_identifier);
+		free(root->for_loop.iterator_unique_id);
 		break;
 
 	case AST_INT_TO_DOUBLE:
