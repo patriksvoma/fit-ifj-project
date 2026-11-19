@@ -951,10 +951,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	return ERR_OK;
 }
 
-err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **return_node)
+err_t parse_expression(parser_data_t *pdata, ast_node_t **return_node)
 {
-	bool use_seed = seed_token;
-
 	symstack_t stack;
 	unsigned expression_start_line;
 	bool expect_unary = true;
@@ -972,16 +970,8 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **r
 		return ERR_INTERNAL;
 	}
 
-	if (use_seed)
-	{
-		result = token_to_stack_item(seed_token, b, &expect_unary);
-		expression_start_line = seed_token->line;
-	}
-	else
-	{
-		result = token_to_stack_item(&pdata->token, b, &expect_unary);
-		expression_start_line = pdata->token.line;
-	}
+	result = token_to_stack_item(&pdata->token, b, &expect_unary);
+	expression_start_line = pdata->token.line;
 	if (result)
 		return result;
 
@@ -1011,10 +1001,7 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **r
 			else if (b->source_token.type == TOKEN_CLOSING_BRACKET && parenthesis_level > 0)
 				parenthesis_level--;
 
-			if (use_seed)
-				use_seed = false;
-			else
-				result = get_next_token(&pdata->token, EOL_OPTIONAL);
+			result = get_next_token(&pdata->token, EOL_OPTIONAL);
 			if (result)
 				return result;
 
@@ -1043,10 +1030,7 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **r
 			else if (b->source_token.type == TOKEN_CLOSING_BRACKET && parenthesis_level > 0)
 				parenthesis_level--;
 
-			if (use_seed)
-				use_seed = false;
-			else
-				result = get_next_token(&pdata->token, EOL_OPTIONAL);
+			result = get_next_token(&pdata->token, EOL_OPTIONAL);
 			if (result)
 				return result;
 

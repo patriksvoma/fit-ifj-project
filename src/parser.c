@@ -1413,7 +1413,7 @@ err_t val_var_def(parser_data_t *pdata, ast_node_t *var_def_node, symbol_data_t 
  */
 err_t expression(parser_data_t *pdata, ast_node_t **return_node)
 {
-	return parse_expression(pdata, NULL, return_node);
+	return parse_expression(pdata, return_node);
 }
 
 err_t parse(ast_node_t *program_node)
