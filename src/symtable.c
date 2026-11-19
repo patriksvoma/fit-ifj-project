@@ -70,25 +70,31 @@ err_t symtable_init(symtable_t *table)
 
 symbol_data_t *symtable_item_find(symtable_t *table, const char *key)
 {
-	if (key == NULL || table == NULL || table->root_node == NULL)
+	if (key == NULL || table == NULL)
 		return NULL;
 
-	if (strcmp(key, table->root_node->key) == 0)
+	while (table != NULL)
 	{
-		return &table->root_node->data;
+		tree_node_t *node = table->root_node;
+
+		while (node != NULL)
+		{
+			if (strcmp(key, node->key) == 0)
+			{
+				return &node->data;
+			}
+			else if (strcmp(key, node->key) < 0)
+			{
+				node = node->left;
+			}
+			else
+			{
+				node = node->right;
+			}
+		}
+		table = table->parent;
 	}
-	else if (strcmp(key, table->root_node->key) < 0)
-	{
-		symtable_t left_table = *table;
-		left_table.root_node = table->root_node->left;
-		return symtable_item_find(&left_table, key);
-	}
-	else
-	{
-		symtable_t right_table = *table;
-		right_table.root_node = table->root_node->right;
-		return symtable_item_find(&right_table, key);
-	}
+	return NULL;
 }
 
 bool symtable_item_exists(symtable_t *table, const char *key)
