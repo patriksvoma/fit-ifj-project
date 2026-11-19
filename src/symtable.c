@@ -13,7 +13,6 @@
 
 // TODO:
 //	scope stuff
-//	add_param_list
 //	add_param
 //	top_param
 //	destroy
@@ -322,6 +321,85 @@ err_t symbol_add_param_list(symbol_data_t *symbol)
 	}
 
 	free(new_list);
+	print_err("Wrong symbol type in symbol_add_param_list()", ERR_INTERNAL);
+	return ERR_INTERNAL;
+}
+
+err_t symbol_add_param(symbol_data_t *symbol)
+{
+	if (symbol == NULL)
+	{
+		print_err("NULL pointer in symbol_add_param().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	if (symbol->symbol_type == SYM_FUNCTION)
+	{
+		if (symbol->data.function.param_list_count == 0)
+		{
+			return ERR_INTERNAL;
+		}
+
+		param_list_t *last_list = symbol->data.function.param_lists[symbol->data.function.param_list_count - 1];
+
+		param_t *new_param = malloc(sizeof(param_t));
+
+		if (new_param == NULL)
+		{
+			print_err("Failed to allocate memory in symbol_add_param().", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+		new_param->identifier = NULL;
+		new_param->type = 0;
+
+		param_t **new_params = realloc(last_list->params, (last_list->param_count + 1) * sizeof(param_t *));
+
+		if (new_params == NULL)
+		{
+			free(new_param);
+			print_err("Failed to allocate memory in symbol_add_param().", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
+		last_list->params = new_params;
+
+		last_list->params[last_list->param_count] = new_param;
+		last_list->param_count++;
+		return ERR_OK;
+	}
+	else if (symbol->symbol_type == SYM_EXTENSION)
+	{
+		if (symbol->data.extension.param_list_count == 0)
+		{
+			return ERR_INTERNAL;
+		}
+
+		param_list_t *last_list = symbol->data.extension.param_lists[symbol->data.extension.param_list_count - 1];
+		param_t *new_param = malloc(sizeof(param_t));
+
+		if (new_param == NULL)
+		{
+			print_err("Failed to allocate memory in symbol_add_param().", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+		new_param->identifier = NULL;
+		new_param->type = 0;
+
+		param_t **new_params = realloc(last_list->params, (last_list->param_count + 1) * sizeof(param_t *));
+
+		if (new_params == NULL)
+		{
+			free(new_param);
+			print_err("Failed to allocate memory in symbol_add_param().", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
+		last_list->params = new_params;
+
+		last_list->params[last_list->param_count] = new_param;
+		last_list->param_count++;
+		return ERR_OK;
+	}
 	print_err("Wrong symbol type in symbol_add_param_list()", ERR_INTERNAL);
 	return ERR_INTERNAL;
 }
