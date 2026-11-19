@@ -1066,7 +1066,7 @@ err_t expression_opt(parser_data_t *pdata, ast_node_t **return_node)
 		literal_t lit;
 		lit.literal_type = TYPE_UNIT;
 
-		*return_node = ast_make_literal(&lit); // FIXME:
+		*return_node = ast_literal_make(&lit);
 		if (*return_node == NULL)
 		{
 			print_err_l("Failed to create an AST node inside expression_opt()", ERR_INTERNAL, pdata->token.line);
