@@ -217,6 +217,74 @@ void test_dot_token()
 	EXPECT_TYPES(".", TOKEN_DOT);
 }
 
+// Identifiers and keywords
+void test_identifier()
+{
+	const char *names[] = {"x_1", "_abc", "__", "abc_"};
+
+	set_input("x_1 _abc __ abc_");
+
+	for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); i++)
+	{
+		token_t token = next_ok();
+		TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER, token.type);
+		TEST_ASSERT_EQUAL_STRING(names[i], token.attribute.string);
+	}
+
+	TEST_ASSERT_EQUAL(TOKEN_EOF, next_ok().type);
+}
+
+void test_keywords()
+{
+	keyword_t expected[] = {KW_DEF,	 KW_DO,	   KW_DOUBLE, KW_ELSE,	  KW_IF,		KW_IMPORT,
+							KW_INT,	 KW_RETURN, KW_STRING, KW_THEN,	  KW_UNIT,		KW_VAL,
+							KW_VAR,	 KW_WHILE,  KW_BOOLEAN, KW_EXTENSION, KW_FOR,		KW_MAIN};
+
+	set_input("def do Double else if import Int return String then Unit val var while Boolean extension for @main");
+
+	for (size_t i = 0; i < sizeof(expected) / sizeof(expected[0]); i++)
+	{
+		token_t token = next_ok();
+		TEST_ASSERT_EQUAL(TOKEN_KEYWORD, token.type);
+		TEST_ASSERT_EQUAL(expected[i], token.attribute.keyword);
+	}
+
+	TEST_ASSERT_EQUAL(TOKEN_EOF, next_ok().type);
+}
+
+void test_keywords_are_case_sensitive()
+{
+	EXPECT_TYPES("int double If whilex", TOKEN_IDENTIFIER, TOKEN_IDENTIFIER, TOKEN_IDENTIFIER, TOKEN_IDENTIFIER);
+}
+
+void test_boolean_literals()
+{
+	set_input("true false truex");
+
+	token_t token = next_ok();
+	TEST_ASSERT_EQUAL(TOKEN_BOOLEAN, token.type);
+	TEST_ASSERT_TRUE(token.attribute.boolean);
+
+	token = next_ok();
+	TEST_ASSERT_EQUAL(TOKEN_BOOLEAN, token.type);
+	TEST_ASSERT_FALSE(token.attribute.boolean);
+
+	TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER, next_ok().type);
+}
+
+void test_lone_underscore()
+{
+	EXPECT_TYPES("_ ( _ )", TOKEN_UNDERSCORE, TOKEN_OPENING_BRACKET, TOKEN_UNDERSCORE, TOKEN_CLOSING_BRACKET);
+}
+
+void test_invalid_at_words()
+{
+	expect_error("@", ERR_SCANNER);
+	expect_error("@mai", ERR_SCANNER);
+	expect_error("@mainx", ERR_SCANNER);
+	expect_error("@ main", ERR_SCANNER);
+}
+
 int main()
 {
 	UNITY_BEGIN();
@@ -232,6 +300,13 @@ int main()
 	RUN_TEST(test_less_minus_is_generator_arrow);
 	RUN_TEST(test_single_ampersand_or_pipe_is_error);
 	RUN_TEST(test_dot_token);
+
+	RUN_TEST(test_identifier);
+	RUN_TEST(test_keywords);
+	RUN_TEST(test_keywords_are_case_sensitive);
+	RUN_TEST(test_boolean_literals);
+	RUN_TEST(test_lone_underscore);
+	RUN_TEST(test_invalid_at_words);
 
 	return UNITY_END();
 }
