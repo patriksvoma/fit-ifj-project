@@ -816,6 +816,13 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 	err_t result;
 	unsigned statement_indent_level = pdata->token.indent;
 
+	// Create the node for the statement and add it to the block
+	// The node will be filled based on the rule
+	ast_node_t *statement_node;
+	result = ast_block_add_statement(block_node, statement_node);
+	if (result)
+		return result;
+
 	// val
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_VAL)
 	{
@@ -1012,9 +1019,7 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 	}
 
 	// <expression>
-	ast_node_t *expression_node;
-
-	return expression(pdata, &expression_node);
+	return expression(pdata, statement_node);
 }
 
 /**
