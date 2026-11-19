@@ -74,6 +74,7 @@ typedef enum
 	TOKEN_AND,			   // &&
 	TOKEN_OR,			   // ||
 	TOKEN_NEG			   // !
+	TOKEN_SEMICOLON		   // ;
 } token_type_t;
 
 /**
