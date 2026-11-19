@@ -206,7 +206,7 @@ ast_node_t *ast_func_call_make(const char *identificator)
 	id = save_identifier(identificator);
 	node->func_call.identifier = id;
 	node->func_call.param_list_count = 0;
-	node->func_call.param_lists = 0;
+	node->func_call.param_lists = NULL;
 	return node;
 }
 
@@ -414,7 +414,7 @@ ast_node_t *ast_unary_op_make(operator_type_t operator, ast_node_t *operand)
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
 
-	if (node == NULL || operand == NULL)
+	if (node == NULL)
 	{
 		return NULL;
 	}
@@ -567,7 +567,7 @@ ast_node_t *ast_if_make(ast_node_t *condition_node)
 	node->eval_type = TYPE_NONE;
 	node->node_type = AST_IF;
 	node->if_statement.condition = condition_node;
-	node->if_statement.else_block = NULL;
+	node->if_statement.if_block = NULL;
 	node->if_statement.else_block = NULL;
 	return node;
 }
@@ -713,7 +713,7 @@ err_t ast_for_add_guard(ast_node_t *for_node, ast_node_t *guard_node)
 
 	if (new_guard == NULL)
 	{
-		print_err("Failed to allocate memory in ast_for_set_by()", ERR_INTERNAL);
+		print_err("Failed to allocate memory in ast_for_add_guard()", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
 
@@ -789,6 +789,7 @@ void destruct(ast_node_t *root)
 				destruct(root->func_call.param_lists[i]->param_node[j]);
 			}
 			free(root->func_call.param_lists[i]->param_node);
+			free(root->func_call.param_lists[i]);
 		}
 		free(root->func_call.param_lists);
 		free(root->func_call.identifier);
@@ -807,6 +808,7 @@ void destruct(ast_node_t *root)
 				destruct(root->ext_call.param_lists[i]->param_node[j]);
 			}
 			free(root->ext_call.param_lists[i]->param_node);
+			free(root->ext_call.param_lists[i]);
 		}
 		destruct(root->ext_call.base_node);
 		free(root->ext_call.param_lists);
