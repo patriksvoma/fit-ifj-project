@@ -85,7 +85,7 @@ typedef struct
 {
 	keyword_t keyword;
 	bool boolean;
-	int integer;
+	long long int integer;
 	double decimal;
 	char *string;
 } token_attr_t;
