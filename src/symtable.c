@@ -93,7 +93,18 @@ symbol_data_t *symtable_item_find(symtable_t *table, const char *key)
 	}
 }
 
-static int height(const tree_node_t *node)
+bool symtable_item_exists(symtable_t *table, const char *key)
+{
+	if (table == NULL || key == NULL)
+		return false;
+
+	if (symtable_item_find(table, key))
+		return true;
+
+	return false;
+}
+
+int height(const tree_node_t *node)
 {
 	if (node == NULL)
 		return 0;
@@ -101,7 +112,7 @@ static int height(const tree_node_t *node)
 	return node->height;
 }
 
-static int max(int a, int b)
+int max(int a, int b)
 {
 	if (a > b)
 		return a;
@@ -115,7 +126,7 @@ static int max(int a, int b)
  * @param node Pointer to the node whose balance is calculated
  * @return int Balance factor of the node
  */
-static int get_balance(const tree_node_t *node)
+int get_balance(const tree_node_t *node)
 {
 	if (node == NULL)
 		return 0;
@@ -123,7 +134,7 @@ static int get_balance(const tree_node_t *node)
 	return height(node->left) - height(node->right);
 }
 
-static tree_node_t *rotate_right(tree_node_t *y)
+tree_node_t *rotate_right(tree_node_t *y)
 {
 	tree_node_t *x = y->left;
 	y->left = x->right;
@@ -135,7 +146,7 @@ static tree_node_t *rotate_right(tree_node_t *y)
 	return x;
 }
 
-static tree_node_t *rotate_left(tree_node_t *y)
+tree_node_t *rotate_left(tree_node_t *y)
 {
 	tree_node_t *x = y->right;
 	y->right = x->left;
@@ -147,57 +158,77 @@ static tree_node_t *rotate_left(tree_node_t *y)
 	return x;
 }
 
-static tree_node_t *insert_node(tree_node_t *root, const char *key, symbol_data_t data)
+tree_node_t *insert_node(tree_node_t *root, const char *key, symbol_data_t data, bool *allocation_fail)
 {
 	if (root == NULL)
-		return symtable_create_node(key, data);
+	{
+		tree_node_t *new_node = symtable_create_node(key, data);
+
+		if (new_node == NULL)
+		{
+			*allocation_fail = true;
+			return NULL;
+		}
+		return new_node;
+	}
+
+	if (strcmp(key, root->key) == 0)
+		return root;
 
 	if (strcmp(key, root->key) < 0)
-		root->left = insert_node(root->left, key, data);
-	else if (strcmp(key, root->key) > 0)
-		root->right = insert_node(root->right, key, data);
+		root->left = insert_node(root->left, key, data, allocation_fail);
 	else
+		root->right = insert_node(root->right, key, data, allocation_fail);
+
+	if (*allocation_fail)
 		return root;
 
 	root->height = max(height(root->left), height(root->right)) + 1;
 	int balance = get_balance(root);
 
-	if (balance > 1 && strcmp(key, root->key) < 0) // LL
+	if (balance > 1 && strcmp(key, root->left->key) < 0) // LL
 	{
 		return rotate_right(root);
 	}
-	else if (balance < -1 && strcmp(key, root->key) > 0) // RR
+	else if (balance < -1 && strcmp(key, root->right->key) > 0) // RR
 	{
 		return rotate_left(root);
 	}
-	else if (balance > 1 && strcmp(key, root->key) > 0) // LR
+	else if (balance > 1 && strcmp(key, root->left->key) > 0) // LR
 	{
 		root->left = rotate_left(root->left);
 		return rotate_right(root);
 	}
-	else if (balance < -1 && strcmp(key, root->key) < 0) // RL
+	else if (balance < -1 && strcmp(key, root->right->key) < 0) // RL
 	{
 		root->right = rotate_right(root->right);
 		return rotate_left(root);
 	}
-
 	return root;
 }
 
 /**
- * @brief Inserts a symbol into the symbol tree
+ * @brief Creates new symbol in symbol table
  *
- * @param tree Pointer to the symbol tree into which the symbol will be inserted
- * @param key Key of inserted symbol
- * @param data Data of inserted symbol
- * @return err_t Error code
+ * @param table Pointer to the symbol table into which symbol is created
+ * @param key Identifier of new symbol
+ * @return symbol_data_t Pointer to data of the new symbol, NULL if symbol already exists or in case of error
  */
-err_t symtable_insert(tree_node_t **root, const char *key, symbol_data_t data)
+symbol_data_t *symtable_item_create(symtable_t *table, const char *key)
 {
-	if (root == NULL || key == NULL)
-		return ERR_INTERNAL;
+	if (table == NULL || key == NULL)
+		return NULL;
 
-	*root = insert_node(*root, key, data);
+	if (symtable_item_exists(table, key))
+		return NULL;
 
-	return ERR_OK;
+	symbol_data_t data = {0};
+	bool allocation_fail = false;
+
+	table->root_node = insert_node(table->root_node, key, data, &allocation_fail);
+
+	if (allocation_fail)
+		return NULL;
+
+	return symtable_item_find(table, key);
 }
