@@ -159,11 +159,11 @@ ast_node_t *ast_func_def_make()
 	node->eval_type = TYPE_NONE;
 	node->node_type = AST_FUNC_DEF;
 	node->func_def.block = NULL;
-	node->func_def.identifier = NULL;
+	node->func_def.unique_id = NULL;
 	return node;
 }
 
-err_t ast_func_def_set_id(ast_node_t *func_def_node, const char *new_id)
+err_t ast_func_def_set_id(ast_node_t *func_def_node, const char *new_unique_id)
 {
 	if (func_def_node == NULL)
 	{
@@ -172,8 +172,8 @@ err_t ast_func_def_set_id(ast_node_t *func_def_node, const char *new_id)
 	}
 
 	char *id;
-	id = save_identifier(new_id);
-	func_def_node->func_def.identifier = id;
+	id = save_identifier(new_unique_id);
+	func_def_node->func_def.unique_id = id;
 	return ERR_OK;
 }
 
@@ -189,7 +189,7 @@ err_t ast_func_def_set_block(ast_node_t *func_def_node, ast_node_t *block)
 	return ERR_OK;
 }
 
-ast_node_t *ast_func_call_make(const char *identificator)
+ast_node_t *ast_func_call_make(const char *unique_id)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -203,8 +203,8 @@ ast_node_t *ast_func_call_make(const char *identificator)
 	node->node_type = AST_FUNC_CALL;
 
 	char *id;
-	id = save_identifier(identificator);
-	node->func_call.identifier = id;
+	id = save_identifier(unique_id);
+	node->func_call.unique_id = id;
 	node->func_call.param_list_count = 0;
 	node->func_call.param_lists = NULL;
 	return node;
@@ -296,12 +296,12 @@ ast_node_t *ast_ext_def_make(data_type_t extended_type)
 
 	node->eval_type = extended_type;
 	node->node_type = AST_EXT_DEF;
-	node->ext_def.identifier = NULL;
+	node->ext_def.unique_id = NULL;
 	node->ext_def.block = NULL;
 	return node;
 }
 
-err_t ast_ext_def_set_id(ast_node_t *func_def_node, const char *newId)
+err_t ast_ext_def_set_id(ast_node_t *func_def_node, const char *unique_id)
 {
 	if (func_def_node == NULL)
 	{
@@ -310,8 +310,8 @@ err_t ast_ext_def_set_id(ast_node_t *func_def_node, const char *newId)
 	}
 
 	char *id;
-	id = save_identifier(newId);
-	func_def_node->ext_def.identifier = id;
+	id = save_identifier(unique_id);
+	func_def_node->ext_def.unique_id = id;
 	return ERR_OK;
 }
 
@@ -327,7 +327,7 @@ err_t ast_ext_def_set_block(ast_node_t *func_def_node, ast_node_t *block)
 	return ERR_OK;
 }
 
-ast_node_t *ast_ext_call_make(const char *identificator)
+ast_node_t *ast_ext_call_make(const char *unique_id)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -341,8 +341,8 @@ ast_node_t *ast_ext_call_make(const char *identificator)
 	node->node_type = AST_EXT_CALL;
 
 	char *id;
-	id = save_identifier(identificator);
-	node->ext_call.identifier = id;
+	id = save_identifier(unique_id);
+	node->ext_call.unique_id = id;
 	node->ext_call.param_lists = NULL;
 	node->ext_call.param_list_count = 0;
 	node->ext_call.base_node = NULL;
@@ -467,7 +467,7 @@ ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t *operand_lef
 	}
 }
 
-ast_node_t *ast_var_def_make(const char *identifier)
+ast_node_t *ast_var_def_make(const char *unique_id)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -481,8 +481,8 @@ ast_node_t *ast_var_def_make(const char *identifier)
 	node->node_type = AST_VAR_DEF;
 
 	char *id;
-	id = save_identifier(identifier);
-	node->variable_definition.identifier = id;
+	id = save_identifier(unique_id);
+	node->variable_definition.unique_id = id;
 	node->variable_definition.assigned_value = NULL;
 	return node;
 }
@@ -499,7 +499,7 @@ err_t ast_var_def_set_assignment(ast_node_t *var_def_node, ast_node_t *assigned_
 	return ERR_OK;
 }
 
-ast_node_t *ast_var_assign_make(const char *identifier, ast_node_t *assigned_value)
+ast_node_t *ast_var_assign_make(const char *unique_id, ast_node_t *assigned_value)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -513,13 +513,13 @@ ast_node_t *ast_var_assign_make(const char *identifier, ast_node_t *assigned_val
 	node->node_type = AST_VAR_ASSIGN;
 
 	char *id;
-	id = save_identifier(identifier);
-	node->variable_assignment.identifier = id;
+	id = save_identifier(unique_id);
+	node->variable_assignment.unique_id = id;
 	node->variable_assignment.assigned_value = assigned_value;
 	return node;
 }
 
-ast_node_t *ast_var_use_make(const char *identifier, data_type_t var_type)
+ast_node_t *ast_var_use_make(const char *unique_id, data_type_t var_type)
 {
 	ast_node_t *leaf;
 	leaf = malloc(sizeof(ast_node_t));
@@ -533,8 +533,8 @@ ast_node_t *ast_var_use_make(const char *identifier, data_type_t var_type)
 	leaf->node_type = AST_VAR_USE;
 
 	char *id;
-	id = save_identifier(identifier);
-	leaf->variable_use = id;
+	id = save_identifier(unique_id);
+	leaf->variable_use_unique_id = id;
 	return leaf;
 }
 
@@ -625,7 +625,7 @@ err_t ast_while_set_block(ast_node_t *while_node, ast_node_t *block)
 	return ERR_OK;
 }
 
-ast_node_t *ast_for_make(const char *iterator_identifier, ast_node_t *from_node)
+ast_node_t *ast_for_make(const char *iterator_unique_id, ast_node_t *from_node)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -640,8 +640,8 @@ ast_node_t *ast_for_make(const char *iterator_identifier, ast_node_t *from_node)
 	node->for_loop.for_type = FOR_TO;
 
 	char *id;
-	id = save_identifier(iterator_identifier);
-	node->for_loop.iterator_identifier = id;
+	id = save_identifier(iterator_unique_id);
+	node->for_loop.iterator_unique_id = id;
 	node->for_loop.from = from_node;
 	node->for_loop.to = NULL;
 	node->for_loop.until = NULL;
@@ -778,7 +778,7 @@ void destruct(ast_node_t *root)
 
 	case AST_FUNC_DEF:
 		destruct(root->func_def.block);
-		free(root->func_def.identifier);
+		free(root->func_def.unique_id);
 		break;
 
 	case AST_FUNC_CALL:
@@ -792,12 +792,12 @@ void destruct(ast_node_t *root)
 			free(root->func_call.param_lists[i]);
 		}
 		free(root->func_call.param_lists);
-		free(root->func_call.identifier);
+		free(root->func_call.unique_id);
 		break;
 
 	case AST_EXT_DEF:
 		destruct(root->ext_def.block);
-		free(root->ext_def.identifier);
+		free(root->ext_def.unique_id);
 		break;
 
 	case AST_EXT_CALL:
@@ -812,7 +812,7 @@ void destruct(ast_node_t *root)
 		}
 		destruct(root->ext_call.base_node);
 		free(root->ext_call.param_lists);
-		free(root->ext_call.identifier);
+		free(root->ext_call.unique_id);
 		break;
 
 	case AST_BLOCK:
@@ -834,16 +834,16 @@ void destruct(ast_node_t *root)
 
 	case AST_VAR_DEF:
 		destruct(root->variable_definition.assigned_value);
-		free(root->variable_definition.identifier);
+		free(root->variable_definition.unique_id);
 		break;
 
 	case AST_VAR_ASSIGN:
 		destruct(root->variable_assignment.assigned_value);
-		free(root->variable_assignment.identifier);
+		free(root->variable_assignment.unique_id);
 		break;
 
 	case AST_VAR_USE:
-		free(root->variable_use);
+		free(root->variable_use_unique_id);
 		break;
 
 	case AST_RETURN_CALL:
@@ -873,7 +873,7 @@ void destruct(ast_node_t *root)
 		destruct(root->for_loop.until);
 		destruct(root->for_loop.by);
 		destruct(root->for_loop.block);
-		free(root->for_loop.iterator_identifier);
+		free(root->for_loop.iterator_unique_id);
 		break;
 
 	case AST_INT_TO_DOUBLE:
