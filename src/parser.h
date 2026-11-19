@@ -23,6 +23,7 @@ typedef struct
 	token_t token;
 	bool in_main;
 	bool in_extension;
+	param_t last_extension_param;
 	symtable_t function_table;
 	symtable_t extension_table;
 } parser_data_t;

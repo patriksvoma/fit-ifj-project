@@ -16,7 +16,7 @@
 err_t prologue(parser_data_t *pdata, ast_node_t *program_node);
 err_t func_list(parser_data_t *pdata, ast_node_t *program_node);
 err_t ext_def(parser_data_t *pdata, ast_node_t *program_node);
-err_t ext_def_list(parser_data_t *pdata, unsigned list_indent);
+err_t ext_def_list(parser_data_t *pdata, ast_node_t *program_node, unsigned list_indent);
 err_t func_annotation(parser_data_t *pdata, ast_node_t *program_node);
 err_t func_def(parser_data_t *pdata, ast_node_t *program_node);
 err_t func_params(parser_data_t *pdata, symbol_data_t *table_entry);
@@ -161,9 +161,6 @@ err_t func_list(parser_data_t *pdata, ast_node_t *program_node)
  */
 err_t ext_def(parser_data_t *pdata, ast_node_t *program_node)
 {
-	// TODO: Remove
-	(void)program_node;
-
 	err_t result;
 
 	// extension
@@ -194,7 +191,7 @@ err_t ext_def(parser_data_t *pdata, ast_node_t *program_node)
 		return result;
 
 	// <param>
-	result = param(pdata);
+	result = param(pdata, &pdata->last_extension_param);
 	if (result)
 		return result;
 
@@ -215,24 +212,28 @@ err_t ext_def(parser_data_t *pdata, ast_node_t *program_node)
 		return ERR_SYNTAX;
 	}
 
+	// These flags are used in order to create the correct node in <func-def>
+	pdata->in_main = false;
+	pdata->in_extension = true;
+
 	// <func-def>
-	// TODO: Pass the correct AST node
-	result = func_def(pdata, NULL);
+	result = func_def(pdata, program_node);
 	if (result)
 		return result;
 
 	// <ext-def-list>
-	return ext_def_list(pdata, extension_list_indent);
+	return ext_def_list(pdata, program_node, extension_list_indent);
 }
 
 /**
  * @brief Rule for lists of extension function declarations | <ext-def-list>
  *
  * @param pdata Parser data
+ * @param program_node AST program node
  * @param list_indent Indentation level of the first extension definition, which all the others have to match
  * @return err_t Error code
  */
-err_t ext_def_list(parser_data_t *pdata, unsigned list_indent)
+err_t ext_def_list(parser_data_t *pdata, ast_node_t *program_node, unsigned list_indent)
 {
 	if (pdata->token.indent > list_indent)
 	{
@@ -250,14 +251,17 @@ err_t ext_def_list(parser_data_t *pdata, unsigned list_indent)
 		if (result)
 			return result;
 
+		// These flags are used in order to create the correct node in <func-def>
+		pdata->in_main = false;
+		pdata->in_extension = true;
+
 		// <func-def>
-		// TODO: Pass the correct AST node
-		result = func_def(pdata, NULL);
+		result = func_def(pdata, program_node);
 		if (result)
 			return result;
 
 		// <ext-def-list>
-		return ext_def_list(pdata, list_indent);
+		return ext_def_list(pdata, program_node, list_indent);
 	}
 
 	// Epsilon rule
@@ -345,7 +349,38 @@ err_t func_def(parser_data_t *pdata, ast_node_t *program_node)
 	// Create a new AST node and a symbol table entry
 	if (pdata->in_extension)
 	{
-		// TODO: Create an extension node
+		// FIXME: Extension should probably be able to have the same name if they are extending a different type
+		// If the extension was already defined, throw an error
+		if (symtable_item_defined(&pdata->extension_table, pdata->token.attribute.string))
+		{
+			print_err_l("An extension can only be defined once.", ERR_SEMANTIC_REDEFINITION, pdata->token.line);
+			return ERR_SEMANTIC_REDEFINITION;
+		}
+
+		// Create a symbol table entry
+		table_entry = symtable_item_create(&pdata->extension_table, pdata->token.attribute.string);
+		if (!table_entry)
+		{
+			print_err_l("Failed to create a symbol table entry in func_def().", ERR_INTERNAL, pdata->token.line);
+			return ERR_INTERNAL;
+		}
+		table_entry->symbol_type = SYM_EXTENSION;
+		table_entry->data.extension.is_defined = true;
+		table_entry->data.extension.base_param = pdata->last_extension_param;
+
+		// Create an AST node
+		def_node = ast_ext_def_make(pdata->last_extension_param.type);
+		if (!def_node)
+		{
+			print_err_l("Failed to create an AST Node in func_def().", ERR_INTERNAL, pdata->token.line);
+			return ERR_INTERNAL;
+		}
+		result = ast_ext_def_set_id(def_node, pdata->token.attribute.string);
+		if (result)
+			return result;
+		result = ast_program_add_ext_def(program_node, def_node);
+		if (result)
+			return result;
 	}
 	else
 	{
