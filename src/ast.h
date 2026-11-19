@@ -288,10 +288,10 @@ ast_node_t *ast_func_def_make();
  * @brief Sets the identificator in a function definition node
  *
  * @param func_def_node The function definition AST node
- * @param newId Pointer to an identificator. The string will be coppied into newly allocated memory
+ * @param new_unique_id Pointer to a mangled identificator. The string will be copied into newly allocated memory
  * @return err_t Error code
  */
-err_t ast_func_def_set_id(ast_node_t *func_def_node, const char *new_id);
+err_t ast_func_def_set_id(ast_node_t *func_def_node, const char *new_unique_id);
 
 /**
  * @brief Sets block for function definition
@@ -305,10 +305,10 @@ err_t ast_func_def_set_block(ast_node_t *func_def_node, ast_node_t *block);
 /**
  * @brief Makes node for function calling
  *
- * @param identificator Identificator of the function
+ * @param unique_id Mangled identifier of the function
  * @return ast_node_t* Pointer to created node
  */
-ast_node_t *ast_func_call_make(const char *identificator);
+ast_node_t *ast_func_call_make(const char *unique_id);
 
 /**
  * @brief Function that adds parameter to function calling
@@ -332,10 +332,10 @@ ast_node_t *ast_ext_def_make(data_type_t extended_type);
  * @brief Sets the identificator in extension definition node
  *
  * @param func_def_node Node of extension definition
- * @param newId Pointer to an identificator. The string will be coppied into newly allocated memory
+ * @param unique_id Pointer to a mangled identifier. The string will be copied into newly allocated memory
  * @return err_t Error code
  */
-err_t ast_ext_def_set_id(ast_node_t *func_def_node, const char *newId);
+err_t ast_ext_def_set_id(ast_node_t *func_def_node, const char *unique_id);
 
 /**
  * @brief Sets the block for extension
@@ -349,10 +349,10 @@ err_t ast_ext_def_set_block(ast_node_t *func_def_node, ast_node_t *block);
 /**
  * @brief Makes node for extension calling
  *
- * @param identificator Identificator of the extension
+ * @param unique_id Mangled identifier of the extension
  * @return ast_node_t* Pointer to created node
  */
-ast_node_t *ast_ext_call_make(const char *identificator);
+ast_node_t *ast_ext_call_make(const char *unique_id);
 
 /**
  * @brief Adds parameter to the extension
@@ -413,10 +413,10 @@ ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t * operand_le
 /**
  * @brief Makes node for variable definition
  *
- * @param identifier Identifier of the variable
+ * @param unique_id Mangled identifier of the variable
  * @return ast_node_t* Pointer to the node
  */
-ast_node_t *ast_var_def_make(const char *identifier);
+ast_node_t *ast_var_def_make(const char *unique_id);
 
 /**
  * @brief Sets a value for defined variable
@@ -430,20 +430,20 @@ err_t ast_var_def_set_assignment(ast_node_t *var_def_node, ast_node_t *assigned_
 /**
  * @brief Makes a node for variable assigment
  *
- * @param identifier The identifier for the variable
+ * @param identunique_idifier The mangled identifier for the variable
  * @param assigned_value Node with the value to be assigned
  * @return ast_node_t* Pointer to the node
  */
-ast_node_t *ast_var_assign_make(const char *identifier, ast_node_t *assigned_value);
+ast_node_t *ast_var_assign_make(const char *unique_id, ast_node_t *assigned_value);
 
 /**
  * @brief Makes a node for variable using
  *
- * @param identifier Identifier of the variable
+ * @param unique_id Mangled identifier of the variable
  * @param var_type Data type of the variable
  * @return ast_node_t* Pointer to the node
  */
-ast_node_t *ast_var_use_make(const char *identifier, data_type_t var_type);
+ast_node_t *ast_var_use_make(const char *unique_id, data_type_t var_type);
 
 /**
  * @brief Makes a node with expression to be returned
@@ -499,11 +499,11 @@ err_t ast_while_set_block(ast_node_t *while_node, ast_node_t *block);
 /**
  * @brief Makes a node for for loop
  *
- * @param iterator_identifier Identifier of the iterator
+ * @param iterator_unique_id Mangled identifier of the iterator
  * @param from_node Node containing from expression
  * @return ast_node_t* Pointer to the node
  */
-ast_node_t *ast_for_make(const char *iterator_identifier, ast_node_t *from_node);
+ast_node_t *ast_for_make(const char *iterator_unique_id, ast_node_t *from_node);
 
 /**
  * @brief Sets the type of for loop
