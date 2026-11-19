@@ -121,10 +121,12 @@ void print_ord()
 	printf("GT LF@temp2 LF@index LF@temp1\n");
 	printf("EQ LF@temp3 LF@index LF@temp1\n");
 	printf("OR LF@temp1 LF@temp2 LF@temp3\n");
+	printf("LT LF@temp2 LF@index int@0\n");
+	printf("OR LF@temp1 LF@temp1 LF@temp2\n");
 	printf("JUMPIFEQ ord$wrong LF@temp1 bool@true\n");
 
 	// Save the character
-	printf("GETCHAR LF@result LF@value LF@index\n");
+	printf("STRI2INT LF@result LF@value LF@index\n");
 	printf("JUMP ord$end\n");
 
 	printf("LABEL ord$wrong\n");
@@ -153,7 +155,7 @@ void print_string(const char *str)
 		unsigned char j = (unsigned char)str[i]; // Number after \ can be 000 - 255
 		if (j <= 32 || j == 35 || j == 92 || j >= 127)
 		{
-			printf("\\03%d", j);
+			printf("\\%03d", j);
 		}
 		else
 		{
@@ -261,12 +263,48 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
 	return;
 }
 
+void print_func_def(char *identifier, const char *unique_id, symtable_t *symtables, names_counter *new_func_def)
+{
+	new_func_def->for_counter = 0;
+	new_func_def->if_counter = 0;
+	new_func_def->while_counter = 0;
+
+	new_func_def->func_name = identifier;
+
+	// Get data for the function to find parameters
+	const symbol_data_t *func_params = symtable_item_find(&symtables[0], identifier);
+
+	if (func_params->data.function.is_main)
+	{
+		printf("LABEL main\n");
+		new_func_def->func_name = "main";
+	}
+	else
+	{
+		printf("LABEL %s\n", unique_id);
+	}
+
+	printf("CREATEFRAME\n");
+	printf("PUSHFRAME\n");
+
+	// Definition and assigment of parameters from the last one, because parameters will be pushed to stack in order
+	// when calling the function
+	for (int i = func_params->data.function.param_list_count - 1; i >= 0; i--)
+	{
+		for (int j = func_params->data.function.param_lists[i]->param_count - 1; j >= 0; j--)
+		{
+			printf("DEFVAR LF@%s%s\n", unique_id, func_params->data.function.param_lists[i]->params[j]->identifier);
+			printf("POPS LF@%s%s\n", unique_id, func_params->data.function.param_lists[i]->params[j]->identifier);
+		}
+	}
+}
+
 /*
-	AST_FUNC_DEF,
 	AST_FUNC_CALL,
 	AST_EXT_DEF,
 	AST_EXT_CALL,
 
+	AST_IF
 	AST_WHILE,
 	AST_FOR,
 */
@@ -276,7 +314,7 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
  *
  * @param node Node for wich the code should be generated
  */
-err_t generate_nodes(const ast_node_t *node, names_counter *new_func_def)
+err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counter *new_func_def)
 {
 	node_type_t type = node->node_type;
 
@@ -315,10 +353,10 @@ err_t generate_nodes(const ast_node_t *node, names_counter *new_func_def)
 		break;
 
 	case AST_UN_OPERATOR:
-		generate_nodes(node->un_operator.operand, new_func_def);
+		generate_nodes(node->un_operator.operand, symtables, new_func_def);
 
 		// Multiply by -1
-		if (node->un_operator.operator == OP_UMINUS)
+		if (node->un_operator.operator == OP_UMINUS) // TODO: Osetrit double
 		{
 			printf("PUSHS int@-1\n");
 			printf("MULS\n");
@@ -330,66 +368,63 @@ err_t generate_nodes(const ast_node_t *node, names_counter *new_func_def)
 		break; // For unary + value stays the same
 
 	case AST_BIN_OPERATOR:
-		generate_nodes(node->bin_operator.operand_left, new_func_def);
-		generate_nodes(node->bin_operator.operand_right, new_func_def);
+		generate_nodes(node->bin_operator.operand_left, symtables, new_func_def);
+		generate_nodes(node->bin_operator.operand_right, symtables, new_func_def);
 		print_bin_operation(node->bin_operator.operator, node->eval_type);
 		break;
 
 	case AST_VAR_DEF:
 		printf("DEFVAR LF@%s\n", node->variable_definition.unique_id);
-		generate_nodes(node->variable_definition.assigned_value, new_func_def);
+		generate_nodes(node->variable_definition.assigned_value, symtables, new_func_def);
 		printf("POPS LF@%s\n", node->variable_definition.unique_id);
 		break;
 
 	case AST_VAR_ASSIGN:
-		generate_nodes(node->variable_assignment.assigned_value, new_func_def);
+		generate_nodes(node->variable_assignment.assigned_value, symtables, new_func_def);
 		printf("POPS LF@%s\n", node->variable_assignment.unique_id);
 		break;
 
 	case AST_INT_TO_DOUBLE:
-		generate_nodes(node->int2double, new_func_def);
+		generate_nodes(node->int2double, symtables, new_func_def);
 		printf("INT2FLOATS\n");
 		break;
 
 	case AST_BLOCK:
 		for (size_t i = 0; i < node->block.statement_count; i++)
 		{
-			generate_nodes(node->block.statements[i], new_func_def);
+			generate_nodes(node->block.statements[i], symtables, new_func_def);
 		}
 		break;
 
 	case AST_PROGRAM:
 		for (size_t i = 0; i < node->program.func_def_count; i++)
 		{
-			generate_nodes(node->program.func_defs[i], new_func_def);
+			generate_nodes(node->program.func_defs[i], symtables, new_func_def);
 		}
 
 		for (size_t i = 0; i < node->program.ext_def_count; i++)
 		{
-			generate_nodes(node->program.ext_defs[i], new_func_def);
+			generate_nodes(node->program.ext_defs[i], symtables, new_func_def);
 		}
 		break;
 
 	case AST_RETURN_CALL:
-		printf("CLEARS\n");
-		generate_nodes(node->return_call, new_func_def);
+		generate_nodes(node->return_call, symtables, new_func_def);
 		printf("POPFRAME\n");
 		printf("RETURN\n");
 		break;
 
 	case AST_FUNC_DEF:
-		new_func_def->func_name = node->func_def.unique_id;
-		new_func_def->for_counter = 0;
-		new_func_def->if_counter = 0;
-		new_func_def->while_counter = 0;
+		print_func_def(node->func_def.identificator, node->func_def.unique_id, symtables, new_func_def);
+		generate_nodes(node->func_def.block, symtables, new_func_def);
 
-		printf("LABEL %s\n", node->func_def.unique_id);
-		printf("CREATEFRAME\n");
-		printf("PUSHFRAME\n");
+		// If there isnt a return, the frame must be cleaned
+		printf("POPFRAME\n");
+		printf("RETURN\n");
 		break;
 
 	case AST_IF:
-		generate_nodes(node->if_statement.condition, new_func_def);
+		generate_nodes(node->if_statement.condition, symtables, new_func_def);
 
 		break;
 
@@ -399,29 +434,35 @@ err_t generate_nodes(const ast_node_t *node, names_counter *new_func_def)
 	return ERR_OK;
 }
 
-err_t generate_code(const ast_node_t *root)
+err_t generate_code(const ast_node_t *root, const parser_data_t *parser_data)
 {
 	names_counter *new_func_def = calloc(1, sizeof(names_counter));
+	symtable_t *symtables = calloc(2, sizeof(symtable_t));
 
-	if (new_func_def == NULL)
+	if (new_func_def == NULL || symtables == NULL)
 	{
 		print_err("Failed to allocate memory in generate_nodes()", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
 
-	printf(".IFJcode26\n");
+	symtables[0] = parser_data->function_table;
+	symtables[1] = parser_data->extension_table;
 
-	printf("JUMP main\n");
+	printf(".IFJcode26\n");
 
 	// Variables for coping values on stack
 	printf("DEFVAR GF@temp1\n");
 	printf("DEFVAR GF@temp2\n");
 
+	printf("CALL main\n");
+	printf("EXIT int@0\n");
+
 	print_substr();
 	print_ord();
 
-	generate_nodes(root, new_func_def);
+	generate_nodes(root, symtables, new_func_def);
 
+	free(symtables);
 	free(new_func_def);
 	return ERR_OK;
 }

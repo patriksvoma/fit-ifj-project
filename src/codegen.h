@@ -18,4 +18,4 @@
  * @param parser_data Pointer to struct with parser data
  * @return err_t Error code
  */
-err_t generate_code(const ast_node_t *root);
+err_t generate_code(const ast_node_t *root, const parser_data_t *parser_data);
