@@ -449,6 +449,17 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				break;
 			}
 
+			if (c == 'e' || c == 'E')
+			{
+				if (!buf_append(&buf, 'e'))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				state = S_EXPONENT;
+				break;
+			}
+
 			if (isalnum(c) || c == '_')
 				goto fail;
 
@@ -481,6 +492,17 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 					goto fail;
 				}
 				state = S_DOT;
+				break;
+			}
+
+			if (c == 'e' || c == 'E')
+			{
+				if (!buf_append(&buf, 'e'))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				state = S_EXPONENT;
 				break;
 			}
 
@@ -535,6 +557,17 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				break;
 			}
 
+			if (c == 'e' || c == 'E')
+			{
+				if (!buf_append(&buf, 'e'))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				state = S_EXPONENT;
+				break;
+			}
+
 			if (c == 'd' || c == 'D')
 			{
 				token->type = TOKEN_DOUBLE;
@@ -561,6 +594,76 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				goto fail;
 			}
 			state = S_NUMBER_DOUBLE;
+			break;
+
+		case S_EXPONENT:
+			if (c == '+' || c == '-')
+			{
+				if (!buf_append(&buf, (char)c))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				state = S_EXP_SIGN;
+				break;
+			}
+			// fall through
+
+		case S_EXP_SIGN:
+			if (!isdigit(c))
+				goto fail;
+
+			if (!buf_append(&buf, (char)c))
+			{
+				err = ERR_INTERNAL;
+				goto fail;
+			}
+			state = S_EXP_END;
+			break;
+
+		case S_EXP_END:
+			if (isdigit(c))
+			{
+				if (!buf_append(&buf, (char)c))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				break;
+			}
+
+			if (c == '_')
+			{
+				state = S_EXP_END_UNDERSCORE;
+				break;
+			}
+
+			if (c == 'd' || c == 'D')
+			{
+				token->type = TOKEN_DOUBLE;
+				goto number;
+			}
+
+			if (isalpha(c) || c == '.')
+				goto fail;
+
+			unread_char(c);
+			token->type = TOKEN_DOUBLE;
+			goto number;
+
+		case S_EXP_END_UNDERSCORE:
+			if (c == '_')
+				break;
+
+			if (!isdigit(c))
+				goto fail;
+
+			if (!buf_append(&buf, (char)c))
+			{
+				err = ERR_INTERNAL;
+				goto fail;
+			}
+			state = S_EXP_END;
 			break;
 
 		default:
