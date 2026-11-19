@@ -251,6 +251,7 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 	buffer_t buf = {0};
 	state_t state = S_START;
 	bool newline_seen = false;
+	token->indent = 0;
 	err_t err = ERR_SCANNER;
 	int c;
 
@@ -269,7 +270,10 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				break;
 			}
 			if (c == ' ' || c == '\r')
+			{
+				token->indent++;
 				break;
+			}
 
 			token->line = scanner_line;
 			token->starts_logical_line = newline_seen;
