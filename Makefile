@@ -15,7 +15,8 @@ DEP = $(OBJ:.o=.d)
 TARGET = ifj-project
 
 TEST_SRC = $(wildcard tests/*.c)
-TEST_BIN = tests/test_runner
+TEST_BIN = $(TEST_SRC:.c=)
+LIB_SRC = $(filter-out src/main.c,$(SRC))
 UNITY_DIR = third-party/Unity/src
 
 # Builds the project without any checks
@@ -39,14 +40,15 @@ build-check: check build
 
 # Run tests
 test: $(TEST_BIN)
-	./$(TEST_BIN)
+	@status=0; for t in $(TEST_BIN); do ./$$t || status=1; done; exit $$status
+
+tests/%: tests/%.c $(LIB_SRC) $(UNITY_DIR)/unity.c
+	$(CC) $(CFLAGS) -D UNITY_OUTPUT_COLOR -Isrc -I$(UNITY_DIR) $^ -o $@
 
 # Run compiler integration tests against source fixtures
 test-e2e: build
 	sh ./tests/e2e.sh
 
-$(TEST_BIN): $(TEST_SRC) $(filter-out src/main.c,$(SRC)) $(UNITY_DIR)/unity.c
-	$(CC) $(CFLAGS) -D UNITY_OUTPUT_COLOR -Isrc -I$(UNITY_DIR) $^ -o $@
 
 # Formats all .c and .h files
 format:
@@ -54,4 +56,4 @@ format:
 
 # Cleans files created during a build
 clean:
-	rm -f $(OBJ) $(DEP) $(TARGET) $(TEST_BIN) "tests/test_runner.d"
+	rm -f $(OBJ) $(DEP) $(TARGET) $(TEST_BIN) $(TEST_BIN:=.d)
