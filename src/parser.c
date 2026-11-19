@@ -15,18 +15,18 @@
 // Forward declarations of parser rules
 err_t prologue(parser_data_t *pdata, ast_node_t *program_node);
 err_t func_list(parser_data_t *pdata, ast_node_t *program_node);
-err_t ext_def(parser_data_t *pdata);
+err_t ext_def(parser_data_t *pdata, ast_node_t *program_node);
 err_t ext_def_list(parser_data_t *pdata, unsigned list_indent);
 err_t func_annotation(parser_data_t *pdata, ast_node_t *program_node);
-err_t func_def(parser_data_t *pdata, ast_node_t *func_def_node);
-err_t func_params(parser_data_t *pdata);
-err_t param_first(parser_data_t *pdata);
-err_t param_list(parser_data_t *pdata);
-err_t param(parser_data_t *pdata);
-err_t return_type(parser_data_t *pdata);
+err_t func_def(parser_data_t *pdata, ast_node_t *program_node);
+err_t func_params(parser_data_t *pdata, symbol_data_t *table_entry);
+err_t param_first(parser_data_t *pdata, symbol_data_t *table_entry);
+err_t param_list(parser_data_t *pdata, symbol_data_t *table_entry);
+err_t param(parser_data_t *pdata, param_t *param_out);
+err_t return_type(parser_data_t *pdata, const ast_node_t *func_call_node);
 err_t block_start(parser_data_t *pdata, unsigned header_indent_level);
 err_t block(parser_data_t *pdata, unsigned block_indent_level);
-err_t type(parser_data_t *pdata);
+err_t type(parser_data_t *pdata, data_type_t *return_type);
 err_t statement(parser_data_t *pdata);
 err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value);
 err_t else_opt(parser_data_t *pdata, unsigned header_indent_level);
@@ -135,7 +135,7 @@ err_t func_list(parser_data_t *pdata, ast_node_t *program_node)
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_EXTENSION)
 	{
 		// <ext-def>
-		result = ext_def(pdata);
+		result = ext_def(pdata, program_node);
 		if (result)
 			return result;
 
@@ -156,10 +156,14 @@ err_t func_list(parser_data_t *pdata, ast_node_t *program_node)
  * @brief Rule for extension definitions | <ext-def>
  *
  * @param pdata Parser data
+ * @param program_node AST program node
  * @return err_t Error code
  */
-err_t ext_def(parser_data_t *pdata)
+err_t ext_def(parser_data_t *pdata, ast_node_t *program_node)
 {
+	// TODO: Remove
+	(void)program_node;
+
 	err_t result;
 
 	// extension
@@ -269,8 +273,6 @@ err_t ext_def_list(parser_data_t *pdata, unsigned list_indent)
  */
 err_t func_annotation(parser_data_t *pdata, ast_node_t *program_node)
 {
-	ast_node_t *func_node; // FIXME:
-
 	// @main, go to <func-def>
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_MAIN)
 	{
@@ -286,11 +288,11 @@ err_t func_annotation(parser_data_t *pdata, ast_node_t *program_node)
 		if (result)
 			return result;
 
-		// TODO: Create an entry in the symbol table
-		func_node = ast_make_func_def(true);	   // FIXME:
-		ast_array_append(program_node, func_node); // FIXME:
+		// These flags are used in order to create the correct node in <func-def>
+		pdata->in_main = true;
+		pdata->in_extension = false;
 
-		return func_def(pdata, func_node);
+		return func_def(pdata, program_node);
 	}
 	// def, go to <func-def>
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_DEF)
@@ -301,11 +303,11 @@ err_t func_annotation(parser_data_t *pdata, ast_node_t *program_node)
 			return ERR_SYNTAX;
 		}
 
-		// TODO: Create an entry in the symbol table
-		func_node = ast_make_func_def(true);	   // FIXME:
-		ast_array_append(program_node, func_node); // FIXME:
+		// These flags are used in order to create the correct node in <func-def>
+		pdata->in_main = false;
+		pdata->in_extension = false;
 
-		return func_def(pdata, func_node);
+		return func_def(pdata, program_node);
 	}
 
 	print_err_l("Expeced a function declaration.", ERR_SYNTAX, pdata->token.line);
@@ -316,10 +318,10 @@ err_t func_annotation(parser_data_t *pdata, ast_node_t *program_node)
  * @brief Rule for function declarations | <func-def>
  *
  * @param pdata Parser data
- * @param func_def_node AST function definition node
+ * @param program_node AST program node
  * @return err_t Error code
  */
-err_t func_def(parser_data_t *pdata, ast_node_t *func_def_node)
+err_t func_def(parser_data_t *pdata, ast_node_t *program_node)
 {
 	// def
 	if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_DEF)
@@ -337,33 +339,70 @@ err_t func_def(parser_data_t *pdata, ast_node_t *func_def_node)
 		print_err_l("Expected an identifier in a function declaration.", ERR_SYNTAX, pdata->token.line);
 		return ERR_SYNTAX;
 	}
-	// Save the identificator
-	// TODO: Check if the identificator already exists
-	// TODO: Save into the symbol table
-	result = ast_func_def_set_id(func_def_node, pdata->token.attribute.string); // FIXME:
-	if (result)
-		return result;
+
+	ast_node_t *def_node;
+	symbol_data_t *table_entry;
+	// Create a new AST node and a symbol table entry
+	if (pdata->in_extension)
+	{
+		// TODO: Create an extension node
+	}
+	else
+	{
+		// If the function was already defined, throw an error
+		if (symtable_item_defined(&pdata->function_table, pdata->token.attribute.string))
+		{
+			print_err_l("A function can only be defined once.", ERR_SEMANTIC_REDEFINITION, pdata->token.line);
+			return ERR_SEMANTIC_REDEFINITION;
+		}
+
+		// Create a symbol table entry
+		table_entry = symtable_item_create(&pdata->function_table, pdata->token.attribute.string);
+		if (!table_entry)
+		{
+			print_err_l("Failed to create a symbol table entry in func_def().", ERR_INTERNAL, pdata->token.line);
+			return ERR_INTERNAL;
+		}
+		table_entry->symbol_type = SYM_FUNCTION;
+		table_entry->data.function.is_defined = true;
+		table_entry->data.function.is_main = pdata->in_main;
+
+		// Create an AST node
+		def_node = ast_func_def_make();
+		if (!def_node)
+		{
+			print_err_l("Failed to create an AST Node in func_def().", ERR_INTERNAL, pdata->token.line);
+			return ERR_INTERNAL;
+		}
+		result = ast_func_def_set_id(def_node, pdata->token.attribute.string);
+		if (result)
+			return result;
+		result = ast_program_add_func_def(program_node, def_node);
+		if (result)
+			return result;
+	}
 
 	result = get_next_token(&pdata->token, EOL_FORBIDDEN);
 	if (result)
 		return result;
 
 	// <func-params>
-	result = func_params(pdata);
+	result = func_params(pdata, table_entry);
 	if (result)
 		return result;
 
 	// <return-type>
-	return return_type(pdata);
+	return return_type(pdata, def_node);
 }
 
 /**
  * @brief Rule for the start of function parameter declaration | <func-params>
  *
  * @param pdata Parser data
+ * @param table_entry Symbol table entry for the function definition
  * @return err_t Error code
  */
-err_t func_params(parser_data_t *pdata)
+err_t func_params(parser_data_t *pdata, symbol_data_t *table_entry)
 {
 	// (, go to <param-first>
 	if (pdata->token.type == TOKEN_OPENING_BRACKET)
@@ -372,7 +411,7 @@ err_t func_params(parser_data_t *pdata)
 		if (result)
 			return result;
 
-		return param_first(pdata);
+		return param_first(pdata, table_entry);
 	}
 
 	// Epsilon rule
@@ -383,11 +422,17 @@ err_t func_params(parser_data_t *pdata)
  * @brief First parameter of a parameter list rule | <param-first>
  *
  * @param pdata Parser data
+ * @param table_entry Symbol table entry for the function definition
  * @return err_t Error code
  */
-err_t param_first(parser_data_t *pdata)
+err_t param_first(parser_data_t *pdata, symbol_data_t *table_entry)
 {
 	err_t result;
+
+	// Create a new empty parameter list
+	result = symbol_add_param_list(table_entry);
+	if (result)
+		return result;
 
 	// ), go to <func-params>
 	if (pdata->token.type == TOKEN_CLOSING_BRACKET)
@@ -396,18 +441,23 @@ err_t param_first(parser_data_t *pdata)
 		if (result)
 			return result;
 
-		return func_params(pdata);
+		return func_params(pdata, table_entry);
 	}
 	// Identifier
 	else if (pdata->token.type == TOKEN_IDENTIFIER)
 	{
+		// Create new empty parameter
+		result = symbol_add_param(table_entry);
+		if (result)
+			return result;
+
 		// <param>
-		result = param(pdata);
+		result = param(pdata, symbol_top_param(table_entry));
 		if (result)
 			return result;
 
 		// <param-list>
-		return param_list(pdata);
+		return param_list(pdata, table_entry);
 	}
 
 	print_err_l("Expected a parameter or an end of the parameter list.", ERR_SYNTAX, pdata->token.line);
@@ -418,9 +468,10 @@ err_t param_first(parser_data_t *pdata)
  * @brief Continuation of a parameter list | <param-list>
  *
  * @param pdata Parser data
+ * @param table_entry Symbol table entry for the function definition
  * @return err_t Error code
  */
-err_t param_list(parser_data_t *pdata)
+err_t param_list(parser_data_t *pdata, symbol_data_t *table_entry)
 {
 	err_t result;
 
@@ -431,20 +482,25 @@ err_t param_list(parser_data_t *pdata)
 		if (result)
 			return result;
 
-		return func_params(pdata);
+		return func_params(pdata, table_entry);
 	}
 	// ","
 	else if (pdata->token.type == TOKEN_COMMA)
 	{
+		// Create a new empty parameter
+		result = symbol_add_param(table_entry);
+		if (result)
+			return result;
+
 		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
 		if (result)
 			return result;
 
-		result = param(pdata);
+		result = param(pdata, symbol_top_param(table_entry));
 		if (result)
 			return result;
 
-		return param_list(pdata);
+		return param_list(pdata, table_entry);
 	}
 
 	print_err_l("Expected a comma or and end of a parameter list.", ERR_SYNTAX, pdata->token.line);
@@ -455,9 +511,10 @@ err_t param_list(parser_data_t *pdata)
  * @brief Function parameter definition rule | <param>
  *
  * @param pdata Parser data
+ * @param param_out Pointer to which the resulting parameter struct will be written
  * @return err_t Error code
  */
-err_t param(parser_data_t *pdata)
+err_t param(parser_data_t *pdata, param_t *param_out)
 {
 	err_t result;
 
@@ -467,10 +524,19 @@ err_t param(parser_data_t *pdata)
 		print_err_l("Expected an identifier.", ERR_SYNTAX, pdata->token.line);
 		return ERR_SYNTAX;
 	}
+
+	// Set the identifier of the parameter
+	param_out->identifier = malloc(strlen(pdata->token.attribute.string) + 1);
+	if (!param_out->identifier)
+	{
+		print_err_l("Failed to allocate memory in param().", ERR_INTERNAL, pdata->token.line);
+		return ERR_INTERNAL;
+	}
+	strcpy(param_out->identifier, pdata->token.attribute.string);
+
 	result = get_next_token(&pdata->token, EOL_OPTIONAL);
 	if (result)
 		return result;
-
 	// :
 	if (pdata->token.type != TOKEN_COLON)
 	{
@@ -482,24 +548,43 @@ err_t param(parser_data_t *pdata)
 		return result;
 
 	// Type
-	return type(pdata);
+	return type(pdata, &param_out->type);
 }
 
 /**
  * @brief Function return type definition | <return-type>
  *
  * @param pdata Parser data
+ * @param func_call_node AST function call node
  * @return err_t Error code
  */
-err_t return_type(parser_data_t *pdata)
+err_t return_type(parser_data_t *pdata, const ast_node_t *func_call_node)
 {
 	err_t result;
 
 	unsigned header_indentation = pdata->token.indent;
 
+	symbol_data_t *entry;
+	if (pdata->in_extension)
+		entry = symtable_item_find(&pdata->extension_table, func_call_node->ext_def.identifier);
+	else
+		entry = symtable_item_find(&pdata->function_table, func_call_node->func_def.identifier);
+	if (!entry)
+	{
+		print_err_l("Failed to find a symbol in a symbol table. This should not happen.", ERR_INTERNAL,
+					pdata->token.line);
+		return ERR_INTERNAL;
+	}
+
 	// =, go to <block-start>
 	if (pdata->token.type == TOKEN_ASSIGN)
 	{
+		// Set the function return type to none, will be set at the end of the block
+		if (pdata->in_extension)
+			entry->data.extension.return_type = TYPE_NONE;
+		else
+			entry->data.function.return_type = TYPE_NONE;
+
 		result = get_next_token(&pdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
@@ -514,7 +599,11 @@ err_t return_type(parser_data_t *pdata)
 		if (result)
 			return result;
 
-		result = type(pdata);
+		// Set the return type
+		if (pdata->in_extension)
+			result = type(pdata, &entry->data.extension.return_type);
+		else
+			result = type(pdata, &entry->data.function.return_type);
 		if (result)
 			return result;
 
@@ -613,9 +702,10 @@ err_t block(parser_data_t *pdata, unsigned block_indent_level)
  * @brief Type parsing rule | <type>
  *
  * @param pdata Parser data
- * @return err_t Erroc code
+ * @param return_type Pointer to where the returned type should be written
+ * @return err_t Error code
  */
-err_t type(parser_data_t *pdata)
+err_t type(parser_data_t *pdata, data_type_t *return_type)
 {
 	bool valid_keyword = false;
 
@@ -625,20 +715,26 @@ err_t type(parser_data_t *pdata)
 		{
 		case KW_INT:
 			valid_keyword = true;
+			*return_type = TYPE_INT;
 			break;
 		case KW_DOUBLE:
 			valid_keyword = true;
+			*return_type = TYPE_DOUBLE;
 			break;
 		case KW_STRING:
 			valid_keyword = true;
+			*return_type = TYPE_STRING;
 			break;
 		case KW_UNIT:
 			valid_keyword = true;
+			*return_type = TYPE_UNIT;
 			break;
 		case KW_BOOLEAN:
 			valid_keyword = true;
+			*return_type = TYPE_BOOLEAN;
 			break;
 		default:
+			*return_type = TYPE_NONE;
 			break;
 		}
 	}

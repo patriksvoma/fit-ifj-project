@@ -12,6 +12,7 @@
 #include "ast.h"
 #include "error.h"
 #include "scanner.h"
+#include "symtable.h"
 
 /**
  * @brief Struct for holding the parser data
@@ -20,6 +21,10 @@
 typedef struct
 {
 	token_t token;
+	bool in_main;
+	bool in_extension;
+	symtable_t function_table;
+	symtable_t extension_table;
 } parser_data_t;
 
 /**
