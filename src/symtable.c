@@ -403,3 +403,35 @@ err_t symbol_add_param(symbol_data_t *symbol)
 	print_err("Wrong symbol type in symbol_add_param_list()", ERR_INTERNAL);
 	return ERR_INTERNAL;
 }
+
+param_t *symbol_top_param(symbol_data_t *symbol)
+{
+	if (symbol == NULL)
+		return NULL;
+
+	if (symbol->symbol_type == SYM_FUNCTION)
+	{
+		if (symbol->data.function.param_list_count == 0)
+			return NULL;
+
+		param_list_t *last_list = symbol->data.function.param_lists[symbol->data.function.param_list_count - 1];
+
+		if (last_list == NULL || last_list->param_count == 0)
+			return NULL;
+
+		return last_list->params[last_list->param_count - 1];
+	}
+	else if (symbol->symbol_type == SYM_EXTENSION)
+	{
+		if (symbol->data.extension.param_list_count == 0)
+			return NULL;
+
+		param_list_t *last_list = symbol->data.extension.param_lists[symbol->data.extension.param_list_count - 1];
+
+		if (last_list == NULL || last_list->param_count == 0)
+			return NULL;
+
+		return last_list->params[last_list->param_count - 1];
+	}
+	return NULL;
+}
