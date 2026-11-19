@@ -514,7 +514,7 @@ ast_node_t *ast_var_assign_make(const char *identifier, ast_node_t *assigned_val
 
 	char *id;
 	id = save_identifier(identifier);
-	node->variable_assignment.identifier = id;
+	node->variable_assignment.unique_id = id;
 	node->variable_assignment.assigned_value = assigned_value;
 	return node;
 }
@@ -839,7 +839,7 @@ void destruct(ast_node_t *root)
 
 	case AST_VAR_ASSIGN:
 		destruct(root->variable_assignment.assigned_value);
-		free(root->variable_assignment.identifier);
+		free(root->variable_assignment.unique_id);
 		break;
 
 	case AST_VAR_USE:

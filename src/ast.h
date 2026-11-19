@@ -197,7 +197,7 @@ typedef struct ast_node
 		// Variable assignment
 		struct
 		{
-			char *identifier;
+			char *unique_id;
 			ast_node_t *assigned_value;
 		} variable_assignment;
 
