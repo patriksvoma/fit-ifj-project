@@ -137,7 +137,7 @@ typedef struct ast_node
 		// Function definition
 		struct
 		{
-			char *identifier;
+			char *unique_id;
 			ast_node_t *block;
 		} func_def;
 

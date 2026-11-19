@@ -159,7 +159,7 @@ ast_node_t *ast_func_def_make()
 	node->eval_type = TYPE_NONE;
 	node->node_type = AST_FUNC_DEF;
 	node->func_def.block = NULL;
-	node->func_def.identifier = NULL;
+	node->func_def.unique_id = NULL;
 	return node;
 }
 
@@ -173,7 +173,7 @@ err_t ast_func_def_set_id(ast_node_t *func_def_node, const char *new_id)
 
 	char *id;
 	id = save_identifier(new_id);
-	func_def_node->func_def.identifier = id;
+	func_def_node->func_def.unique_id = id;
 	return ERR_OK;
 }
 
@@ -778,7 +778,7 @@ void destruct(ast_node_t *root)
 
 	case AST_FUNC_DEF:
 		destruct(root->func_def.block);
-		free(root->func_def.identifier);
+		free(root->func_def.unique_id);
 		break;
 
 	case AST_FUNC_CALL:
