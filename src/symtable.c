@@ -13,8 +13,6 @@
 
 // TODO:
 //	scope stuff
-//	add_param
-//	top_param
 //	destroy
 
 /**
