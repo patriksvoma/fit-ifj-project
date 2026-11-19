@@ -14,6 +14,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+typedef struct ast_node ast_node_t;
+
 /**
  * @brief Data types
  *
@@ -110,7 +112,7 @@ typedef enum
 	FOR_TO_BY
 } for_type_t;
 
-typedef struct ast_node_t
+typedef struct ast_node
 {
 	node_type_t node_type;
 	data_type_t eval_type;
@@ -237,6 +239,7 @@ typedef struct ast_node_t
 			ast_node_t *block;
 		} for_loop;
 
+		// Int to double conversion
 		ast_node_t *int2double;
 	};
 } ast_node_t;
@@ -305,7 +308,7 @@ err_t ast_func_def_set_block(ast_node_t *func_def_node, ast_node_t *block);
  * @param identificator Identificator of the function
  * @return ast_node_t* Pointer to created node
  */
-ast_node_t *ast_func_call_make(char *identificator);
+ast_node_t *ast_func_call_make(const char *identificator);
 
 /**
  * @brief Function that adds parameter to function calling
@@ -349,7 +352,7 @@ err_t ast_ext_def_set_block(ast_node_t *func_def_node, ast_node_t *block);
  * @param identificator Identificator of the extension
  * @return ast_node_t* Pointer to created node
  */
-ast_node_t *ast_ext_call_make(char *identificator);
+ast_node_t *ast_ext_call_make(const char *identificator);
 
 /**
  * @brief Adds parameter to the extension
@@ -405,7 +408,7 @@ ast_node_t *ast_unary_op_make(operator_type_t operator, ast_node_t * operand);
  * @param operand_right Second operand of the
  * @return ast_node_t* Pointer to the node containing the operation
  */
-ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t *operand_left, ast_node_t *operand_right);
+ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t * operand_left, ast_node_t *operand_right);
 
 /**
  * @brief Makes node for variable definition
@@ -413,7 +416,7 @@ ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t *operand_lef
  * @param identifier Identifier of the variable
  * @return ast_node_t* Pointer to the node
  */
-ast_node_t *ast_var_def_make(char *identifier);
+ast_node_t *ast_var_def_make(const char *identifier);
 
 /**
  * @brief Sets a value for defined variable
@@ -431,7 +434,7 @@ err_t ast_var_def_set_assignment(ast_node_t *var_def_node, ast_node_t *assigned_
  * @param assigned_value Node with the value to be assigned
  * @return ast_node_t* Pointer to the node
  */
-ast_node_t *ast_var_assign_make(char *identifier, ast_node_t *assigned_value);
+ast_node_t *ast_var_assign_make(const char *identifier, ast_node_t *assigned_value);
 
 /**
  * @brief Makes a node for variable using
@@ -440,7 +443,7 @@ ast_node_t *ast_var_assign_make(char *identifier, ast_node_t *assigned_value);
  * @param var_type Data type of the variable
  * @return ast_node_t* Pointer to the node
  */
-ast_node_t *ast_var_use_make(char *identifier, data_type_t var_type);
+ast_node_t *ast_var_use_make(const char *identifier, data_type_t var_type);
 
 /**
  * @brief Makes a node with expression to be returned
@@ -500,13 +503,13 @@ err_t ast_while_set_block(ast_node_t *while_node, ast_node_t *block);
  * @param from_node Node containing from expression
  * @return ast_node_t* Pointer to the node
  */
-ast_node_t *ast_for_make(char *iterator_identifier, ast_node_t *from_node);
+ast_node_t *ast_for_make(const char *iterator_identifier, ast_node_t *from_node);
 
 /**
  * @brief Sets the type of for loop
  *
  * @param for_node Node containing the for loop
- * @param type Type of the fpr loop
+ * @param type Type of the for loop
  * @return err_t Error code
  */
 err_t ast_for_set_type(ast_node_t *for_node, for_type_t type);
