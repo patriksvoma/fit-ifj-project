@@ -178,7 +178,17 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
 		break;
 
 	case OP_PLUS:
-		printf("ADDS\n");
+		if (data_type == TYPE_STRING)
+		{
+			printf("POPS GF@temp2\n");
+			printf("POPS GF@temp1\n");
+			printf("CONCAT GF@temp1 GF@temp1 GF@temp2\n");
+			printf("PUSHS GF@temp1\n");
+		}
+		else
+		{
+			printf("ADDS\n");
+		}
 		break;
 
 	case OP_MINUS:
@@ -246,9 +256,6 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
 	AST_EXT_DEF,
 	AST_EXT_CALL,
 	AST_BLOCK,
-
-	AST_VAR_DEF,
-	AST_VAR_ASSIGN,
 
 	AST_RETURN_CALL,
 	AST_IF,
@@ -318,6 +325,18 @@ void generate_nodes(const ast_node_t *node)
 		generate_nodes(node->bin_operator.operand_left);
 		generate_nodes(node->bin_operator.operand_right);
 		print_bin_operation(node->bin_operator.operator, node->eval_type);
+		break;
+
+	case AST_VAR_DEF:
+		printf("DEFVAR LF@%s\n", node->variable_definition.identifier);
+		generate_nodes(node->variable_definition.assigned_value);
+		printf("POPS LF@%s\n", node->variable_definition.identifier);
+		break;
+
+	case AST_VAR_ASSIGN:
+		generate_nodes(node->variable_assignment.assigned_value);
+		printf("POPS LF@%s\n", node->variable_assignment.identifier);
+		break;
 
 	default:
 		break;
