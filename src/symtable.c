@@ -11,10 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// TODO:
-//	scope stuff
-//	destroy
-
 /**
  * @brief Creates a new symbol tree node
  *
@@ -49,24 +45,6 @@ tree_node_t *symtable_create_node(const char *key, symbol_data_t data)
 	return new;
 }
 
-/**
- * @brief Creates an empty symbol tree
- *
- * @param tree Pointer to the symbol tree which will be initialized
- * @return err_t Error code
- */
-err_t symtable_init(symtable_t *table)
-{
-	if (table == NULL)
-	{
-		print_err("NULL pointer in symtable_init().", ERR_INTERNAL);
-		return ERR_INTERNAL;
-	}
-	table->root_node = NULL;
-	table->parent = NULL;
-
-	return ERR_OK;
-}
 symbol_data_t *symtable_item_find_local(symtable_t *table, const char *key)
 {
 	if (key == NULL || table == NULL || table->root_node == NULL)
@@ -99,7 +77,7 @@ symbol_data_t *symtable_item_find(symtable_t *table, const char *key)
 		return symtable_item_find_local(table, key);
 
 	if (table->parent != NULL)
-		return symtable_item_find(table, key);
+		return symtable_item_find(table->parent, key);
 
 	return NULL;
 }
@@ -252,7 +230,7 @@ symbol_data_t *symtable_item_create(symtable_t *table, const char *key)
 	if (allocation_fail)
 		return NULL;
 
-	return symtable_item_find(table, key);
+	return symtable_item_find_local(table, key);
 }
 
 bool symtable_item_defined_local(symtable_t *table, const char *key)
