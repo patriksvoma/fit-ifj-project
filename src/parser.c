@@ -981,8 +981,18 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 			return result;
 
 		// <expression>
-		ast_node_t *return_value_node; // FIXME:
-		return expression_opt(pdata, &return_value_node);
+		ast_node_t *return_value_node;
+		result = expression_opt(pdata, &return_value_node);
+		if (result)
+			return result;
+
+		statement_node = ast_return_call_make(return_value_node);
+		if (!statement_node)
+		{
+			print_err_l("Failed to create an AST node in statement().", ERR_INTERNAL, pdata->token.line);
+			return ERR_INTERNAL;
+		}
+		return ast_block_add_statement(block_node, statement_node);
 	}
 	// identifier
 	else if (pdata->token.type == TOKEN_IDENTIFIER)
@@ -992,6 +1002,7 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 		// id = <expression>
 		// <expression>
 
+		// FIXME: The string most probably needs to be copied here
 		token_t id_token = pdata->token;
 
 		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
