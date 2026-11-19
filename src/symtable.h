@@ -188,8 +188,9 @@ symtable_t *local_table_destroy(symtable_t *table);
 /**
  * @brief Generates a unique name for a symbol and saves it inside
  *
+ * @param identifier Original identifier of the symbol
  * @param symbol Symbol which is changed
  * @param table Table, in which the symbol is located (used for generating the name)
  * @return err_t Error code
  */
-err_t symbol_generate_unique_id(const symbol_data_t *symbol, const symtable_t *table);
+err_t symbol_generate_unique_id(const char *identifier, symbol_data_t *symbol, const symtable_t *table);
