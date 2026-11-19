@@ -202,7 +202,7 @@ typedef struct ast_node
 		} variable_assignment;
 
 		// Variable usage
-		char *variable_use;
+		char *variable_use_unique_id;
 
 		// Return expression
 		ast_node_t *return_call;

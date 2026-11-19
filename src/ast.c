@@ -534,7 +534,7 @@ ast_node_t *ast_var_use_make(const char *identifier, data_type_t var_type)
 
 	char *id;
 	id = save_identifier(identifier);
-	leaf->variable_use = id;
+	leaf->variable_use_unique_id = id;
 	return leaf;
 }
 
@@ -843,7 +843,7 @@ void destruct(ast_node_t *root)
 		break;
 
 	case AST_VAR_USE:
-		free(root->variable_use);
+		free(root->variable_use_unique_id);
 		break;
 
 	case AST_RETURN_CALL:

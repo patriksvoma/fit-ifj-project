@@ -248,7 +248,7 @@ void generate_nodes(const ast_node_t *node)
 		break;
 
 	case AST_VAR_USE:
-		printf("PUSHS LF@%s\n", node->variable_use);
+		printf("PUSHS LF@%s\n", node->variable_use_unique_id);
 		break;
 
 	case AST_UN_OPERATOR:
