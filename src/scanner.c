@@ -686,10 +686,63 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 
 		case S_STRING_START_2:
 			if (c == '"')
-				goto fail;
+			{
+				state = S_MULTILINE_STRING;
+				break;
+			}
 
 			unread_char(c);
 			goto string;
+
+		case S_MULTILINE_STRING:
+			if (c == EOF)
+				goto fail;
+
+			if (c == '"')
+			{
+				state = S_MULTILINE_END_1;
+				break;
+			}
+
+			if (!buf_append(&buf, (char)c))
+				goto internal_error;
+
+			break;
+
+		case S_MULTILINE_END_1:
+			if (c == '"')
+			{
+				state = S_MULTILINE_END_2;
+				break;
+			}
+
+			unread_char(c);
+
+			if (!buf_append(&buf, '"'))
+				goto internal_error;
+
+			state = S_MULTILINE_STRING;
+			break;
+
+		case S_MULTILINE_END_2:
+			if (c == '"')
+			{
+				while (next_is('"'))
+				{
+					if (!buf_append(&buf, '"'))
+						goto internal_error;
+				}
+
+				goto string;
+			}
+
+			unread_char(c);
+
+			if (!buf_append(&buf, '"') || !buf_append(&buf, '"'))
+				goto internal_error;
+
+			state = S_MULTILINE_STRING;
+			break;
 
 		default:
 			break;
