@@ -68,6 +68,7 @@ typedef struct symbol_data
 		{
 			data_type_t type;
 			bool mutable;
+			bool is_defined;
 			char *unique_name;
 		} variable;
 	} data;

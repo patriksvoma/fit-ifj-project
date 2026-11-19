@@ -253,7 +253,7 @@ bool symtable_item_defined(symtable_t *table, const char *key)
 
 	if (data->symbol_type == SYM_VARIABLE)
 	{
-		return true;
+		return data->data.variable.is_defined;
 	}
 	else if (data->symbol_type == SYM_FUNCTION)
 	{
@@ -432,4 +432,72 @@ param_t *symbol_top_param(symbol_data_t *symbol)
 		return last_list->params[last_list->param_count - 1];
 	}
 	return NULL;
+}
+
+void destroy_tree(tree_node_t *node)
+{
+	if (node == NULL)
+		return;
+
+	if (node->left)
+	{
+		destroy_tree(node->left);
+	}
+
+	if (node->right)
+	{
+		destroy_tree(node->right);
+	}
+
+	if (node->data.symbol_type == SYM_VARIABLE)
+	{
+		free(node->data.data.variable.unique_name);
+	}
+	else if (node->data.symbol_type == SYM_FUNCTION)
+	{
+		free(node->data.data.function.unique_name);
+		for (size_t i = 0; i < node->data.data.function.param_list_count; i++)
+		{
+			param_list_t *list = node->data.data.function.param_lists[i];
+
+			for (size_t j = 0; j < list->param_count; j++)
+			{
+				free(list->params[j]->identifier);
+				free(list->params[j]);
+			}
+			free(list->params);
+			free(list);
+		}
+		free(node->data.data.function.param_lists);
+	}
+	else if (node->data.symbol_type == SYM_EXTENSION)
+	{
+		free(node->data.data.extension.unique_name);
+		for (size_t i = 0; i < node->data.data.extension.param_list_count; i++)
+		{
+			param_list_t *list = node->data.data.extension.param_lists[i];
+
+			for (size_t j = 0; j < list->param_count; j++)
+			{
+				free(list->params[j]->identifier);
+				free(list->params[j]);
+			}
+			free(list->params);
+			free(list);
+		}
+		free(node->data.data.extension.param_lists);
+		free(node->data.data.extension.base_param.identifier);
+	}
+	free(node->key);
+	free(node);
+}
+
+void symtable_destroy(symtable_t **table)
+{
+	if (table == NULL || *table == NULL)
+		return;
+
+	destroy_tree((*table)->root_node);
+	free(*table);
+	*table = NULL;
 }
