@@ -23,7 +23,7 @@ err_t func_params(parser_data_t *pdata, symbol_data_t *table_entry);
 err_t param_first(parser_data_t *pdata, symbol_data_t *table_entry);
 err_t param_list(parser_data_t *pdata, symbol_data_t *table_entry);
 err_t param(parser_data_t *pdata, param_t *param_out);
-err_t return_type(parser_data_t *pdata, const ast_node_t *func_call_node);
+err_t return_type(parser_data_t *pdata, ast_node_t *func_call_node);
 err_t block_start(parser_data_t *pdata, ast_node_t *block_node, unsigned header_indent_level);
 err_t block(parser_data_t *pdata, ast_node_t *block_node, unsigned block_indent_level);
 err_t type(parser_data_t *pdata, data_type_t *return_type);
@@ -593,7 +593,7 @@ err_t param(parser_data_t *pdata, param_t *param_out)
  * @param func_call_node AST function call node
  * @return err_t Error code
  */
-err_t return_type(parser_data_t *pdata, const ast_node_t *func_call_node)
+err_t return_type(parser_data_t *pdata, ast_node_t *func_call_node)
 {
 	err_t result;
 
