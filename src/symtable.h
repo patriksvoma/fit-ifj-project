@@ -62,7 +62,7 @@ typedef struct symbol_data
 			size_t param_list_count;
 			char *unique_name;
 			bool is_defined;
-			data_type_t extension_type;
+			param_t base_param;
 		} extension;
 		struct
 		{

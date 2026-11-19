@@ -13,17 +13,17 @@
 
 // TODO:
 //	scope stuff
-//	item_create
-//	item_exists
-//	item_find
+//	add_param_list
+//	add_param
+//	top_param
 //	destroy
 
 /**
  * @brief Creates a new symbol tree node
  *
- * @param *key
- * @param data
- * @return tree_node_t Pointer to created node, NULL if allocation fails
+ * @param key Identifier of the new node
+ * @param data Data that are given to the new node
+ * @return tree_node_t Pointer to created node, NULL if allocation fails or NUll key
  */
 tree_node_t *symtable_create_node(const char *key, symbol_data_t data)
 {
@@ -53,19 +53,20 @@ tree_node_t *symtable_create_node(const char *key, symbol_data_t data)
 }
 
 /**
- * @brief Initializes symbol tree
+ * @brief Creates an empty symbol tree
  *
  * @param tree Pointer to the symbol tree which will be initialized
  * @return err_t Error code
  */
-err_t symtable_init(tree_node_t **root)
+err_t symtable_init(symtable_t *table)
 {
-	if (root == NULL)
+	if (table == NULL)
 	{
 		print_err("NULL pointer in symtable_init().", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
-	*root = NULL;
+	table->root_node = NULL;
+	table->parent = NULL;
 
 	return ERR_OK;
 }
@@ -124,7 +125,7 @@ int max(int a, int b)
  * @brief Get balance factor of a node
  *
  * @param node Pointer to the node whose balance is calculated
- * @return int Balance factor of the node
+ * @return int Balance factor of the node, or 0 in case of nonexisting node
  */
 int get_balance(const tree_node_t *node)
 {
@@ -134,30 +135,41 @@ int get_balance(const tree_node_t *node)
 	return height(node->left) - height(node->right);
 }
 
-tree_node_t *rotate_right(tree_node_t *y)
+tree_node_t *rotate_right(tree_node_t *root)
 {
-	tree_node_t *x = y->left;
-	y->left = x->right;
-	x->right = y;
+	tree_node_t *child = root->left;
+	root->left = child->right;
+	child->right = root;
 
-	y->height = max(height(y->left), height(y->right)) + 1;
-	x->height = max(height(x->left), height(x->right)) + 1;
+	root->height = max(height(root->left), height(root->right)) + 1;
+	child->height = max(height(child->left), height(child->right)) + 1;
 
-	return x;
+	return child;
 }
 
-tree_node_t *rotate_left(tree_node_t *y)
+tree_node_t *rotate_left(tree_node_t *root)
 {
-	tree_node_t *x = y->right;
-	y->right = x->left;
-	x->left = y;
+	tree_node_t *child = root->right;
+	root->right = child->left;
+	child->left = root;
 
-	y->height = max(height(y->left), height(y->right)) + 1;
-	x->height = max(height(x->left), height(x->right)) + 1;
+	root->height = max(height(root->left), height(root->right)) + 1;
+	child->height = max(height(child->left), height(child->right)) + 1;
 
-	return x;
+	return child;
 }
 
+/**
+ * @brief Inserts a new node into a tree, if the tree is empty creates a root
+ * 			if it is not empty inserts the node based on its key and then updates height and gets balance
+ * 			after that it rebalances the tree
+ *
+ * @param root The root of tree into which the node is inserted
+ * @param key Identifier of the inserted node
+ * @param data Data to add to the inserted node
+ * @param allocation_fail If allocation fails has value true, false otherwise
+ * @return tree_node_t Returns pointer to new root of the tree, or NULL in case of error
+ */
 tree_node_t *insert_node(tree_node_t *root, const char *key, symbol_data_t data, bool *allocation_fail)
 {
 	if (root == NULL)
@@ -255,4 +267,61 @@ bool symtable_item_defined(symtable_t *table, const char *key)
 		return data->data.extension.is_defined;
 	}
 	return false;
+}
+
+err_t symbol_add_param_list(symbol_data_t *symbol)
+{
+	if (symbol == NULL)
+	{
+		print_err("NULL pointer in symbol_add_param_list().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	param_list_t *new_list = malloc(sizeof(param_list_t));
+
+	if (new_list == NULL)
+	{
+		print_err("Failed to allocate memory in symbol_add_param_list().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	new_list->params = NULL;
+	new_list->param_count = 0;
+
+	if (symbol->symbol_type == SYM_FUNCTION)
+	{
+		param_list_t **new_lists = realloc(symbol->data.function.param_lists,
+										   (symbol->data.function.param_list_count + 1) * sizeof(param_list_t *));
+
+		if (new_lists == NULL)
+		{
+			free(new_list);
+			print_err("Failed to allocate memory in symbol_add_param_list().", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+		symbol->data.function.param_lists = new_lists;
+		symbol->data.function.param_lists[symbol->data.function.param_list_count] = new_list;
+		symbol->data.function.param_list_count++;
+		return ERR_OK;
+	}
+	else if (symbol->symbol_type == SYM_EXTENSION)
+	{
+		param_list_t **new_lists = realloc(symbol->data.extension.param_lists,
+										   (symbol->data.extension.param_list_count + 1) * sizeof(param_list_t *));
+
+		if (new_lists == NULL)
+		{
+			free(new_list);
+			print_err("Failed to allocate memory in symbol_add_param_list().", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+		symbol->data.extension.param_lists = new_lists;
+		symbol->data.extension.param_lists[symbol->data.extension.param_list_count] = new_list;
+		symbol->data.extension.param_list_count++;
+		return ERR_OK;
+	}
+
+	free(new_list);
+	print_err("Wrong symbol type in symbol_add_param_list()", ERR_INTERNAL);
+	return ERR_INTERNAL;
 }
