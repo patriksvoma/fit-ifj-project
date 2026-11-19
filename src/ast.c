@@ -349,11 +349,10 @@ ast_node_t *ast_ext_call_make(char *identificator)
 	return node;
 }
 
-//TODO: Dodelat
+// TODO: Dodelat
 err_t ast_ext_call_add_param(ast_node_t *ext_call_node, ast_node_t *param_node, unsigned param_list_index,
 							 unsigned param_index)
 {
-
 }
 
 err_t ast_ext_call_add_base(ast_node_t *ext_call_node, ast_node_t *base_node)
@@ -368,7 +367,7 @@ err_t ast_ext_call_add_base(ast_node_t *ext_call_node, ast_node_t *base_node)
 	return ERR_OK;
 }
 
-ast_node_t *ast_make_block()
+ast_node_t *ast_block_make()
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -382,6 +381,107 @@ ast_node_t *ast_make_block()
 	node->node_type = AST_BLOCK;
 	node->block.statements = NULL;
 	node->block.statement_count = 0;
+	return node;
+}
+
+err_t ast_block_add_statement(ast_node_t *block_node, ast_node_t *statement_node)
+{
+	if (block_node == NULL || statement_node == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_block_add_statement()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	ast_node_t **new_statement =
+		realloc(block_node->block.statements, (block_node->block.statement_count + 1) * sizeof(ast_node_t *));
+
+	if (new_statement == NULL)
+	{
+		print_err("Failed to allocate memory in ast_block_add_statement()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	block_node->block.statements = new_statement;
+	block_node->block.statements[block_node->block.statement_count] = statement_node;
+	block_node->block.statement_count++;
+	return ERR_OK;
+}
+
+ast_node_t *ast_unary_op_make(operator_type_t operator, ast_node_t *operand)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	if (operand == OP_NEG || operand == OP_UMINUS || operand == OP_UPLUS)
+	{
+		node->eval_type = operand->eval_type;
+		node->node_type = AST_UN_OPERATOR;
+		node->un_operator.operator = operator;
+		node->un_operator.operand = operand;
+		return node;
+	}
+	else // Binary operations
+	{
+		free(node);
+		return NULL;
+	}
+}
+
+ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t *operand_left, ast_node_t *operand_right)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	if (operator != OP_NEG && operator != OP_UMINUS && operator != OP_UPLUS)
+	{
+		if (operator == OP_MUL || operator == OP_DIV || operator == OP_MINUS || operator == OP_PLUS)
+		{
+			node->eval_type = operand_left->eval_type;
+		}
+		else // Type canges for comparing operations
+		{
+			node->eval_type = TYPE_BOOLEAN;
+		}
+		node->node_type = AST_BIN_OPERATOR;
+		node->bin_operator.operand_left = operand_left;
+		node->bin_operator.operand_right = operand_right;
+		node->bin_operator.operator = operator;
+		return node;
+	}
+	else // Unary operations
+	{
+		free(node);
+		return NULL;
+	}
+}
+
+ast_node_t *ast_var_def_make(char *identifier)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_VAR_DEF;
+
+	char *id;
+	id = save_identifier(identifier);
+	node->variable_definition.identifier = id;
+	node->variable_definition.assigned_value = NULL;
 	return node;
 }
 
@@ -401,67 +501,6 @@ ast_node_t *ast_make_identifier(char *i, data_type_t i_type)
 	leaf->ast_node_value.identifier = i;
 
 	return leaf;
-}
-
-ast_node_t *ast_make_unary_op(ast_node_t *operand, operator_type_t op)
-{
-	ast_node_t *node;
-	node = malloc(sizeof(ast_node_t));
-
-	if (node == NULL)
-	{
-		return NULL;
-	}
-
-	if (op == OP_NEG || op == OP_UMINUS || op == OP_UPLUS)
-	{
-		// Setting values
-		node->eval_type = operand->eval_type;
-		node->node_type = AST_UN_OPERATOR;
-		node->ast_node_value.un_operator.operand = operand;
-		node->ast_node_value.un_operator.operator_type = op;
-		return node;
-	}
-	else // Binary operations
-	{
-		free(node);
-		return NULL;
-	}
-}
-
-ast_node_t *ast_make_binary_op(ast_node_t *operand_left, ast_node_t *operand_right, operator_type_t op)
-{
-	ast_node_t *node;
-	node = malloc(sizeof(ast_node_t));
-
-	if (node == NULL)
-	{
-		return NULL;
-	}
-
-	if (op != OP_NEG && op != OP_UMINUS && op != OP_UPLUS)
-	{
-		// Setting values
-
-		if (op == OP_CONCATENATION || op == OP_MUL || op == OP_DIV || op == OP_MINUS || op == OP_PLUS)
-		{
-			node->eval_type = operand_left->eval_type;
-		}
-		else // Type canges for comparing operations
-		{
-			node->eval_type = TYPE_BOOLEAN;
-		}
-		node->node_type = AST_BIN_OPERATOR;
-		node->ast_node_value.bin_operator.operand_left = operand_left;
-		node->ast_node_value.bin_operator.operand_right = operand_right;
-		node->ast_node_value.bin_operator.operator_type = op;
-		return node;
-	}
-	else // Unary operations
-	{
-		free(node);
-		return NULL;
-	}
 }
 
 ast_node_t *ast_make_int_to_double(ast_node_t *operand)
@@ -496,26 +535,6 @@ ast_node_t *ast_make_assign(char *i, data_type_t i_type, ast_node_t *expression)
 	node->node_type = AST_ASSIGN;
 	node->ast_node_value.assign.expression = expression;
 	node->ast_node_value.assign.identifier = i;
-	return node;
-}
-
-ast_node_t *ast_make_var_def(char *i, data_type_t i_type, ast_node_t *expression, bool non_modifiable)
-{
-	ast_node_t *node;
-	node = malloc(sizeof(ast_node_t));
-
-	if (node == NULL)
-	{
-		return NULL;
-	}
-
-	// Setting values
-	node->eval_type = i_type;
-	node->node_type = AST_VAR_DEF;
-	node->ast_node_value.var_def.data_type = i_type;
-	node->ast_node_value.var_def.expression = expression;
-	node->ast_node_value.var_def.identifier = i;
-	node->ast_node_value.var_def.non_modifiable = non_modifiable;
 	return node;
 }
 

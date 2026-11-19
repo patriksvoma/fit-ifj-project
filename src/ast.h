@@ -405,7 +405,7 @@ ast_node_t *ast_unary_op_make(operator_type_t operator, ast_node_t * operand);
  * @param operand_right Second operand of the
  * @return ast_node_t* Pointer to the node containing the operation
  */
-ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t * operand_left, ast_node_t *operand_right);
+ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t *operand_left, ast_node_t *operand_right);
 
 /**
  * @brief Makes node for variable definition
