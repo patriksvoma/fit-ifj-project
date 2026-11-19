@@ -100,31 +100,65 @@ typedef struct symtable
 } symtable_t;
 
 /**
- * @brief Creates a symbol into symbol tree
+ * @brief Creates an empty item to symbol table
  *
- * @param table Pointer to the symbol tree into which the symbol will be created
+ * @param table Pointer to the symbol table into which the empty item created
  * @param key Identifier of inserted symbol
  * @return symbol_data_t Pointer to data of the new item
  */
-symbol_data_t *symtable_item_create(symtable_t *table, char *key);
+symbol_data_t *symtable_item_create(symtable_t *table, const char *key);
 
 /**
  * @brief Searches for a symbol in the symbol tree
  *
- * @param table Pointer to the symbol tree which will be searched
+ * @param table Pointer to the symbol table which will be searched
  * @param key Identifier of the symbol
  * @return symbol_data_t Pointer to the symbol data if found, NULL if not found
  */
 symbol_data_t *symtable_item_find(symtable_t *table, const char *key);
 
 /**
- * @brief Searches for a symbol in the symbol tree
+ * @brief Searches for a symbol in the symbol table
  *
- * @param table Pointer to the symbol tree which will be searched
+ * @param table Pointer to the symbol table which will be searched
  * @param key Identifier of the symbol
  * @return bool If found True, False if not found
  */
 bool symtable_item_exists(symtable_t *table, const char *key);
+
+/**
+ * @brief Searches for a symbol in the symbol tree and checks if it is defined
+ *
+ * @param table Pointer to the symbol tree which will be searched
+ * @param key Identifier of the symbol
+ * @return bool For variables: true if found, false if not found
+ *              For functions or extensions: true if found and defined, false if not found or found and not defined
+ */
+bool symtable_item_defined(symtable_t *table, const char *key);
+
+/**
+ * @brief Adds an empty param list to a function or an extension
+ *
+ * @param symbol Function or extension symbol
+ * @return err_t Error code
+ */
+err_t symbol_add_param_list(symbol_data_t *symbol);
+
+/**
+ * @brief Finds the parameter with the highest index in a parameter list with the highest index
+ *
+ * @param symbol Function or extension symbol
+ * @return param_t Pointer to the parameter
+ */
+param_t *symbol_top_param(symbol_data_t *symbol);
+
+/**
+ * @brief Appends a new empty parameter into the parameter list with the highest index
+ *
+ * @param symbol Function or extension symbol
+ * @return err_t Error code
+ */
+err_t symbol_add_param(symbol_data_t *symbol);
 
 /**
  * @brief Destroys all symbols of the symbol tree
