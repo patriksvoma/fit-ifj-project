@@ -8,6 +8,7 @@
  */
 
 #include "symtable.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -522,27 +523,116 @@ void symtable_destroy(symtable_t **table)
 	*table = NULL;
 }
 
-symtable_t *local_table_create(const symtable_t *parent)
+symtable_t *local_table_create(symtable_t *parent)
 {
-	// TODO: Implement
-	(void)parent;
-	print_err("local_table_create() called but not implemented!", ERR_INTERNAL);
-	return NULL;
+	symtable_t *table = malloc(sizeof(symtable_t));
+	if (!table)
+		return NULL;
+
+	table->parent = parent;
+	table->root_node = NULL;
+	table->child_table_counter = 0;
+
+	// Increase the parent nodes child counter
+	// Used for generating unique identifiers
+	if (parent)
+		parent->child_table_counter++;
+
+	return table;
 }
 
-symtable_t *local_table_destroy(const symtable_t *table)
+symtable_t *local_table_destroy(symtable_t *table)
 {
-	// TODO: Implement
-	(void)table;
-	print_err("local_table_destroy() called but not implemented!", ERR_INTERNAL);
-	return NULL;
+	if (!table)
+		return NULL;
+
+	symtable_t *parent = table->parent;
+
+	symtable_destroy(&table);
+
+	return parent;
 }
 
-err_t symbol_generate_unique_id(const symbol_data_t *symbol, const symtable_t *table)
+err_t append_last_table_counter(char **buf, size_t *buf_len, symtable_t *table)
 {
-	// TODO: Implement
-	(void)symbol;
-	(void)table;
-	print_err("symbol_generate_unique_id() called but not implemented!", ERR_INTERNAL);
+	// Go recuresively to the global table, as that is supposed to be the first one to be appended
+	if (!table)
+		return ERR_OK;
+	err_t result = append_last_table_counter(buf, buf_len, table->parent);
+	if (result)
+		return result;
+
+	// Create a string where the table counter will be written
+	char counter_str[12] = {0};
+
+	// Print the string and count the length
+	sprintf(counter_str, "$%u", table->child_table_counter);
+	size_t len = strlen(counter_str);
+
+	// Reallocate the buffer with the size increased by len, then append the counter string
+	char *new_buf = realloc(*buf, *buf_len + len);
+	if (!new_buf)
+	{
+		free(*buf);
+		print_err("Failed to reallocate memory in append_last_table_counter()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	*buf = new_buf;
+
+	memcpy(*buf + *buf_len - 1, counter_str, len);
+	*buf_len += len;
+	(*buf)[*buf_len - 1] = '\0';
+
+	return ERR_OK;
+}
+
+err_t symbol_generate_unique_id(const char *identifier, symbol_data_t *symbol, const symtable_t *table)
+{
+	if (!identifier || !symbol || !table)
+	{
+		print_err("Null pointer reference in symbol_generate_unique_id().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	size_t buf_len = 1;
+	char *buf = malloc(buf_len);
+	if (!buf)
+	{
+		print_err("Failed to allocate a buffer in symbol_generate_unique_id()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// Append all the counter strings ($1$4$2)
+	err_t result = append_last_table_counter(&buf, &buf_len, table->parent);
+	if (result)
+		return result;
+
+	// Append the variable name
+	size_t id_len = strlen(identifier);
+	char *new_buf = realloc(buf, buf_len + id_len);
+	if (!new_buf)
+	{
+		free(buf);
+		print_err("Failed to reallocat a buffer in symbol_generate_unique_id()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	buf = new_buf;
+
+	memcpy(buf + buf_len - 1, identifier, id_len);
+	buf_len += id_len;
+	buf[buf_len - 1] = '\0';
+
+	switch (symbol->symbol_type)
+	{
+	case SYM_VARIABLE:
+		symbol->data.variable.unique_name = buf;
+		break;
+	case SYM_FUNCTION:
+		symbol->data.function.unique_name = buf;
+		break;
+	case SYM_EXTENSION:
+		symbol->data.extension.unique_name = buf;
+		break;
+	}
 	return ERR_OK;
 }

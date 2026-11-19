@@ -98,7 +98,7 @@ typedef struct symtable
 {
 	struct symtable *parent;
 	tree_node_t *root_node;
-
+	unsigned child_table_counter;
 } symtable_t;
 
 /**
@@ -185,7 +185,7 @@ void symtable_destroy(symtable_t **table);
  * @param parent Symbol table to use as the parent
  * @return symtable_t* Pointer to a new child table
  */
-symtable_t *local_table_create(const symtable_t *parent);
+symtable_t *local_table_create(symtable_t *parent);
 
 /**
  * @brief Deallocates the local table and returns a pointer to its parent
@@ -193,13 +193,14 @@ symtable_t *local_table_create(const symtable_t *parent);
  * @param table Table to destroy
  * @return symtable_t* Pointer to the parent table, if it exists
  */
-symtable_t *local_table_destroy(const symtable_t *table);
+symtable_t *local_table_destroy(symtable_t *table);
 
 /**
  * @brief Generates a unique name for a symbol and saves it inside
  *
+ * @param identifier Original identifier of the symbol
  * @param symbol Symbol which is changed
  * @param table Table, in which the symbol is located (used for generating the name)
  * @return err_t Error code
  */
-err_t symbol_generate_unique_id(const symbol_data_t *symbol, const symtable_t *table);
+err_t symbol_generate_unique_id(const char *identifier, symbol_data_t *symbol, const symtable_t *table);
