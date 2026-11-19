@@ -3,14 +3,18 @@
  * @brief Header file for Abstract syntax tree
  *
  * @author Petr Marek (xmarekp00@stud.fit.vut.cz)
+ * @author Patrik Švoma (xsvomap00@stud.fit.vut.cz)
  *
  * @date 2026-11-11
  */
 
 #pragma once
 
+#include "error.h"
 #include <stdbool.h>
 #include <stdlib.h>
+
+typedef struct ast_node ast_node_t;
 
 /**
  * @brief Data types
@@ -27,7 +31,7 @@ typedef enum
 } data_type_t;
 
 /**
- * @brief Operatotions
+ * @brief Operations
  *
  */
 typedef enum
@@ -44,7 +48,6 @@ typedef enum
 	OP_GREATER_EQUAL,
 	OP_EQUAL,
 	OP_NOT_EQUAL,
-	OP_CONCATENATION,
 	OP_NEG,
 	OP_LOGIC_AND,
 	OP_LOGIC_OR
@@ -56,27 +59,27 @@ typedef enum
  */
 typedef enum
 {
-	AST_PROGRAM,
-	AST_FUNC_DEF,
-	AST_PARAM,
-	AST_RETURN,
-	AST_BLOCK,
-	AST_IF,
-	AST_WHILE,
-	AST_VAR_DEF,
-	AST_IDENTIFIER,
-	AST_BIN_OPERATOR,
-	AST_UN_OPERATOR,
-	AST_ASSIGN,
-	AST_CALL,
 	AST_LITERAL_INT,
 	AST_LITERAL_DOUBLE,
 	AST_LITERAL_STRING,
-	AST_LITERAL_UNIT,
 	AST_LITERAL_BOOLEAN,
-	AST_INT_TO_DOUBLE,
-	AST_EXTENSION_DEF,
-	AST_EXTENSION_USE
+	AST_LITERAL_UNIT,
+	AST_PROGRAM,
+	AST_FUNC_DEF,
+	AST_FUNC_CALL,
+	AST_EXT_DEF,
+	AST_EXT_CALL,
+	AST_BLOCK,
+	AST_UN_OPERATOR,
+	AST_BIN_OPERATOR,
+	AST_VAR_DEF,
+	AST_VAR_ASSIGN,
+	AST_VAR_USE,
+	AST_RETURN_CALL,
+	AST_IF,
+	AST_WHILE,
+	AST_FOR,
+	AST_INT_TO_DOUBLE
 } node_type_t;
 
 /**
@@ -94,93 +97,115 @@ typedef struct
 	} value;
 } literal_t;
 
-typedef struct ast_node ast_node_t;
+// Struct for parameters
+typedef struct param_node_list_t
+{
+	ast_node_t **param_node;
+	size_t param_count;
+} param_node_list_t;
 
-/**
- * @brief Struct for ast nodes
- *
- */
-struct ast_node
+// Types of for loops
+typedef enum
+{
+	FOR_TO,
+	FOR_UNTIL,
+	FOR_TO_BY
+} for_type_t;
+
+typedef struct ast_node
 {
 	node_type_t node_type;
 	data_type_t eval_type;
 
 	union {
-		// Blocks and program
-		struct
-		{
-			ast_node_t **expression;
-			size_t exp_count;
-		} code_block;
-
 		// Literals
-		int int_literal;
-		double double_literal;
-		char *string_literal;
-		bool boolean_literal;
+		long long literal_int;
+		double literal_double;
+		char *literal_string;
+		bool literal_boolean;
 
-		// Variable
-		char *identifier;
-
-		// Unary operator
+		// Main program block
 		struct
 		{
-			operator_type_t operator_type;
-			ast_node_t *operand;
-		} un_operator;
+			ast_node_t **func_defs;
+			size_t func_def_count;
 
-		// Binary operator
-		struct
-		{
-			operator_type_t operator_type;
-			ast_node_t *operand_right;
-			ast_node_t *operand_left;
-		} bin_operator;
-
-		// Assign
-		struct
-		{
-			char *identifier;
-			ast_node_t *expression;
-		} assign;
-
-		// Variable definition
-		struct
-		{
-			char *identifier;
-			ast_node_t *expression;
-			data_type_t data_type;
-			bool non_modifiable;
-		} var_def;
-
-		// Call function
-		struct
-		{
-			char *identifier;
-			ast_node_t **arguments;
-			size_t arg_count;
-		} call;
-
-		// Return
-		ast_node_t *expression;
+			ast_node_t **ext_defs;
+			size_t ext_def_count;
+		} program;
 
 		// Function definition
 		struct
 		{
 			char *identifier;
-			bool is_main;
 			ast_node_t *block;
-			ast_node_t **params;
-			size_t param_count;
-			data_type_t return_type;
 		} func_def;
 
-		// Function parameter
+		// Function calling
 		struct
 		{
 			char *identifier;
-			data_type_t data_type;
-		} param;
+			param_node_list_t **param_lists;
+			size_t param_list_count;
+		} func_call;
+
+		// Extension definition
+		struct
+		{
+			char *identifier;
+			ast_node_t *block;
+		} ext_def;
+
+		// Extension calling
+		struct
+		{
+			char *identifier;
+			param_node_list_t **param_lists;
+			size_t param_list_count;
+			ast_node_t *base_node;
+		} ext_call;
+
+		// Code block
+		struct
+		{
+			ast_node_t **statements;
+			size_t statement_count;
+		} block;
+
+		// Unary operation
+		struct
+		{
+			operator_type_t operator;
+			ast_node_t *operand;
+		} un_operator;
+
+		// Binary operation
+		struct
+		{
+			operator_type_t operator;
+			ast_node_t *operand_left;
+			ast_node_t *operand_right;
+		} bin_operator;
+
+		// Varible definition
+		struct
+		{
+			char *identifier;
+			ast_node_t *assigned_value;
+		} variable_definition;
+
+		// Variable assignment
+		struct
+		{
+			char *identifier;
+			ast_node_t *assigned_value;
+		} variable_assignment;
+
+		// Variable usage
+		char *variable_use;
+
+		// Return expression
+		ast_node_t *return_call;
 
 		// If statement
 		struct
@@ -190,32 +215,34 @@ struct ast_node
 			ast_node_t *else_block;
 		} if_statement;
 
-		// While
+		// While loop
 		struct
 		{
 			ast_node_t *condition;
 			ast_node_t *block;
 		} while_loop;
 
-		// Double to int
-		ast_node_t *operand;
-
-		// Extension definition
+		// For loop
 		struct
 		{
-			char *identifier;
+			for_type_t for_type;
+
+			char *iterator_identifier;
+			ast_node_t *from;
+			ast_node_t *to;
+			ast_node_t *until;
+			ast_node_t *by;
+
+			ast_node_t **guards;
+			size_t guard_count;
+
 			ast_node_t *block;
-			ast_node_t **params;
-			size_t param_count;
-			data_type_t return_type;
-			data_type_t base_type;
-		} extension_def;
+		} for_loop;
 
-		// Extension use
-		ast_node_t *base; // TODO: Domluvit se, možná spojit s double to int?
-
-	} ast_node_value;
-};
+		// Int to double conversion
+		ast_node_t *int2double;
+	};
+} ast_node_t;
 
 /**
  * @brief Function to make a leaf containing literal
@@ -223,160 +250,326 @@ struct ast_node
  * @param literal Structure containing the literal value and type
  * @return ast_node_t* Pointer to leaf
  */
-ast_node_t *ast_make_literal(literal_t *literal);
-
-/**
- * @brief Function to make a leaf containing variable
- *
- * @param i Poiter to variable name
- * @param i_type Data type of variable
- * @return ast_node_t* Pointer to leaf
- */
-ast_node_t *ast_make_identifier(char *i, data_type_t i_type);
-
-/**
- * @brief Function to make tree containing unary operation
- *
- * @param operand Poiter to node containing operand
- * @param op Type of operator
- * @return ast_node_t* Pointer to node of the operation
- */
-ast_node_t *ast_make_unary_op(ast_node_t *operand, operator_type_t op);
-
-/**
- * @brief Function to make a tree containing binary operation
- *
- * @param operand_left Poiter to node containing left operand
- * @param operand_right Poiter to node containing right operand
- * @param op Type of operator
- * @return ast_node_t* Pointer to node of the operation
- */
-ast_node_t *ast_make_binary_op(ast_node_t *operand_left, ast_node_t *operand_right, operator_type_t op);
-
-/**
- * @brief Makes a node for converting an int to double
- *
- * @param operand Node containing number to be converted
- * @return ast_node_t* Pointer to node with the operation
- */
-ast_node_t *ast_make_int_to_double(ast_node_t *operand);
-
-/**
- * @brief Function to make tree containing variable assignment
- *
- * @param i Poiter to identifier name
- * @param i_type Data type of identifier
- * @param expression Pointer to node with expression that should be assigned to identifier
- * @return ast_node_t* Pointer to node with assignment
- */
-ast_node_t *ast_make_assign(char *i, data_type_t i_type, ast_node_t *expression);
-
-/**
- * @brief Function to make tree containing variable definition
- *
- * @param i Poiter to identifier name
- * @param i_type Data type of identifier
- * @param expression Pointer to node with expression that should be assigned to identifier
- * @param non_modifiable Bool to decide if its val or var
- * @return ast_node_t* Pointer to node with variable definition
- */
-ast_node_t *ast_make_var_def(char *i, data_type_t i_type, ast_node_t *expression, bool non_modifiable);
-
-/**
- * @brief Function to make tree containing return expression
- *
- * @param expression Pointer to node with expression that should be returned
- * @return ast_node_t* Pointer to node with return expression
- */
-ast_node_t *ast_make_return(ast_node_t *expression);
-
-/**
- * @brief Function to make a node containing function parameter
- *
- * @param i Poiter to parameter identifier
- * @param i_type Data type of identifier
- * @return ast_node_t* Pointer to node of the parameter
- */
-ast_node_t *ast_make_param(char *i, data_type_t i_type);
-
-/**
- * @brief Function to make a tree containing while cycle
- *
- * @param condition Poiter to node containing condition
- * @param block Pointer to root of tree containing block of the while cycle
- * @return ast_node_t* Pointer to node of the while cycle
- */
-ast_node_t *ast_make_while(ast_node_t *condition, ast_node_t *block);
-
-/**
- * @brief Function to make a tree containing if statement
- *
- * @param condition A node with condition for the statement
- * @param if_block Code block for if branch
- * @param else_block Code block for else branch
- * @return ast_node_t* Pointer to node of the if statement
- */
-ast_node_t *ast_make_if(ast_node_t *condition, ast_node_t *if_block, ast_node_t *else_block);
-
-/**
- * @brief Function to make a tree containing function calling
- *
- * @param i Poiter to function identifier name
- * @param args An array of arguments of the function
- * @param args_count Number of arguments of the function
- * @return ast_node_t* Pointer to node of the function call
- */
-ast_node_t *ast_make_call(char *i);
-
-/**
- * @brief Function to make a empty node containing function definition
- *
- * @param is_main Bool to decide if its main function
- * @return ast_node_t* Pointer to node of the function definition
- */
-ast_node_t *ast_make_func_def(bool is_main);
-
-/**
- * @brief Function to make an empty node for code block
- *
- * @return ast_node_t Pointer to node of the code block
- */
-ast_node_t *ast_make_block();
+ast_node_t *ast_literal_make(literal_t *literal);
 
 /**
  * @brief Function to make an empty node for program
  *
  * @return ast_node_t* Pointer to node of the program
  */
-ast_node_t *ast_make_program();
+ast_node_t *ast_program_make();
 
 /**
- * @brief Makes an empty node for extension definition
+ * @brief Adds function definition to program node
  *
- * @return ast_node_t*
+ * @param program_node Node containing program
+ * @param func_def_node Node containing the function definition
+ * @return err_t Error code
  */
-ast_node_t *ast_make_extension_def(); // TODO: Domluvit se co všechno je možné předat
+err_t ast_program_add_func_def(ast_node_t *program_node, ast_node_t *func_def_node);
 
 /**
- * @brief Makes a node with the base its used on
+ * @brief Adds extension definition to program node
  *
- * @param base Node containg what should be the extension used on
- * @return ast_node_t* Pointer to node containing the use of the extension
+ * @param program_node Node containing program
+ * @param ext_def_node Node containing the extension definition
+ * @return err_t Error code
  */
-ast_node_t *ast_make_extension_use(ast_node_t *base);
+err_t ast_program_add_ext_def(ast_node_t *program_node, ast_node_t *ext_def_node);
 
 /**
- * @brief Function to destruct the tree
+ * @brief Function to make a empty node containing function definition
  *
- * @param root Pointer to root node
- * @return void
+ * @return ast_node_t* Pointer to node of the function definition
+ */
+ast_node_t *ast_func_def_make();
+
+/**
+ * @brief Sets the identificator in a function definition node
+ *
+ * @param func_def_node The function definition AST node
+ * @param newId Pointer to an identificator. The string will be coppied into newly allocated memory
+ * @return err_t Error code
+ */
+err_t ast_func_def_set_id(ast_node_t *func_def_node, const char *new_id);
+
+/**
+ * @brief Sets block for function definition
+ *
+ * @param func_def_node Pointer to node containing function definition
+ * @param block Pointer to node containing block
+ * @return err_t Error code
+ */
+err_t ast_func_def_set_block(ast_node_t *func_def_node, ast_node_t *block);
+
+/**
+ * @brief Makes node for function calling
+ *
+ * @param identificator Identificator of the function
+ * @return ast_node_t* Pointer to created node
+ */
+ast_node_t *ast_func_call_make(const char *identificator);
+
+/**
+ * @brief Function that adds parameter to function calling
+ *
+ * @param func_call_node Node of function calling
+ * @param param_node Node of parameter
+ * @param param_list_index Index of parameter list
+ * @return err_t Error code
+ */
+err_t ast_func_call_add_param(ast_node_t *func_call_node, ast_node_t *param_node, unsigned param_list_index);
+
+/**
+ * @brief Makes a node for extension definition
+ *
+ * @param extended_type Data type that can be extended
+ * @return ast_node_t* Pointer to created node
+ */
+ast_node_t *ast_ext_def_make(data_type_t extended_type);
+
+/**
+ * @brief Sets the identificator in extension definition node
+ *
+ * @param func_def_node Node of extension definition
+ * @param newId Pointer to an identificator. The string will be coppied into newly allocated memory
+ * @return err_t Error code
+ */
+err_t ast_ext_def_set_id(ast_node_t *func_def_node, const char *newId);
+
+/**
+ * @brief Sets the block for extension
+ *
+ * @param func_def_node Node of extension definition
+ * @param block Node of the block
+ * @return err_t Error code
+ */
+err_t ast_ext_def_set_block(ast_node_t *func_def_node, ast_node_t *block);
+
+/**
+ * @brief Makes node for extension calling
+ *
+ * @param identificator Identificator of the extension
+ * @return ast_node_t* Pointer to created node
+ */
+ast_node_t *ast_ext_call_make(const char *identificator);
+
+/**
+ * @brief Adds parameter to the extension
+ *
+ * @param ext_call_node Node of the extension calling
+ * @param param_node Node of the parameter
+ * @param param_list_index Index for the parameter list
+ * @param param_index Index for the parameter inside of the list
+ * @return err_t Error code
+ */
+err_t ast_ext_call_add_param(ast_node_t *ext_call_node, ast_node_t *param_node, unsigned param_list_index,
+							 unsigned param_index);
+
+/**
+ * @brief Adds a base on wich the extension will be called
+ *
+ * @param ext_call_node Node of the extension calling
+ * @param base_node Node for the base
+ * @return err_t Error code
+ */
+err_t ast_ext_call_add_base(ast_node_t *ext_call_node, ast_node_t *base_node);
+
+/**
+ * @brief Makes a node for code block
+ *
+ * @return ast_node_t* Pointer to the block
+ */
+ast_node_t *ast_block_make();
+
+/**
+ * @brief Adds statement for a code block
+ *
+ * @param block_node Node for the code block
+ * @param statement_node Node with the statement
+ * @return err_t Error code
+ */
+err_t ast_block_add_statement(ast_node_t *block_node, ast_node_t *statement_node);
+
+/**
+ * @brief Makes an unary operation
+ *
+ * @param operator Type of operator
+ * @param operand Operand of the operation
+ * @return ast_node_t* Pointer to the node containing the operation
+ */
+ast_node_t *ast_unary_op_make(operator_type_t operator, ast_node_t * operand);
+
+/**
+ * @brief Makes an binary operation
+ *
+ * @param operator Type of operator
+ * @param operand_left First operand of the operation
+ * @param operand_right Second operand of the
+ * @return ast_node_t* Pointer to the node containing the operation
+ */
+ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t * operand_left, ast_node_t *operand_right);
+
+/**
+ * @brief Makes node for variable definition
+ *
+ * @param identifier Identifier of the variable
+ * @return ast_node_t* Pointer to the node
+ */
+ast_node_t *ast_var_def_make(const char *identifier);
+
+/**
+ * @brief Sets a value for defined variable
+ *
+ * @param var_def_node Node with the definition
+ * @param assigned_value_node Node with the value to be assigned
+ * @return err_t Error code
+ */
+err_t ast_var_def_set_assignment(ast_node_t *var_def_node, ast_node_t *assigned_value_node);
+
+/**
+ * @brief Makes a node for variable assigment
+ *
+ * @param identifier The identifier for the variable
+ * @param assigned_value Node with the value to be assigned
+ * @return ast_node_t* Pointer to the node
+ */
+ast_node_t *ast_var_assign_make(const char *identifier, ast_node_t *assigned_value);
+
+/**
+ * @brief Makes a node for variable using
+ *
+ * @param identifier Identifier of the variable
+ * @param var_type Data type of the variable
+ * @return ast_node_t* Pointer to the node
+ */
+ast_node_t *ast_var_use_make(const char *identifier, data_type_t var_type);
+
+/**
+ * @brief Makes a node with expression to be returned
+ *
+ * @param return_value_node Node containing the value to be returned
+ * @return ast_node_t* Pointer to the node
+ */
+ast_node_t *ast_return_call_make(ast_node_t *return_value_node);
+
+/**
+ * @brief Makes a node for if statement
+ *
+ * @param condition_node Node containing the condition
+ * @return ast_node_t* Pointer to the node
+ */
+ast_node_t *ast_if_make(ast_node_t *condition_node);
+
+/**
+ * @brief Sets block for if branch
+ *
+ * @param if_node Node of the if statement
+ * @param block Node containing the code block
+ * @return err_t Error code
+ */
+err_t ast_if_set_then_block(ast_node_t *if_node, ast_node_t *block);
+
+/**
+ * @brief Sets block for else branch
+ *
+ * @param if_node Node of the if statement
+ * @param block Node containing the code block
+ * @return err_t Error code
+ */
+err_t ast_if_set_else_block(ast_node_t *if_node, ast_node_t *block);
+
+/**
+ * @brief Makes a node for while loop
+ *
+ * @param condition Condition of the while loop
+ * @return ast_node_t* Pointer to the node
+ */
+ast_node_t *ast_while_make(ast_node_t *condition);
+
+/**
+ * @brief Sets the code block for the wile loop
+ *
+ * @param while_node Node containing the while loop
+ * @param block Node containing the code block of the while loop
+ * @return err_t Error code
+ */
+err_t ast_while_set_block(ast_node_t *while_node, ast_node_t *block);
+
+/**
+ * @brief Makes a node for for loop
+ *
+ * @param iterator_identifier Identifier of the iterator
+ * @param from_node Node containing from expression
+ * @return ast_node_t* Pointer to the node
+ */
+ast_node_t *ast_for_make(const char *iterator_identifier, ast_node_t *from_node);
+
+/**
+ * @brief Sets the type of for loop
+ *
+ * @param for_node Node containing the for loop
+ * @param type Type of the for loop
+ * @return err_t Error code
+ */
+err_t ast_for_set_type(ast_node_t *for_node, for_type_t type);
+
+/**
+ * @brief Sets the to expression in for loop
+ *
+ * @param for_node Node of the for loop
+ * @param to_node Node of the to expression
+ * @return err_t Error code
+ */
+err_t ast_for_set_to(ast_node_t *for_node, ast_node_t *to_node);
+
+/**
+ * @brief Sets the until expression in for loop
+ *
+ * @param for_node Node containing for loop
+ * @param until_node Node containing until expression
+ * @return err_t Error code
+ */
+err_t ast_for_set_until(ast_node_t *for_node, ast_node_t *until_node);
+
+/**
+ * @brief Sets the by expression in for loop
+ *
+ * @param for_node Node containing for loop
+ * @param by_node Node containing by expression
+ * @return err_t Error code
+ */
+err_t ast_for_set_by(ast_node_t *for_node, ast_node_t *by_node);
+
+/**
+ * @brief Sets the guard expression in for loop
+ *
+ * @param for_node Node containing for loop
+ * @param guard_node Node containing guard expression
+ * @return err_t Error code
+ */
+err_t ast_for_add_guard(ast_node_t *for_node, ast_node_t *guard_node);
+
+/**
+ * @brief Sets the code block in for loop
+ *
+ * @param for_node Node containing for loop
+ * @param block Node containing the code block
+ * @return err_t Error code
+ */
+err_t ast_for_set_block(ast_node_t *for_node, ast_node_t *block);
+
+/**
+ * @brief Makes node for int to double conversion
+ *
+ * @param operand Node with the number to be converted
+ * @return ast_node_t* Pointer to the node
+ */
+ast_node_t *ast_int2double_make(ast_node_t *operand);
+
+/**
+ * @brief Destructs the ast
+ *
+ * @param root Root of the ast
  */
 void destruct(ast_node_t *root);
-
-/**
- * @brief Adds node to the end of an array
- *
- * @param node Node that contains the array
- * @param elem Node to be appended
- */
-void ast_array_append(ast_node_t *node, ast_node_t *elem);
