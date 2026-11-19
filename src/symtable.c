@@ -232,3 +232,28 @@ symbol_data_t *symtable_item_create(symtable_t *table, const char *key)
 
 	return symtable_item_find(table, key);
 }
+
+bool symtable_item_defined(symtable_t *table, const char *key)
+{
+	if (table == NULL || key == NULL)
+		return NULL;
+
+	if (!symtable_item_exists(table, key))
+		return false;
+
+	symbol_data_t *data = symtable_item_find(table, key);
+
+	if (data->symbol_type == SYM_VARIABLE)
+	{
+		return true;
+	}
+	else if (data->symbol_type == SYM_FUNCTION)
+	{
+		return data->data.function.is_defined;
+	}
+	else if (data->symbol_type == SYM_EXTENSION)
+	{
+		return data->data.extension.is_defined;
+	}
+	return false;
+}
