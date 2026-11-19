@@ -325,6 +325,12 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				break;
 			}
 
+			if (c == '/')
+			{
+				state = S_SLASH;
+				break;
+			}
+
 			switch (c)
 			{
 			case EOF:
@@ -742,6 +748,25 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				goto internal_error;
 
 			state = S_MULTILINE_STRING;
+			break;
+
+		case S_SLASH:
+			if (c == '/')
+			{
+				state = S_COMMENT;
+				break;
+			}
+
+			unread_char(c);
+			token->type = TOKEN_DIV;
+			goto accept;
+
+		case S_COMMENT:
+			if (c == '\n' || c == EOF)
+			{
+				unread_char(c);
+				state = S_START;
+			}
 			break;
 
 		default:
