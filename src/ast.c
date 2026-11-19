@@ -594,6 +594,35 @@ err_t ast_if_set_else_block(ast_node_t *if_node, ast_node_t *block)
 	return ERR_OK;
 }
 
+ast_node_t *ast_while_make(ast_node_t *condition)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_WHILE;
+	node->while_loop.condition = condition;
+	node->while_loop.block = NULL;
+	return node;
+}
+
+err_t ast_while_set_block(ast_node_t *while_node, ast_node_t *block)
+{
+	if (while_node == NULL || block == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_while_set_block()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	while_node->while_loop.block = block;
+	return ERR_OK;
+}
+
 ast_node_t *ast_make_int_to_double(ast_node_t *operand)
 {
 	ast_node_t *node;
