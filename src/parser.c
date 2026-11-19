@@ -24,10 +24,10 @@ err_t param_first(parser_data_t *pdata, symbol_data_t *table_entry);
 err_t param_list(parser_data_t *pdata, symbol_data_t *table_entry);
 err_t param(parser_data_t *pdata, param_t *param_out);
 err_t return_type(parser_data_t *pdata, const ast_node_t *func_call_node);
-err_t block_start(parser_data_t *pdata, unsigned header_indent_level);
-err_t block(parser_data_t *pdata, unsigned block_indent_level);
+err_t block_start(parser_data_t *pdata, ast_node_t *block_node, unsigned header_indent_level);
+err_t block(parser_data_t *pdata, ast_node_t *block_node, unsigned block_indent_level);
 err_t type(parser_data_t *pdata, data_type_t *return_type);
-err_t statement(parser_data_t *pdata);
+err_t statement(parser_data_t *pdata, ast_node_t *block_node);
 err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value);
 err_t else_opt(parser_data_t *pdata, unsigned header_indent_level);
 err_t else_if_opt(parser_data_t *pdata, unsigned header_indent_level);
@@ -606,10 +606,25 @@ err_t return_type(parser_data_t *pdata, const ast_node_t *func_call_node)
 		entry = symtable_item_find(&pdata->function_table, func_call_node->func_def.identifier);
 	if (!entry)
 	{
-		print_err_l("Failed to find a symbol in a symbol table. This should not happen.", ERR_INTERNAL,
-					pdata->token.line);
+		print_err_l("Failed to find a symbol that was previously created in a symbol table. This should not happen.",
+					ERR_INTERNAL, pdata->token.line);
 		return ERR_INTERNAL;
 	}
+
+	// Create the block node which will be filled with statements and put it into the function def node
+	ast_node_t *block_node = ast_block_make();
+	if (!block_node)
+	{
+		print_err_l("Failed to create an AST node in return_type().", ERR_INTERNAL, pdata->token.line);
+		return ERR_INTERNAL;
+	}
+
+	if (pdata->in_extension)
+		result = ast_ext_def_set_block(func_call_node, block_node);
+	else
+		result = ast_func_def_set_block(func_call_node, block_node);
+	if (result)
+		return result;
 
 	// =, go to <block-start>
 	if (pdata->token.type == TOKEN_ASSIGN)
@@ -624,7 +639,7 @@ err_t return_type(parser_data_t *pdata, const ast_node_t *func_call_node)
 		if (result)
 			return result;
 
-		return block_start(pdata, header_indentation);
+		return block_start(pdata, block_node, header_indentation);
 	}
 	// :
 	else if (pdata->token.type == TOKEN_COLON)
@@ -653,7 +668,7 @@ err_t return_type(parser_data_t *pdata, const ast_node_t *func_call_node)
 			return result;
 
 		// <block-start>
-		return block_start(pdata, header_indentation);
+		return block_start(pdata, block_node, header_indentation);
 	}
 
 	print_err_l("Expected a return type definiton, or a block start delimiter (=).", ERR_SYNTAX, pdata->token.line);
@@ -664,17 +679,18 @@ err_t return_type(parser_data_t *pdata, const ast_node_t *func_call_node)
  * @brief Statement block start | <block-start>
  *
  * @param pdata Parser data
+ * @param block_node AST block node
  * @param header_indent_level Indentation level of the block header
  * @return err_t Error code
  */
-err_t block_start(parser_data_t *pdata, unsigned header_indent_level)
+err_t block_start(parser_data_t *pdata, ast_node_t *block_node, unsigned header_indent_level)
 {
 	bool is_inline = !pdata->token.starts_logical_line;
 
 	// If the first statement is on the same line as the header, there is only one statement allowed
 	if (is_inline)
 	{
-		return statement(pdata);
+		return statement(pdata, block_node);
 	}
 
 	unsigned statement_indent_level = pdata->token.indent;
@@ -686,22 +702,23 @@ err_t block_start(parser_data_t *pdata, unsigned header_indent_level)
 	}
 
 	// <statement>
-	err_t result = statement(pdata);
+	err_t result = statement(pdata, block_node);
 	if (result)
 		return result;
 
 	// <block>
-	return block(pdata, statement_indent_level);
+	return block(pdata, block_node, statement_indent_level);
 }
 
 /**
  * @brief Statement block | <block>
  *
  * @param pdata Parser data
+ * @param block_node AST block node
  * @param block_indent_level Indentation level every statement in the block must match
  * @return err_t Error code
  */
-err_t block(parser_data_t *pdata, unsigned block_indent_level)
+err_t block(parser_data_t *pdata, ast_node_t *block_node, unsigned block_indent_level)
 {
 	while (pdata->token.type == TOKEN_SEMICOLON)
 	{
@@ -725,12 +742,11 @@ err_t block(parser_data_t *pdata, unsigned block_indent_level)
 	else if (statement_indent_level < block_indent_level)
 		return ERR_OK;
 
-	err_t result = statement(pdata);
+	err_t result = statement(pdata, block_node);
 	if (result)
 		return result;
 
-	// TODO: End blocks by checking indentation
-	return block(pdata, block_indent_level);
+	return block(pdata, block_node, block_indent_level);
 }
 
 /**
@@ -792,9 +808,10 @@ err_t type(parser_data_t *pdata, data_type_t *return_type)
  * @brief Statements | <statement>
  *
  * @param pdata Parser data
+ * @param block_node AST block node
  * @return err_t Error code
  */
-err_t statement(parser_data_t *pdata)
+err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 {
 	err_t result;
 	unsigned statement_indent_level = pdata->token.indent;
@@ -995,7 +1012,8 @@ err_t statement(parser_data_t *pdata)
 	}
 
 	// <expression>
-	ast_node_t *expression_node; // FIXME:
+	ast_node_t *expression_node;
+
 	return expression(pdata, &expression_node);
 }
 
