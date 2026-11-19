@@ -303,7 +303,28 @@ ast_node_t *ast_ext_def_make(data_type_t extended_type)
 
 err_t ast_ext_def_set_id(ast_node_t *func_def_node, const char *newId)
 {
+	if (func_def_node == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_ext_def_set_id()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
 
+	char *id;
+	id = save_identifier;
+	func_def_node->ext_def.identifier = id;
+	return ERR_OK;
+}
+
+err_t ast_ext_def_set_block(ast_node_t *func_def_node, ast_node_t *block)
+{
+	if (func_def_node == NULL || block == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_ext_def_set_block()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	func_def_node->ext_def.block = block;
+	return ERR_OK;
 }
 
 ast_node_t *ast_make_identifier(char *i, data_type_t i_type)
