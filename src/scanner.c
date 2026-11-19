@@ -254,6 +254,9 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 	bool newline_seen = false;
 	token->indent = 0;
 	err_t err = ERR_SCANNER;
+	unsigned depth = 0;
+	bool block_newline = false;
+	bool comment_eol = false;
 	int c;
 
 	memset(token, 0, sizeof(*token));
@@ -268,6 +271,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (c == '\n')
 			{
 				newline_seen = true;
+				comment_eol = false;
 				break;
 			}
 			if (c == ' ' || c == '\r')
@@ -327,6 +331,12 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (c == '"')
 			{
 				state = S_STRING_START_1;
+				break;
+			}
+
+			if (c == '/')
+			{
+				state = S_SLASH;
 				break;
 			}
 
@@ -749,6 +759,90 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			state = S_MULTILINE_STRING;
 			break;
 
+		case S_SLASH:
+			if (c == '/')
+			{
+				state = S_COMMENT;
+				break;
+			}
+
+			if (c == '*')
+			{
+				depth = 1;
+				block_newline = false;
+				state = S_COMMENT_BLOCK;
+				break;
+			}
+
+			unread_char(c);
+			token->type = TOKEN_DIV;
+			goto accept;
+
+		case S_COMMENT:
+			if (c == '\n' || c == EOF)
+			{
+				unread_char(c);
+				state = S_START;
+			}
+			break;
+
+		case S_COMMENT_BLOCK:
+			if (c == EOF)
+				goto fail;
+
+			if (c == '\n')
+				block_newline = true;
+
+			if (c == '/')
+				state = S_COMMENT_BLOCK_1;
+			else if (c == '*')
+				state = S_COMMENT_BLOCK_2;
+
+			break;
+
+		case S_COMMENT_BLOCK_1:
+			if (c == EOF)
+				goto fail;
+
+			if (c == '\n')
+				block_newline = true;
+
+			if (c == '*')
+			{
+				depth++;
+				state = S_COMMENT_BLOCK;
+			}
+			else if (c != '/')
+			{
+				state = S_COMMENT_BLOCK;
+			}
+			break;
+
+		case S_COMMENT_BLOCK_2:
+			if (c == EOF)
+				goto fail;
+
+			if (c == '\n')
+				block_newline = true;
+
+			if (c == '/')
+			{
+				depth--;
+
+				if (depth == 0 && block_newline)
+				{
+					newline_seen = true;
+					comment_eol = true;
+				}
+
+				state = (depth == 0) ? S_START : S_COMMENT_BLOCK;
+			}
+			else if (c != '*')
+			{
+				state = S_COMMENT_BLOCK;
+			}
+			break;
+
 		default:
 			break;
 		}
@@ -774,6 +868,14 @@ number:
 
 accept:
 	buf_free(&buf);
+
+	if (comment_eol && token->type != TOKEN_EOF)
+	{
+		free(token->attribute.string);
+		token->attribute.string = NULL;
+		return ERR_SYNTAX;
+	}
+
 	(void)eol; // TODO: check EOL
 	return ERR_OK;
 
