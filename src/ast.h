@@ -190,7 +190,7 @@ typedef struct ast_node
 		// Varible definition
 		struct
 		{
-			char *identifier;
+			char *unique_id;
 			ast_node_t *assigned_value;
 		} variable_definition;
 

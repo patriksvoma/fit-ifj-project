@@ -482,7 +482,7 @@ ast_node_t *ast_var_def_make(const char *identifier)
 
 	char *id;
 	id = save_identifier(identifier);
-	node->variable_definition.identifier = id;
+	node->variable_definition.unique_id = id;
 	node->variable_definition.assigned_value = NULL;
 	return node;
 }
@@ -834,7 +834,7 @@ void destruct(ast_node_t *root)
 
 	case AST_VAR_DEF:
 		destruct(root->variable_definition.assigned_value);
-		free(root->variable_definition.identifier);
+		free(root->variable_definition.unique_id);
 		break;
 
 	case AST_VAR_ASSIGN:
