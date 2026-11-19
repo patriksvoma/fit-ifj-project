@@ -166,3 +166,19 @@ err_t symbol_add_param(symbol_data_t *symbol);
  * @param table Pointer to the symbol tree which will be destroyed
  */
 void symtable_destroy(symtable_t **table);
+
+/**
+ * @brief Allocates a new symbol table and with the "parent" as its parent
+ *
+ * @param parent Symbol table to use as the parent
+ * @return symtable_t* Pointer to a new child table
+ */
+symtable_t *local_table_create(symtable_t *parent);
+
+/**
+ * @brief Deallocates the local table and returns a pointer to its parent
+ *
+ * @param table Table to destroy
+ * @return symtable_t* Pointer to the parent table, if it exists
+ */
+symtable_t *local_table_destroy(symtable_t *table);
