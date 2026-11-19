@@ -112,7 +112,7 @@ typedef enum
 	FOR_TO_BY
 } for_type_t;
 
-typedef struct ast_node
+struct ast_node
 {
 	node_type_t node_type;
 	data_type_t eval_type;
@@ -138,6 +138,7 @@ typedef struct ast_node
 		struct
 		{
 			char *unique_id;
+			char *identificator;
 			ast_node_t *block;
 		} func_def;
 
@@ -153,6 +154,7 @@ typedef struct ast_node
 		struct
 		{
 			char *unique_id;
+			char *identificator;
 			ast_node_t *block;
 		} ext_def;
 
@@ -242,7 +244,7 @@ typedef struct ast_node
 		// Int to double conversion
 		ast_node_t *int2double;
 	};
-} ast_node_t;
+};
 
 /**
  * @brief Function to make a leaf containing literal
@@ -285,13 +287,22 @@ err_t ast_program_add_ext_def(ast_node_t *program_node, ast_node_t *ext_def_node
 ast_node_t *ast_func_def_make();
 
 /**
- * @brief Sets the identificator in a function definition node
+ * @brief Sets the mangeled identificator in a function definition node
  *
  * @param func_def_node The function definition AST node
  * @param new_unique_id Pointer to a mangled identificator. The string will be copied into newly allocated memory
  * @return err_t Error code
  */
 err_t ast_func_def_set_id(ast_node_t *func_def_node, const char *new_unique_id);
+
+/**
+ * @brief Sets identificator of the function
+ *
+ * @param func_def_node The function definition AST node
+ * @param identificator Pointer to a identificator
+ * @return err_t err_t Error code
+ */
+err_t ast_func_def_set_identificator(ast_node_t *func_def_node, const char *identificator);
 
 /**
  * @brief Sets block for function definition
@@ -329,13 +340,22 @@ err_t ast_func_call_add_param(ast_node_t *func_call_node, ast_node_t *param_node
 ast_node_t *ast_ext_def_make(data_type_t extended_type);
 
 /**
- * @brief Sets the identificator in extension definition node
+ * @brief Sets the mangeled identificator in extension definition node
  *
  * @param func_def_node Node of extension definition
- * @param unique_id Pointer to a mangled identifier. The string will be copied into newly allocated memory
+ * @param unique_id Pointer to a mangled identificator. The string will be copied into newly allocated memory
  * @return err_t Error code
  */
 err_t ast_ext_def_set_id(ast_node_t *func_def_node, const char *unique_id);
+
+/**
+ * @brief ets the identificator in extension definition node
+ *
+ * @param func_def_node Node of extension definition
+ * @param identificator Pointer to a identificator. The string will be copied into newly allocated memory
+ * @return err_t Error code
+ */
+err_t ast_ext_def_set_identificator(ast_node_t *func_def_node, const char *identificator);
 
 /**
  * @brief Sets the block for extension

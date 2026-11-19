@@ -8,7 +8,6 @@
  */
 
 #include "ast.h"
-#include "error.h"
 #include <string.h>
 
 /**
@@ -177,6 +176,20 @@ err_t ast_func_def_set_id(ast_node_t *func_def_node, const char *new_unique_id)
 	return ERR_OK;
 }
 
+err_t ast_func_def_set_identificator(ast_node_t *func_def_node, const char *identificator)
+{
+	if (func_def_node == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_func_def_set_identificator()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	char *id;
+	id = save_identifier(identificator);
+	func_def_node->func_def.identificator = id;
+	return ERR_OK;
+}
+
 err_t ast_func_def_set_block(ast_node_t *func_def_node, ast_node_t *block)
 {
 	if (func_def_node == NULL || block == NULL)
@@ -312,6 +325,20 @@ err_t ast_ext_def_set_id(ast_node_t *func_def_node, const char *unique_id)
 	char *id;
 	id = save_identifier(unique_id);
 	func_def_node->ext_def.unique_id = id;
+	return ERR_OK;
+}
+
+err_t ast_ext_def_set_identificator(ast_node_t *func_def_node, const char *identificator)
+{
+	if (func_def_node == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_ext_def_set_identificator()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	char *id;
+	id = save_identifier(identificator);
+	func_def_node->ext_def.identificator = id;
 	return ERR_OK;
 }
 
@@ -779,6 +806,7 @@ void destruct(ast_node_t *root)
 	case AST_FUNC_DEF:
 		destruct(root->func_def.block);
 		free(root->func_def.unique_id);
+		free(root->func_def.identificator);
 		break;
 
 	case AST_FUNC_CALL:
@@ -798,6 +826,7 @@ void destruct(ast_node_t *root)
 	case AST_EXT_DEF:
 		destruct(root->ext_def.block);
 		free(root->ext_def.unique_id);
+		free(root->ext_def.identificator);
 		break;
 
 	case AST_EXT_CALL:
