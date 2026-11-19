@@ -159,7 +159,7 @@ typedef struct ast_node
 		// Extension calling
 		struct
 		{
-			char *identifier;
+			char *unique_id;
 			param_node_list_t **param_lists;
 			size_t param_list_count;
 			ast_node_t *base_node;

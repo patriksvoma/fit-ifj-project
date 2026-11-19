@@ -342,7 +342,7 @@ ast_node_t *ast_ext_call_make(const char *identificator)
 
 	char *id;
 	id = save_identifier(identificator);
-	node->ext_call.identifier = id;
+	node->ext_call.unique_id = id;
 	node->ext_call.param_lists = NULL;
 	node->ext_call.param_list_count = 0;
 	node->ext_call.base_node = NULL;
@@ -812,7 +812,7 @@ void destruct(ast_node_t *root)
 		}
 		destruct(root->ext_call.base_node);
 		free(root->ext_call.param_lists);
-		free(root->ext_call.identifier);
+		free(root->ext_call.unique_id);
 		break;
 
 	case AST_BLOCK:
