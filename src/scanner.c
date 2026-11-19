@@ -10,6 +10,8 @@
 #include "scanner.h"
 
 #include <ctype.h>
+#include <errno.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -207,6 +209,37 @@ bool next_is(int expected)
 }
 
 /**
+ * @brief Convert the text of a number to its value
+ *
+ * @param text Digits of the number
+ * @param token Type of number, TOKEN_INT or TOKEN_DOUBLE
+ * @return err_t ERR_OK or ERR_SCANNER if the value is out of range
+ */
+err_t convert_number(const char *text, token_t *token)
+{
+	errno = 0;
+
+	if (token->type == TOKEN_INT)
+	{
+		long long value = strtoll(text, NULL, 10);
+
+		if (errno == ERANGE)
+			return ERR_SCANNER;
+
+		token->attribute.integer = value;
+		return ERR_OK;
+	}
+
+	double value = strtod(text, NULL);
+
+	if (errno == ERANGE && (value == HUGE_VAL || value == -HUGE_VAL))
+		return ERR_SCANNER;
+
+	token->attribute.decimal = value;
+	return ERR_OK;
+}
+
+/**
  * @brief Get the next token object
  *
  * @param token
@@ -260,6 +293,17 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 					goto fail;
 				}
 				state = S_UNDERSCORE;
+				break;
+			}
+
+			if (isdigit(c))
+			{
+				if (!buf_append(&buf, (char)c))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				state = (c == '0') ? S_ZERO : S_NUMBER_INT;
 				break;
 			}
 
@@ -373,10 +417,62 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			token->type = TOKEN_UNDERSCORE;
 			goto accept;
 
+		case S_ZERO:
+			if (isalnum(c) || c == '_')
+				goto fail;
+
+			unread_char(c);
+			token->type = TOKEN_INT;
+			goto number;
+
+		case S_NUMBER_INT:
+			if (isdigit(c))
+			{
+				if (!buf_append(&buf, (char)c))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				break;
+			}
+
+			if (c == '_')
+			{
+				state = S_NUM_INT_UNDERSCORE;
+				break;
+			}
+
+			if (isalpha(c))
+				goto fail;
+
+			unread_char(c);
+			token->type = TOKEN_INT;
+			goto number;
+
+		case S_NUM_INT_UNDERSCORE:
+			if (c == '_')
+				break;
+
+			if (!isdigit(c))
+				goto fail;
+
+			if (!buf_append(&buf, (char)c))
+			{
+				err = ERR_INTERNAL;
+				goto fail;
+			}
+			state = S_NUMBER_INT;
+			break;
+
 		default:
 			break;
 		}
 	}
+
+number:
+	err = convert_number(buf.data, token);
+	if (err != ERR_OK)
+		goto fail;
 
 accept:
 	buf_free(&buf);
