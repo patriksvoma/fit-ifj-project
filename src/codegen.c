@@ -193,20 +193,20 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
 /*
 	AST_PROGRAM,
 	AST_FUNC_DEF,
-	AST_PARAM,
-	AST_RETURN,
+	AST_FUNC_CALL,
+	AST_EXT_DEF,
+	AST_EXT_CALL,
 	AST_BLOCK,
-	AST_IF,
-	AST_WHILE,
-	AST_VAR_DEF,
 
 	AST_BIN_OPERATOR,
-	AST_ASSIGN,
-	AST_CALL,
+	AST_VAR_DEF,
+	AST_VAR_ASSIGN,
 
-	AST_INT_TO_DOUBLE,
-	AST_EXTENSION_DEF,
-	AST_EXTENSION_USE
+	AST_RETURN_CALL,
+	AST_IF,
+	AST_WHILE,
+	AST_FOR,
+	AST_INT_TO_DOUBLE
 */
 
 /**
@@ -221,20 +221,20 @@ void generate_nodes(const ast_node_t *node)
 	switch (type)
 	{
 	case AST_LITERAL_INT:
-		printf("PUSHS int@%lli\n", node->ast_node_value.int_literal);
+		printf("PUSHS int@%lli\n", node->literal_int);
 		break;
 
 	case AST_LITERAL_DOUBLE:
-		printf("PUSHS float@%a\n", node->ast_node_value.double_literal);
+		printf("PUSHS float@%a\n", node->literal_double);
 		break;
 
 	case AST_LITERAL_STRING:
 		printf("PUSHS string@");
-		print_string(node->ast_node_value.string_literal);
+		print_string(node->literal_string);
 		break;
 
 	case AST_LITERAL_BOOLEAN:
-		if (node->ast_node_value.boolean_literal)
+		if (node->literal_boolean)
 		{
 			printf("PUSHS bool@true\n");
 		}
@@ -247,28 +247,28 @@ void generate_nodes(const ast_node_t *node)
 	case AST_LITERAL_UNIT:
 		break;
 
-	case AST_IDENTIFIER:
-		printf("PUSHS LF@%s\n", node->ast_node_value.identifier);
+	case AST_VAR_USE:
+		printf("PUSHS LF@%s\n", node->variable_use);
 		break;
 
 	case AST_UN_OPERATOR:
-		generate_nodes(node->ast_node_value.un_operator.operand);
+		generate_nodes(node->un_operator.operand);
 
 		// Multiply by -1
-		if (node->ast_node_value.un_operator.operator_type == OP_UMINUS)
+		if (node->un_operator.operator == OP_UMINUS)
 		{
 			printf("PUSHS int@-1\n");
 			printf("MULS\n");
 		}
-		else if (node->ast_node_value.un_operator.operator_type == OP_NEG)
+		else if (node->un_operator.operator == OP_NEG)
 		{
 			printf("NOTS\n");
 		}
 		break; // For unary + value stays the same
 
 	case AST_BIN_OPERATOR:
-		generate_nodes(node->ast_node_value.bin_operator.operand_left);
-		generate_nodes(node->ast_node_value.bin_operator.operand_right);
+		generate_nodes(node->bin_operator.operand_left);
+		generate_nodes(node->bin_operator.operand_right);
 
 	default:
 		break;

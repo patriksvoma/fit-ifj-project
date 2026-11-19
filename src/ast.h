@@ -119,7 +119,7 @@ typedef struct ast_node
 
 	union {
 		// Literals
-		long long literal_int;
+		long long int literal_int;
 		double literal_double;
 		char *literal_string;
 		bool literal_boolean;
