@@ -17,7 +17,7 @@ int main()
 
 	parser_data_t pdata = {};
 
-	int err_code = parse(ast_root, pdata);
+	int err_code = parse(ast_root, &pdata);
 
 	generate_code(ast_root, &pdata);
 

@@ -138,7 +138,6 @@ struct ast_node
 		struct
 		{
 			char *unique_id;
-			char *identificator;
 			ast_node_t *block;
 		} func_def;
 
@@ -154,7 +153,6 @@ struct ast_node
 		struct
 		{
 			char *unique_id;
-			char *identificator;
 			ast_node_t *block;
 		} ext_def;
 
@@ -296,15 +294,6 @@ ast_node_t *ast_func_def_make();
 err_t ast_func_def_set_id(ast_node_t *func_def_node, const char *new_unique_id);
 
 /**
- * @brief Sets identificator of the function
- *
- * @param func_def_node The function definition AST node
- * @param identificator Pointer to a identificator
- * @return err_t err_t Error code
- */
-err_t ast_func_def_set_identificator(ast_node_t *func_def_node, const char *identificator);
-
-/**
  * @brief Sets block for function definition
  *
  * @param func_def_node Pointer to node containing function definition
@@ -347,15 +336,6 @@ ast_node_t *ast_ext_def_make(data_type_t extended_type);
  * @return err_t Error code
  */
 err_t ast_ext_def_set_id(ast_node_t *func_def_node, const char *unique_id);
-
-/**
- * @brief ets the identificator in extension definition node
- *
- * @param func_def_node Node of extension definition
- * @param identificator Pointer to a identificator. The string will be copied into newly allocated memory
- * @return err_t Error code
- */
-err_t ast_ext_def_set_identificator(ast_node_t *func_def_node, const char *identificator);
 
 /**
  * @brief Sets the block for extension
