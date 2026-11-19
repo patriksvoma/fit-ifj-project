@@ -12,6 +12,8 @@
 
 #define PREC_TABLE_SIZE 20
 
+static err_t parse_expression_internal(parser_data_t *pdata, ast_node_t **return_node, bool stop_at_call_delimiter);
+
 /**
  * @brief All possible grammar rules
  *
@@ -951,7 +953,18 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	return ERR_OK;
 }
 
-err_t parse_expression(parser_data_t *pdata, ast_node_t **return_node)
+/**
+ * @brief Parses an expression
+ *
+ * @param pdata Parser data
+ * @param return_node Address to which the address of the created AST note should be written
+ * @param stop_at_call_delimiter If true, the parser will stop successfuly at a ) if the expression was reduced
+ *                               completely and it is not inside parenthesis. If false, this situation will cause an
+ *                               error
+ *
+ * @return err_t Error code
+ */
+err_t parse_expression_internal(parser_data_t *pdata, ast_node_t **return_node, bool stop_at_call_delimiter)
 {
 	symstack_t stack;
 	unsigned expression_start_line;
@@ -979,6 +992,11 @@ err_t parse_expression(parser_data_t *pdata, ast_node_t **return_node)
 			 (stack.top->type == STACKITEM_TYPE_EXPRESSION && stack.top->next->type == STACKITEM_TYPE_TERMINAL &&
 			  stack.top->next->data.terminal == TERMINAL_DOLLAR)))
 	{
+		if (stop_at_call_delimiter && pdata->token.type == TOKEN_CLOSING_BRACKET && parenthesis_level == 0 &&
+			stack.top->type == STACKITEM_TYPE_EXPRESSION && stack.top->next->type == STACKITEM_TYPE_TERMINAL &&
+			stack.top->next->data.terminal == TERMINAL_DOLLAR)
+			break;
+
 		// If the new token is the first one on a line, is not the first token of the expression,
 		// and is not inside parenthesis, it marks the end of the expression
 		if (expression_started && parenthesis_level == 0 && b->source_token.starts_logical_line)
@@ -1006,6 +1024,11 @@ err_t parse_expression(parser_data_t *pdata, ast_node_t **return_node)
 				return result;
 
 			b = symstack_create_item();
+			if (!b)
+			{
+				print_err("Failed to create an item inside parse_expression().", ERR_INTERNAL);
+				return ERR_INTERNAL;
+			}
 			result = token_to_stack_item(&pdata->token, b, &expect_unary);
 			if (result)
 				return result;
@@ -1065,4 +1088,9 @@ err_t parse_expression(parser_data_t *pdata, ast_node_t **return_node)
 	free(b);
 
 	return ERR_OK;
+}
+
+err_t parse_expression(parser_data_t *pdata, ast_node_t **return_node)
+{
+	return parse_expression_internal(pdata, return_node, false);
 }
