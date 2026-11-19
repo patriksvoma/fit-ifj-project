@@ -506,3 +506,28 @@ void symtable_destroy(symtable_t **table)
 	free(*table);
 	*table = NULL;
 }
+
+symtable_t *local_table_create(const symtable_t *parent)
+{
+	// TODO: Implement
+	(void)parent;
+	print_err("local_table_create() called but not implemented!", ERR_INTERNAL);
+	return NULL;
+}
+
+symtable_t *local_table_destroy(const symtable_t *table)
+{
+	// TODO: Implement
+	(void)table;
+	print_err("local_table_destroy() called but not implemented!", ERR_INTERNAL);
+	return NULL;
+}
+
+err_t symbol_generate_unique_id(const symbol_data_t *symbol, const symtable_t *table)
+{
+	// TODO: Implement
+	(void)symbol;
+	(void)table;
+	print_err("symbol_generate_unique_id() called but not implemented!", ERR_INTERNAL);
+	return ERR_OK;
+}

@@ -34,7 +34,7 @@ err_t else_if_opt(parser_data_t *pdata, unsigned header_indent_level);
 err_t for_generator(parser_data_t *pdata);
 err_t for_by(parser_data_t *pdata);
 err_t for_guard(parser_data_t *pdata);
-err_t val_var_def(parser_data_t *pdata);
+err_t val_var_def(parser_data_t *pdata, ast_node_t *var_def_node, symbol_data_t *table_entry);
 err_t expression(parser_data_t *pdata, ast_node_t **return_node);
 err_t expression_seeded(parser_data_t *pdata, ast_node_t **return_node, token_t *seed_token);
 
@@ -421,13 +421,34 @@ err_t func_def(parser_data_t *pdata, ast_node_t *program_node)
 	if (result)
 		return result;
 
+	// Create a symbol table for the function
+	pdata->local_var_table = local_table_create(NULL);
+	if (!pdata->local_var_table)
+	{
+		print_err_l("Failed to create a local symbol table.", ERR_INTERNAL, pdata->token.line);
+		return ERR_INTERNAL;
+	}
+
+	// TODO: Add parameters and extension base into the symbol table
+
 	// <func-params>
 	result = func_params(pdata, table_entry);
 	if (result)
 		return result;
 
 	// <return-type>
-	return return_type(pdata, def_node);
+	result = return_type(pdata, def_node);
+
+	// Destroy the local var table;
+	pdata->local_var_table = local_table_destroy(pdata->local_var_table);
+	if (pdata->local_var_table)
+	{
+		print_err_l("A symbol table destroyed in func_def() still has a parent, this should not happen.", ERR_INTERNAL,
+					pdata->token.line);
+		return ERR_INTERNAL;
+	}
+
+	return result;
 }
 
 /**
@@ -833,12 +854,38 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 			print_err_l("Expected an identifier in constant declaration.", ERR_SYNTAX, pdata->token.line);
 			return ERR_SYNTAX;
 		}
+
+		// Check if the variable has already been defined
+		if (symtable_item_defined(pdata->local_var_table, pdata->token.attribute.string))
+		{
+			print_err_l("Variable name has already been defined!", ERR_SEMANTIC_REDEFINITION, pdata->token.line);
+			return ERR_SEMANTIC_REDEFINITION;
+		}
+
+		// Create a symbol table entry
+		symbol_data_t *entry = symtable_item_create(pdata->local_var_table, pdata->token.attribute.string);
+		if (!entry)
+		{
+			print_err_l("Failed to create a symbol table entry in statement().", ERR_INTERNAL, pdata->token.line);
+			return ERR_INTERNAL;
+		}
+		entry->symbol_type = SYM_VARIABLE;
+		entry->data.variable.mutable = false;
+		// entry->data.variable.unique_name // FIXME: Generate a unique name for the variable
+
 		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
 		if (result)
 			return result;
 
+		// Create an AST node
+		statement_node = ast_var_def_make(entry->data.variable.unique_name);
+
 		// <val-var-def>
-		return val_var_def(pdata);
+		result = val_var_def(pdata, statement_node, entry);
+		if (result)
+			return result;
+
+		return ast_block_add_statement(block_node, statement_node);
 	}
 	// var
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_VAR)
@@ -853,12 +900,38 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 			print_err_l("Expected an identifier in variable declaration.", ERR_SYNTAX, pdata->token.line);
 			return ERR_SYNTAX;
 		}
+
+		// Check if the variable has already been defined
+		if (symtable_item_defined(pdata->local_var_table, pdata->token.attribute.string))
+		{
+			print_err_l("Variable name has already been defined!", ERR_SEMANTIC_REDEFINITION, pdata->token.line);
+			return ERR_SEMANTIC_REDEFINITION;
+		}
+
+		// Create a symbol table entry
+		symbol_data_t *entry = symtable_item_create(pdata->local_var_table, pdata->token.attribute.string);
+		if (!entry)
+		{
+			print_err_l("Failed to create a symbol table entry in statement().", ERR_INTERNAL, pdata->token.line);
+			return ERR_INTERNAL;
+		}
+		entry->symbol_type = SYM_VARIABLE;
+		entry->data.variable.mutable = true;
+		// entry->data.variable.unique_name // FIXME: Generate a unique name for the variable
+
 		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
 		if (result)
 			return result;
 
+		// Create an AST node
+		statement_node = ast_var_def_make(entry->data.variable.unique_name);
+
 		// <val-var-def>
-		return val_var_def(pdata);
+		result = val_var_def(pdata, statement_node, entry);
+		if (result)
+			return result;
+
+		return ast_block_add_statement(block_node, statement_node);
 	}
 	// if
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_IF)
@@ -1254,9 +1327,11 @@ err_t for_guard(parser_data_t *pdata)
  * @brief Val or var definition
  *
  * @param pdata Parser data
+ * @param var_def_node AST variable definition node
+ * @param table_entry Entry in the lcoal symbol table of
  * @return err_t Error code
  */
-err_t val_var_def(parser_data_t *pdata)
+err_t val_var_def(parser_data_t *pdata, ast_node_t *var_def_node, symbol_data_t *table_entry)
 {
 	err_t result;
 
@@ -1268,8 +1343,7 @@ err_t val_var_def(parser_data_t *pdata)
 			return result;
 
 		// <type>
-		data_type_t tmp_type; // FIXME:
-		result = type(pdata, &tmp_type);
+		result = type(pdata, &table_entry->data.variable.type);
 		if (result)
 			return result;
 
@@ -1283,9 +1357,21 @@ err_t val_var_def(parser_data_t *pdata)
 		if (result)
 			return result;
 
-		// <expression
-		ast_node_t *assigned_value_node; // FIXME:
-		return expression(pdata, &assigned_value_node);
+		// <expression>
+		ast_node_t *assigned_value_node;
+		result = expression(pdata, &assigned_value_node);
+		if (result)
+			return result;
+
+		// If types dont match, throw a semantic error
+		if (table_entry->data.variable.type != assigned_value_node->eval_type)
+		{
+			print_err_l("Type of the expression assigned to variable does not match its type.",
+						ERR_SEMANTIC_INVALID_TYPE, pdata->token.line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
+		return ast_var_def_set_assignment(var_def_node, assigned_value_node);
 	}
 
 	// =
@@ -1295,8 +1381,16 @@ err_t val_var_def(parser_data_t *pdata)
 		if (result)
 			return result;
 
-		ast_node_t *assigned_value_node; // FIXME:
-		return expression(pdata, &assigned_value_node);
+		// <expression>
+		ast_node_t *assigned_value_node;
+		result = expression(pdata, &assigned_value_node);
+		if (result)
+			return result;
+
+		// Set the type of the variable
+		table_entry->data.variable.type = assigned_value_node->eval_type;
+
+		return ast_var_def_set_assignment(var_def_node, assigned_value_node);
 	}
 
 	print_err_l("Expected a type declaration or an assignment operator after identifier", ERR_SYNTAX,

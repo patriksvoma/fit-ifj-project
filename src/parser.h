@@ -26,6 +26,7 @@ typedef struct
 	param_t last_extension_param;
 	symtable_t function_table;
 	symtable_t extension_table;
+	symtable_t *local_var_table;
 } parser_data_t;
 
 /**
