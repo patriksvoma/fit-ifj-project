@@ -310,7 +310,7 @@ err_t ast_ext_def_set_id(ast_node_t *func_def_node, const char *newId)
 	}
 
 	char *id;
-	id = save_identifier;
+	id = save_identifier(newId);
 	func_def_node->ext_def.identifier = id;
 	return ERR_OK;
 }
@@ -325,6 +325,64 @@ err_t ast_ext_def_set_block(ast_node_t *func_def_node, ast_node_t *block)
 
 	func_def_node->ext_def.block = block;
 	return ERR_OK;
+}
+
+ast_node_t *ast_ext_call_make(char *identificator)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_EXT_CALL;
+
+	char *id;
+	id = save_identifier(identificator);
+	node->ext_call.identifier = id;
+	node->ext_call.param_lists = NULL;
+	node->ext_call.param_list_count = 0;
+	node->ext_call.base_node = NULL;
+	return node;
+}
+
+//TODO: Dodelat
+err_t ast_ext_call_add_param(ast_node_t *ext_call_node, ast_node_t *param_node, unsigned param_list_index,
+							 unsigned param_index)
+{
+
+}
+
+err_t ast_ext_call_add_base(ast_node_t *ext_call_node, ast_node_t *base_node)
+{
+	if (ext_call_node == NULL || base_node == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_ext_call_add_base()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	ext_call_node->ext_call.base_node = base_node;
+	return ERR_OK;
+}
+
+ast_node_t *ast_make_block()
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_BLOCK;
+	node->block.statements = NULL;
+	node->block.statement_count = 0;
+	return node;
 }
 
 ast_node_t *ast_make_identifier(char *i, data_type_t i_type)
@@ -481,24 +539,6 @@ ast_node_t *ast_make_return(ast_node_t *expression)
 	return node;
 }
 
-ast_node_t *ast_make_param(char *i, data_type_t i_type)
-{
-	ast_node_t *node;
-	node = malloc(sizeof(ast_node_t));
-
-	if (node == NULL)
-	{
-		return NULL;
-	}
-
-	// Setting values
-	node->eval_type = i_type;
-	node->node_type = AST_PARAM;
-	node->ast_node_value.param.data_type = i_type;
-	node->ast_node_value.param.identifier = i;
-	return node;
-}
-
 ast_node_t *ast_make_while(ast_node_t *condition, ast_node_t *block)
 {
 	ast_node_t *node;
@@ -536,28 +576,6 @@ ast_node_t *ast_make_if(ast_node_t *condition, ast_node_t *if_block, ast_node_t 
 	return node;
 }
 
-// TODO: Tady to taky bude potřeba popřípadě dodělat
-ast_node_t *ast_make_extension_def()
-{
-	ast_node_t *node;
-	node = malloc(sizeof(ast_node_t));
-
-	if (node == NULL)
-	{
-		return NULL;
-	}
-
-	// Setting values
-	node->eval_type = TYPE_NONE;
-	node->node_type = AST_EXTENSION_DEF;
-	node->ast_node_value.extension_def.param_count = 0;
-	node->ast_node_value.extension_def.params = NULL;
-	node->ast_node_value.extension_def.block = NULL;
-	node->ast_node_value.extension_def.return_type = TYPE_NONE;
-	node->ast_node_value.extension_def.base_type = TYPE_NONE;
-	return node;
-}
-
 ast_node_t *ast_make_extension_use(ast_node_t *base)
 {
 	ast_node_t *node;
@@ -571,23 +589,6 @@ ast_node_t *ast_make_extension_use(ast_node_t *base)
 	node->eval_type = TYPE_NONE;
 	node->node_type = AST_EXTENSION_USE;
 	node->ast_node_value.base = base;
-	return node;
-}
-
-ast_node_t *ast_make_block()
-{
-	ast_node_t *node;
-	node = malloc(sizeof(ast_node_t));
-
-	if (node == NULL)
-	{
-		return NULL;
-	}
-
-	node->eval_type = TYPE_NONE;
-	node->node_type = AST_BLOCK;
-	node->ast_node_value.code_block.exp_count = 0;
-	node->ast_node_value.code_block.expression = NULL;
 	return node;
 }
 
