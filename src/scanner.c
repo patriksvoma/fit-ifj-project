@@ -253,6 +253,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 	bool newline_seen = false;
 	err_t err = ERR_SCANNER;
 	unsigned depth = 0;
+	bool block_newline = false;
+	bool comment_eol = false;
 	int c;
 
 	memset(token, 0, sizeof(*token));
@@ -267,6 +269,7 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (c == '\n')
 			{
 				newline_seen = true;
+				comment_eol = false;
 				break;
 			}
 			if (c == ' ' || c == '\r')
@@ -761,6 +764,7 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (c == '*')
 			{
 				depth = 1;
+				block_newline = false;
 				state = S_COMMENT_BLOCK;
 				break;
 			}
@@ -781,6 +785,9 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (c == EOF)
 				goto fail;
 
+			if (c == '\n')
+				block_newline = true;
+
 			if (c == '/')
 				state = S_COMMENT_BLOCK_1;
 			else if (c == '*')
@@ -791,6 +798,9 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 		case S_COMMENT_BLOCK_1:
 			if (c == EOF)
 				goto fail;
+
+			if (c == '\n')
+				block_newline = true;
 
 			if (c == '*')
 			{
@@ -807,9 +817,19 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (c == EOF)
 				goto fail;
 
+			if (c == '\n')
+				block_newline = true;
+
 			if (c == '/')
 			{
 				depth--;
+
+				if (depth == 0 && block_newline)
+				{
+					newline_seen = true;
+					comment_eol = true;
+				}
+
 				state = (depth == 0) ? S_START : S_COMMENT_BLOCK;
 			}
 			else if (c != '*')
@@ -843,6 +863,14 @@ number:
 
 accept:
 	buf_free(&buf);
+
+	if (comment_eol && token->type != TOKEN_EOF)
+	{
+		free(token->attribute.string);
+		token->attribute.string = NULL;
+		return ERR_SYNTAX;
+	}
+
 	(void)eol; // TODO: check EOL
 	return ERR_OK;
 
