@@ -307,6 +307,26 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				break;
 			}
 
+			if (c == '.')
+			{
+				int next = next_char();
+				unread_char(next);
+
+				if (!isdigit(next))
+				{
+					token->type = TOKEN_DOT;
+					goto accept;
+				}
+
+				if (!buf_append(&buf, '.'))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				state = S_DOT;
+				break;
+			}
+
 			switch (c)
 			{
 			case EOF:
@@ -418,6 +438,17 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			goto accept;
 
 		case S_ZERO:
+			if (c == '.')
+			{
+				if (!buf_append(&buf, (char)c))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				state = S_DOT;
+				break;
+			}
+
 			if (isalnum(c) || c == '_')
 				goto fail;
 
@@ -442,6 +473,17 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				break;
 			}
 
+			if (c == '.')
+			{
+				if (!buf_append(&buf, (char)c))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				state = S_DOT;
+				break;
+			}
+
 			if (isalpha(c))
 				goto fail;
 
@@ -462,6 +504,63 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				goto fail;
 			}
 			state = S_NUMBER_INT;
+			break;
+
+		case S_DOT:
+			if (!isdigit(c))
+				goto fail;
+
+			if (!buf_append(&buf, (char)c))
+			{
+				err = ERR_INTERNAL;
+				goto fail;
+			}
+			state = S_NUMBER_DOUBLE;
+			break;
+
+		case S_NUMBER_DOUBLE:
+			if (isdigit(c))
+			{
+				if (!buf_append(&buf, (char)c))
+				{
+					err = ERR_INTERNAL;
+					goto fail;
+				}
+				break;
+			}
+
+			if (c == '_')
+			{
+				state = S_NUM_DOUBLE_UNDERSCORE;
+				break;
+			}
+
+			if (c == 'd' || c == 'D')
+			{
+				token->type = TOKEN_DOUBLE;
+				goto number;
+			}
+
+			if (isalpha(c) || c == '.')
+				goto fail;
+
+			unread_char(c);
+			token->type = TOKEN_DOUBLE;
+			goto number;
+
+		case S_NUM_DOUBLE_UNDERSCORE:
+			if (c == '_')
+				break;
+
+			if (!isdigit(c))
+				goto fail;
+
+			if (!buf_append(&buf, (char)c))
+			{
+				err = ERR_INTERNAL;
+				goto fail;
+			}
+			state = S_NUMBER_DOUBLE;
 			break;
 
 		default:
