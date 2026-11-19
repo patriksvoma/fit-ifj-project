@@ -257,6 +257,24 @@ ast_node_t *ast_literal_make(literal_t *literal);
 ast_node_t *ast_program_make();
 
 /**
+ * @brief Adds function definition to program node
+ *
+ * @param program_node Node containing program
+ * @param func_def_node Node containing the function definition
+ * @return err_t Error code
+ */
+err_t ast_program_add_func_def(ast_node_t *program_node, ast_node_t *func_def_node);
+
+/**
+ * @brief Adds extension definition to program node
+ *
+ * @param program_node Node containing program
+ * @param ext_def_node Node containing the extension definition
+ * @return err_t Error code
+ */
+err_t ast_program_add_ext_def(ast_node_t *program_node, ast_node_t *ext_def_node);
+
+/**
  * @brief Function to make a empty node containing function definition
  *
  * @return ast_node_t* Pointer to node of the function definition
@@ -295,11 +313,9 @@ ast_node_t *ast_func_call_make(char *identificator);
  * @param func_call_node Node of function calling
  * @param param_node Node of parameter
  * @param param_list_index Index of parameter list
- * @param param_index Index of parameter inside the list
  * @return err_t Error code
  */
-err_t ast_func_call_add_param(ast_node_t *func_call_node, ast_node_t *param_node, unsigned param_list_index,
-							  unsigned param_index);
+err_t ast_func_call_add_param(ast_node_t *func_call_node, ast_node_t *param_node, unsigned param_list_index);
 
 /**
  * @brief Makes a node for extension definition
@@ -389,7 +405,7 @@ ast_node_t *ast_unary_op_make(operator_type_t operator, ast_node_t * operand);
  * @param operand_right Second operand of the
  * @return ast_node_t* Pointer to the node containing the operation
  */
-ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t * operand_left, ast_node_t *operand_right);
+ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t *operand_left, ast_node_t *operand_right);
 
 /**
  * @brief Makes node for variable definition
