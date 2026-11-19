@@ -129,14 +129,24 @@ symbol_data_t *symtable_item_find(symtable_t *table, const char *key);
 bool symtable_item_exists(symtable_t *table, const char *key);
 
 /**
- * @brief Searches for a symbol in the symbol tree and checks if it is defined
+ * @brief Searches for a symbol in the symbol table and parents and checks if it is defined
  *
  * @param table Pointer to the symbol tree which will be searched
  * @param key Identifier of the symbol
- * @return bool For variables: true if found, false if not found
- *              For functions or extensions: true if found and defined, false if not found or found and not defined
+ * @return bool For variables, functions or extensions: true if found and defined,
+ * 				false if not found or found and not defined
  */
 bool symtable_item_defined(symtable_t *table, const char *key);
+
+/**
+ * @brief Searches for a symbol in the local symbol table and checks if it is defined
+ *
+ * @param table Pointer to the symbol tree which will be searched
+ * @param key Identifier of the symbol
+ * @return bool For variables, functions or extensions: true if found and defined,
+ * 				false if not found or found and not defined
+ */
+bool symtable_item_defined_local(symtable_t *table, const char *key);
 
 /**
  * @brief Adds an empty param list to a function or an extension
