@@ -64,6 +64,7 @@ err_t symtable_init(symtable_t *table)
 	}
 	table->root_node = NULL;
 	table->parent = NULL;
+	table->child_table_counter = 0;
 
 	return ERR_OK;
 }
@@ -507,20 +508,34 @@ void symtable_destroy(symtable_t **table)
 	*table = NULL;
 }
 
-symtable_t *local_table_create(const symtable_t *parent)
+symtable_t *local_table_create(symtable_t *parent)
 {
-	// TODO: Implement
-	(void)parent;
-	print_err("local_table_create() called but not implemented!", ERR_INTERNAL);
-	return NULL;
+	symtable_t *table = malloc(sizeof(symtable_t));
+	if (!table)
+		return NULL;
+
+	table->parent = parent;
+	table->root_node = NULL;
+	table->child_table_counter = 0;
+
+	// Increase the parent nodes child counter
+	// Used for generating unique identifiers
+	if (parent)
+		parent->child_table_counter++;
+
+	return table;
 }
 
-symtable_t *local_table_destroy(const symtable_t *table)
+symtable_t *local_table_destroy(symtable_t *table)
 {
-	// TODO: Implement
-	(void)table;
-	print_err("local_table_destroy() called but not implemented!", ERR_INTERNAL);
-	return NULL;
+	if (!table)
+		return NULL;
+
+	symtable_t *parent = table->parent;
+
+	symtable_destroy(&table);
+
+	return parent;
 }
 
 err_t symbol_generate_unique_id(const symbol_data_t *symbol, const symtable_t *table)
