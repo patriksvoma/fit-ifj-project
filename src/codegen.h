@@ -12,10 +12,29 @@
 #include "parser.h"
 
 /**
+ * @brief Structure to help make labels for if, for and while
+ *
+ */
+typedef struct names_counter
+{
+	char *func_name;
+	unsigned if_counter;
+	unsigned for_counter;
+	unsigned while_counter;
+} names_counter;
+
+/**
  * @brief Function for code generation
  *
  * @param root Pointer to node of ast containing the root
  * @param parser_data Pointer to struct with parser data
  * @return err_t Error code
  */
-err_t generate_code(const ast_node_t *root);
+err_t generate_code(const ast_node_t *root, const parser_data_t *parser_data);
+
+/**
+ * @brief Function to generate code for a specific node
+ *
+ * @param node Node for wich the code should be generated
+ */
+err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counter *new_func_def);

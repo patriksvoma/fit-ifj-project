@@ -9,18 +9,7 @@
 
 #include "codegen.h"
 #include <stdio.h>
-
-/**
- * @brief Structure to help make labels for if, for and while
- *
- */
-typedef struct names_counter
-{
-	char *func_name;
-	unsigned if_counter;
-	unsigned for_counter;
-	unsigned while_counter;
-} names_counter;
+#include <string.h>
 
 /**
  * @brief Prints build-in function subStr
@@ -28,7 +17,7 @@ typedef struct names_counter
  */
 void print_substr()
 {
-	printf("LABEL substr\n");
+	printf("LABEL subStr\n");
 	printf("CREATEFRAME\n");
 	printf("PUSHFRAME\n");
 
@@ -66,30 +55,31 @@ void print_substr()
 	printf("OR LF@temp1 LF@temp2 LF@temp3\n");
 
 	// Wrong parameters (exit value 40)
-	printf("JUMPIFNEQ correct$params LF@temp1 bool@true\n");
+	printf("JUMPIFNEQ correct$params$subStr LF@temp1 bool@true\n");
 
 	printf("POPFRAME\n");
 	printf("EXIT int@40\n");
 
-	printf("LABEL correct$params\n");
+	printf("LABEL correct$params$subStr\n");
 	printf("MOVE LF@result string@\n");
 
 	// While condition
-	printf("LABEL substr$w$0\n");
+	printf("LABEL subStr$w$0\n");
 	printf("LT LF@temp1 LF@start LF@end\n");
-	printf("JUMPIFEQ substr$w$0$end LF@temp1 bool@false\n");
+	printf("JUMPIFEQ subStr$w$0$end LF@temp1 bool@false\n");
 
 	// While code block, going trough the sub string and adding each letter to the previous one
 	printf("GETCHAR LF@temp1 LF@value LF@start\n");
 	printf("CONCAT LF@result LF@result LF@temp1\n");
 	printf("ADD LF@start LF@start int@1\n");
-	printf("JUMP substr$w$0\n");
+	printf("JUMP subStr$w$0\n");
 
 	// Return value
-	printf("LABEL substr$w$0$end\n");
+	printf("LABEL subStr$w$0$end\n");
 	printf("PUSHS LF@result\n");
 	printf("POPFRAME\n");
 	printf("RETURN\n");
+	return;
 }
 
 /**
@@ -121,10 +111,12 @@ void print_ord()
 	printf("GT LF@temp2 LF@index LF@temp1\n");
 	printf("EQ LF@temp3 LF@index LF@temp1\n");
 	printf("OR LF@temp1 LF@temp2 LF@temp3\n");
+	printf("LT LF@temp2 LF@index int@0\n");
+	printf("OR LF@temp1 LF@temp1 LF@temp2\n");
 	printf("JUMPIFEQ ord$wrong LF@temp1 bool@true\n");
 
 	// Save the character
-	printf("GETCHAR LF@result LF@value LF@index\n");
+	printf("STRI2INT LF@result LF@value LF@index\n");
 	printf("JUMP ord$end\n");
 
 	printf("LABEL ord$wrong\n");
@@ -134,6 +126,25 @@ void print_ord()
 	printf("PUSHS LF@result\n");
 	printf("POPFRAME\n");
 	printf("RETURN\n");
+	return;
+}
+
+/**
+ * @brief Prints function to help with build-in function toStr when used on boolean
+ *
+ */
+void print_bool2str()
+{
+	printf("LABEL bool2str\n");
+	printf("PUSHS bool@true\n");
+	printf("JUMPIFEQS bool2str$true\n");
+	printf("PUSHS string@false\n");
+	printf("JUMP bool2str$end\n");
+	printf("LABEL bool2str$true\n");
+	printf("PUSHS string@true\n");
+	printf("LABEL bool2str$end\n");
+	printf("RETURN\n");
+	return;
 }
 
 /**
@@ -153,7 +164,7 @@ void print_string(const char *str)
 		unsigned char j = (unsigned char)str[i]; // Number after \ can be 000 - 255
 		if (j <= 32 || j == 35 || j == 92 || j >= 127)
 		{
-			printf("\\03%d", j);
+			printf("\\%03d", j);
 		}
 		else
 		{
@@ -261,9 +272,194 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
 	return;
 }
 
+/**
+ * @brief Prints header code for function definition and saves parameters
+ *
+ * @param identifier Identifier of the function
+ * @param unique_id Unique name for the function
+ * @param symtables Symtables with functions to find parameters
+ * @param new_func_def Struct with couter for loops and function name, to name labels corectly
+ */
+void print_func_def(char *identifier, const char *unique_id, symtable_t *symtables, names_counter *new_func_def)
+{
+	new_func_def->for_counter = 0;
+	new_func_def->if_counter = 0;
+	new_func_def->while_counter = 0;
+
+	new_func_def->func_name = identifier;
+
+	// Get data for the function to find parameters
+	const symbol_data_t *func_params = symtable_item_find(&symtables[0], identifier);
+
+	if (func_params->data.function.is_main)
+	{
+		printf("LABEL main\n");
+		printf("LABEL %s\n", unique_id);
+		new_func_def->func_name = "main";
+	}
+	else
+	{
+		printf("LABEL %s\n", unique_id);
+	}
+
+	printf("CREATEFRAME\n");
+	printf("PUSHFRAME\n");
+
+	// Definition and assigment of parameters from the last one, because parameters will be pushed to stack in order
+	// when calling the function
+	for (int i = func_params->data.function.param_list_count - 1; i >= 0; i--)
+	{
+		for (int j = func_params->data.function.param_lists[i]->param_count - 1; j >= 0; j--)
+		{
+			printf("DEFVAR LF@%s$%s\n", unique_id, func_params->data.function.param_lists[i]->params[j]->identifier);
+			printf("POPS LF@%s$%s\n", unique_id, func_params->data.function.param_lists[i]->params[j]->identifier);
+		}
+	}
+	return;
+}
+
+/**
+ * @brief Prints code for build-in function calling
+ *
+ * @param identifier Name of the functions
+ * @param param_lists Pointer to array of lists of parameters
+ * @param symtables Passed only so generate_nodes() can be called and not to be lost
+ * @param new_func_def Passed only so generate_nodes() can be called and not to be lost
+ * @return true When the function as a built-in function
+ * @return false When it wasn't a built-in function
+ */
+bool print_build_in_func_call(const char *identifier, param_node_list_t **param_lists, symtable_t *symtables,
+							  names_counter *new_func_def)
+{
+	const char *id = identifier;
+
+	if (strcmp(id, "print") == 0)
+	{
+		if (param_lists[0]->param_node[0]->eval_type == TYPE_UNIT)
+		{
+			generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+			printf("POPS GF@temp1\n");
+			printf("WRITE string@()\n");
+		}
+		else
+		{
+			generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+			printf("POPS GF@temp1\n");
+			printf("WRITE GF@temp1\n");
+		}
+		printf("PUSHS nil@nil\n");
+	}
+	// TODO: Nejspis bude potreba predelat
+	else if (strcmp(id, "readLine") == 0)
+	{
+		printf("READ GF@temp1 string\n");
+		printf("PUSHS GF@temp1\n");
+	}
+	else if (strcmp(id, "readInt") == 0)
+	{
+		printf("READ GF@temp1 int\n");
+		printf("PUSHS GF@temp1\n");
+	}
+	else if (strcmp(id, "readDouble") == 0)
+	{
+		printf("READ GF@temp1 float\n");
+		printf("PUSHS GF@temp1\n");
+	}
+	else if (strcmp(id, "readBoolean") == 0)
+	{
+		printf("READ GF@temp1 bool\n");
+		printf("PUSHS GF@temp1\n");
+	}
+	else if (strcmp(id, "toStr") == 0)
+	{
+		generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+		switch (param_lists[0]->param_node[0]->eval_type)
+		{
+		case TYPE_INT:
+			printf("INT2STRS\n");
+			break;
+
+		case TYPE_DOUBLE:
+			printf("FLOAT2STRS\n");
+			break;
+
+		case TYPE_BOOLEAN:
+			printf("CALL bool2str\n");
+			break;
+
+		case TYPE_UNIT:
+			printf("POPS GF@temp1\n");
+			printf("PUSHS string@()\n");
+			break;
+
+		default:
+			break;
+		}
+	}
+	else if (strcmp(id, "toInt") == 0)
+	{
+		generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+		printf("FLOAT2INTS\n");
+	}
+	else if (strcmp(id, "strLength") == 0)
+	{
+		generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+		printf("POPS GF@temp1\n");
+		printf("STRLEN GF@temp1 GF@temp1\n");
+		printf("PUSHS GF@temp1\n");
+	}
+	else if (strcmp(id, "subStr") == 0)
+	{
+		generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+		generate_nodes(param_lists[0]->param_node[1], symtables, new_func_def);
+		generate_nodes(param_lists[0]->param_node[2], symtables, new_func_def);
+		printf("CALL subStr\n");
+	}
+	else if (strcmp(id, "ord") == 0)
+	{
+		generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+		generate_nodes(param_lists[0]->param_node[1], symtables, new_func_def);
+		printf("CALL ord\n");
+	}
+	else if (strcmp(id, "chr") == 0)
+	{
+		generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+		printf("INT2CHARS\n");
+	}
+	else
+	{
+		return false;
+	}
+	return true;
+}
+
+/**
+ * @brief Prints code for user function calling
+ *
+ * @param unique_id Unique name of the function
+ * @param param_lists Pointer to array of lists of parameters
+ * @param param_list_count Count of the lists
+ * @param symtables Passed only so generate_nodes() can be called and not to be lost
+ * @param new_func_def Passed only so generate_nodes() can be called and not to be lost
+ */
+void print_user_func_call(const char *unique_id, param_node_list_t **param_lists, size_t param_list_count,
+						  symtable_t *symtables, names_counter *new_func_def)
+{
+	const char *id = unique_id;
+
+	for (size_t i = 0; i < param_list_count; i++)
+	{
+		for (size_t j = 0; j < param_lists[i]->param_count; j++)
+		{
+			generate_nodes(param_lists[i]->param_node[j], symtables, new_func_def);
+		}
+	}
+
+	printf("CALL %s\n", id);
+	return;
+}
+
 /*
-	AST_FUNC_DEF,
-	AST_FUNC_CALL,
 	AST_EXT_DEF,
 	AST_EXT_CALL,
 
@@ -271,15 +467,11 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
 	AST_FOR,
 */
 
-/**
- * @brief Function to generate code for a specific node
- *
- * @param node Node for wich the code should be generated
- */
-err_t generate_nodes(const ast_node_t *node, names_counter *new_func_def)
+err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counter *new_func_def)
 {
 	node_type_t type = node->node_type;
 
+	// Recursively calling the function to search the tree, leaf nodes leave a value on stack
 	switch (type)
 	{
 	case AST_LITERAL_INT:
@@ -315,10 +507,10 @@ err_t generate_nodes(const ast_node_t *node, names_counter *new_func_def)
 		break;
 
 	case AST_UN_OPERATOR:
-		generate_nodes(node->un_operator.operand, new_func_def);
+		generate_nodes(node->un_operator.operand, symtables, new_func_def);
 
 		// Multiply by -1
-		if (node->un_operator.operator == OP_UMINUS)
+		if (node->un_operator.operator == OP_UMINUS) // TODO: Osetrit double
 		{
 			printf("PUSHS int@-1\n");
 			printf("MULS\n");
@@ -330,67 +522,94 @@ err_t generate_nodes(const ast_node_t *node, names_counter *new_func_def)
 		break; // For unary + value stays the same
 
 	case AST_BIN_OPERATOR:
-		generate_nodes(node->bin_operator.operand_left, new_func_def);
-		generate_nodes(node->bin_operator.operand_right, new_func_def);
+		generate_nodes(node->bin_operator.operand_left, symtables, new_func_def);
+		generate_nodes(node->bin_operator.operand_right, symtables, new_func_def);
 		print_bin_operation(node->bin_operator.operator, node->eval_type);
 		break;
 
 	case AST_VAR_DEF:
 		printf("DEFVAR LF@%s\n", node->variable_definition.unique_id);
-		generate_nodes(node->variable_definition.assigned_value, new_func_def);
+		generate_nodes(node->variable_definition.assigned_value, symtables, new_func_def);
 		printf("POPS LF@%s\n", node->variable_definition.unique_id);
 		break;
 
 	case AST_VAR_ASSIGN:
-		generate_nodes(node->variable_assignment.assigned_value, new_func_def);
+		generate_nodes(node->variable_assignment.assigned_value, symtables, new_func_def);
 		printf("POPS LF@%s\n", node->variable_assignment.unique_id);
 		break;
 
 	case AST_INT_TO_DOUBLE:
-		generate_nodes(node->int2double, new_func_def);
+		generate_nodes(node->int2double, symtables, new_func_def);
 		printf("INT2FLOATS\n");
 		break;
 
 	case AST_BLOCK:
 		for (size_t i = 0; i < node->block.statement_count; i++)
 		{
-			generate_nodes(node->block.statements[i], new_func_def);
+			generate_nodes(node->block.statements[i], symtables, new_func_def);
 		}
 		break;
 
 	case AST_PROGRAM:
 		for (size_t i = 0; i < node->program.func_def_count; i++)
 		{
-			generate_nodes(node->program.func_defs[i], new_func_def);
+			generate_nodes(node->program.func_defs[i], symtables, new_func_def);
 		}
 
 		for (size_t i = 0; i < node->program.ext_def_count; i++)
 		{
-			generate_nodes(node->program.ext_defs[i], new_func_def);
+			generate_nodes(node->program.ext_defs[i], symtables, new_func_def);
 		}
 		break;
 
 	case AST_RETURN_CALL:
-		printf("CLEARS\n");
-		generate_nodes(node->return_call, new_func_def);
+		generate_nodes(node->return_call, symtables, new_func_def);
 		printf("POPFRAME\n");
 		printf("RETURN\n");
 		break;
 
 	case AST_FUNC_DEF:
-		new_func_def->func_name = node->func_def.unique_id;
-		new_func_def->for_counter = 0;
-		new_func_def->if_counter = 0;
-		new_func_def->while_counter = 0;
+		print_func_def(node->func_def.identificator, node->func_def.unique_id, symtables, new_func_def);
+		generate_nodes(node->func_def.block, symtables, new_func_def);
 
-		printf("LABEL %s\n", node->func_def.unique_id);
-		printf("CREATEFRAME\n");
-		printf("PUSHFRAME\n");
+		// If there isnt a return, the frame must be cleaned
+		printf("POPFRAME\n");
+		printf("RETURN\n");
+		break;
+
+	case AST_FUNC_CALL:
+		bool is_build_in =
+			print_build_in_func_call(node->func_call.unique_id, node->func_call.param_lists, symtables, new_func_def);
+
+		if (!is_build_in)
+		{
+			print_user_func_call(node->func_call.unique_id, node->func_call.param_lists,
+								 node->func_call.param_list_count, symtables, new_func_def);
+		}
 		break;
 
 	case AST_IF:
-		generate_nodes(node->if_statement.condition, new_func_def);
+		unsigned curr = new_func_def->if_counter;
+		new_func_def->if_counter++;
 
+		generate_nodes(node->if_statement.condition, symtables, new_func_def);
+
+		// Condition evaluation
+		printf("PUSHS bool@true\n");
+		printf("JUMPIFNEQS %s$if$%u$else\n", new_func_def->func_name, curr);
+
+		// If block
+		generate_nodes(node->if_statement.if_block, symtables, new_func_def);
+		printf("JUMP %s$if$%u$end\n", new_func_def->func_name, curr);
+
+		// Else block
+		printf("LABEL %s$if$%u$else\n", new_func_def->func_name, curr);
+		if (node->if_statement.else_block != NULL)
+		{
+			generate_nodes(node->if_statement.else_block, symtables, new_func_def);
+		}
+
+		printf("LABEL %s$if$%u$end\n", new_func_def->func_name, curr);
 		break;
 
 	default:
@@ -399,29 +618,37 @@ err_t generate_nodes(const ast_node_t *node, names_counter *new_func_def)
 	return ERR_OK;
 }
 
-err_t generate_code(const ast_node_t *root)
+err_t generate_code(const ast_node_t *root, const parser_data_t *parser_data)
 {
+	// Make structures to help with unique names for if, while and for
 	names_counter *new_func_def = calloc(1, sizeof(names_counter));
+	symtable_t *symtables = calloc(2, sizeof(symtable_t));
 
-	if (new_func_def == NULL)
+	if (new_func_def == NULL || symtables == NULL)
 	{
 		print_err("Failed to allocate memory in generate_nodes()", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
 
+	symtables[0] = parser_data->function_table;
+	symtables[1] = parser_data->extension_table;
+
 	printf(".IFJcode26\n");
 
-	printf("JUMP main\n");
-
-	// Variables for coping values on stack
+	// Variables to help with values on stack
 	printf("DEFVAR GF@temp1\n");
 	printf("DEFVAR GF@temp2\n");
 
+	printf("CALL main\n");
+	printf("EXIT int@0\n");
+
 	print_substr();
 	print_ord();
+	print_bool2str();
 
-	generate_nodes(root, new_func_def);
+	generate_nodes(root, symtables, new_func_def);
 
+	free(symtables);
 	free(new_func_def);
 	return ERR_OK;
 }
