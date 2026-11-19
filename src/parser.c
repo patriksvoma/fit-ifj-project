@@ -409,6 +409,11 @@ err_t func_def(parser_data_t *pdata, ast_node_t *program_node)
 			print_err_l("Failed to create an AST Node in func_def().", ERR_INTERNAL, pdata->token.line);
 			return ERR_INTERNAL;
 		}
+
+		// TODO: To same predelat do jedne hodnoty
+		result = ast_func_def_set_identificator(def_node, pdata->token.attribute.string);
+		if (result)
+			return result;
 		result = ast_func_def_set_id(def_node, pdata->token.attribute.string);
 		if (result)
 			return result;

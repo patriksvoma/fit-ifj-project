@@ -21,5 +21,7 @@ int main()
 
 	generate_code(ast_root, &pdata);
 
+	destruct(ast_root);
+
 	return err_code;
 }
