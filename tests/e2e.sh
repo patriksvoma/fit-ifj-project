@@ -46,6 +46,11 @@ run_case()
 run_case "valid-main" 0 "valid-main.ifj"
 run_case "invalid-prologue" 2 "invalid-prologue.ifj"
 run_case "duplicate-function" 4 "duplicate-function.ifj"
+run_case "valid-function-call-and-variable-use" 0 "valid-function-call-and-variable-use.ifj"
+run_case "undefined-variable-in-expression" 3 "undefined-variable-in-expression.ifj"
+run_case "undefined-function-call" 3 "undefined-function-call.ifj"
+run_case "function-call-wrong-arity" 5 "function-call-wrong-arity.ifj"
+run_case "function-call-wrong-type" 6 "function-call-wrong-type.ifj"
 
 printf '\n%d passed, %d failed\n' "$passed" "$failed"
 if [ "$failed" -ne 0 ]; then
