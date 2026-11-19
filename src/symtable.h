@@ -20,8 +20,8 @@
  */
 typedef enum
 {
-	SYM_VARIABLE, // TODO: save Type (int, ...), index of variable in struct
-	SYM_FUNCTION, // TODO: save Type (return), parameters (I/O), if already defined (collision check)
+	SYM_VARIABLE,
+	SYM_FUNCTION,
 	SYM_EXTENSION,
 } symbol_type_t;
 
@@ -38,7 +38,7 @@ typedef struct
 } param_list_t;
 
 /**
- * @brief Additional data of the symbol differs if the symbol is function, variable or extension
+ * @brief Additional data of the symbol, differs if the symbol is function, variable or extension
  *
  */
 typedef struct symbol_data
@@ -68,6 +68,7 @@ typedef struct symbol_data
 		{
 			data_type_t type;
 			bool mutable;
+			bool is_defined;
 			char *unique_name;
 		} variable;
 	} data;
@@ -89,8 +90,9 @@ typedef struct tree_node
 } tree_node_t;
 
 /**
- * @brief
+ * @brief Symbol table scope
  *
+ * Each scope has its own tree and a pointer to its parent scope, allowing nesting
  */
 typedef struct symtable
 {
