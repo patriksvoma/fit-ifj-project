@@ -434,6 +434,11 @@ param_t *symbol_top_param(symbol_data_t *symbol)
 	return NULL;
 }
 
+/**
+ * @brief Recursively destroys node and its subtrees, frees allocated data of the node
+ *
+ * @param node Pointer to node that will be destroyed
+ */
 void destroy_tree(tree_node_t *node)
 {
 	if (node == NULL)
