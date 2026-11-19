@@ -647,6 +647,37 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (c == '\n' || c == EOF)
 				goto fail;
 
+			if (c == '\\')
+			{
+				state = S_ESCAPE;
+				break;
+			}
+
+			if (!buf_append(&buf, (char)c))
+				goto internal_error;
+
+			state = S_STRING;
+			break;
+
+		case S_ESCAPE:
+			switch (c)
+			{
+			case '\\':
+			case '"':
+				break;
+			case 'n':
+				c = '\n';
+				break;
+			case 'r':
+				c = '\r';
+				break;
+			case 't':
+				c = '\t';
+				break;
+			default:
+				goto fail;
+			}
+
 			if (!buf_append(&buf, (char)c))
 				goto internal_error;
 
