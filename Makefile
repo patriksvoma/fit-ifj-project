@@ -3,7 +3,7 @@
 # Authors:
 #	xsvomap00 (Patrik Švoma)
 
-.PHONY: build check build-check test format clean
+.PHONY: build check build-check test test-e2e format clean
 
 CC = gcc-14
 CFLAGS = -Wall -Wextra -Werror -MMD -MP
@@ -40,6 +40,10 @@ build-check: check build
 # Run tests
 test: $(TEST_BIN)
 	./$(TEST_BIN)
+
+# Run compiler integration tests against source fixtures
+test-e2e: build
+	sh ./tests/e2e.sh
 
 $(TEST_BIN): $(TEST_SRC) $(filter-out src/main.c,$(SRC)) $(UNITY_DIR)/unity.c
 	$(CC) $(CFLAGS) -D UNITY_OUTPUT_COLOR -Isrc -I$(UNITY_DIR) $^ -o $@

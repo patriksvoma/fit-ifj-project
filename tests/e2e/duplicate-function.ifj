@@ -1,0 +1,5 @@
+import ifj26.*
+def sample() =
+  val x = 1
+def sample() =
+  val x = 2
