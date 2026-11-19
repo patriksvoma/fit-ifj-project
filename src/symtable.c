@@ -67,33 +67,40 @@ err_t symtable_init(symtable_t *table)
 
 	return ERR_OK;
 }
+symbol_data_t *symtable_item_find_local(symtable_t *table, const char *key)
+{
+	if (key == NULL || table == NULL || table->root_node == NULL)
+		return NULL;
+
+	if (strcmp(key, table->root_node->key) == 0)
+	{
+		return &table->root_node->data;
+	}
+	else if (strcmp(key, table->root_node->key) < 0)
+	{
+		symtable_t left_table = *table;
+		left_table.root_node = table->root_node->left;
+		return symtable_item_find_local(&left_table, key);
+	}
+	else
+	{
+		symtable_t right_table = *table;
+		right_table.root_node = table->root_node->right;
+		return symtable_item_find_local(&right_table, key);
+	}
+}
 
 symbol_data_t *symtable_item_find(symtable_t *table, const char *key)
 {
 	if (key == NULL || table == NULL)
 		return NULL;
 
-	while (table != NULL)
-	{
-		tree_node_t *node = table->root_node;
+	if (symtable_item_find_local(table, key) != NULL)
+		return symtable_item_find_local(table, key);
 
-		while (node != NULL)
-		{
-			if (strcmp(key, node->key) == 0)
-			{
-				return &node->data;
-			}
-			else if (strcmp(key, node->key) < 0)
-			{
-				node = node->left;
-			}
-			else
-			{
-				node = node->right;
-			}
-		}
-		table = table->parent;
-	}
+	if (table->parent != NULL)
+		return symtable_item_find(table, key);
+
 	return NULL;
 }
 
@@ -102,7 +109,7 @@ bool symtable_item_exists(symtable_t *table, const char *key)
 	if (table == NULL || key == NULL)
 		return false;
 
-	if (symtable_item_find(table, key))
+	if (symtable_item_find_local(table, key))
 		return true;
 
 	return false;
@@ -248,10 +255,34 @@ symbol_data_t *symtable_item_create(symtable_t *table, const char *key)
 	return symtable_item_find(table, key);
 }
 
+bool symtable_item_defined_local(symtable_t *table, const char *key)
+{
+	if (table == NULL || key == NULL)
+		return false;
+
+	symbol_data_t *data = symtable_item_find_local(table, key);
+	if (!data)
+		return false;
+
+	if (data->symbol_type == SYM_VARIABLE)
+	{
+		return data->data.variable.is_defined;
+	}
+	else if (data->symbol_type == SYM_FUNCTION)
+	{
+		return data->data.function.is_defined;
+	}
+	else if (data->symbol_type == SYM_EXTENSION)
+	{
+		return data->data.extension.is_defined;
+	}
+	return false;
+}
+
 bool symtable_item_defined(symtable_t *table, const char *key)
 {
 	if (table == NULL || key == NULL)
-		return NULL;
+		return false;
 
 	symbol_data_t *data = symtable_item_find(table, key);
 	if (!data)
