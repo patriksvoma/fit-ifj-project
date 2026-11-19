@@ -144,7 +144,7 @@ typedef struct ast_node
 		// Function calling
 		struct
 		{
-			char *identifier;
+			char *unique_id;
 			param_node_list_t **param_lists;
 			size_t param_list_count;
 		} func_call;

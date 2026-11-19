@@ -204,7 +204,7 @@ ast_node_t *ast_func_call_make(const char *identificator)
 
 	char *id;
 	id = save_identifier(identificator);
-	node->func_call.identifier = id;
+	node->func_call.unique_id = id;
 	node->func_call.param_list_count = 0;
 	node->func_call.param_lists = NULL;
 	return node;
@@ -792,7 +792,7 @@ void destruct(ast_node_t *root)
 			free(root->func_call.param_lists[i]);
 		}
 		free(root->func_call.param_lists);
-		free(root->func_call.identifier);
+		free(root->func_call.unique_id);
 		break;
 
 	case AST_EXT_DEF:
