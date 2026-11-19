@@ -277,10 +277,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (isalpha(c) || c == '@')
 			{
 				if (!buf_append(&buf, (char)c))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				state = S_IDENTIFIER;
 				break;
 			}
@@ -288,10 +286,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (c == '_')
 			{
 				if (!buf_append(&buf, (char)c))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				state = S_UNDERSCORE;
 				break;
 			}
@@ -299,10 +295,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (isdigit(c))
 			{
 				if (!buf_append(&buf, (char)c))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				state = (c == '0') ? S_ZERO : S_NUMBER_INT;
 				break;
 			}
@@ -319,10 +313,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				}
 
 				if (!buf_append(&buf, '.'))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				state = S_DOT;
 				break;
 			}
@@ -391,10 +383,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (isalnum(c) || c == '_')
 			{
 				if (!buf_append(&buf, (char)c))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				break;
 			}
 
@@ -425,10 +415,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (isalnum(c) || c == '_')
 			{
 				if (!buf_append(&buf, (char)c))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				state = S_IDENTIFIER;
 				break;
 			}
@@ -441,10 +429,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (c == '.')
 			{
 				if (!buf_append(&buf, (char)c))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				state = S_DOT;
 				break;
 			}
@@ -452,10 +438,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (c == 'e' || c == 'E')
 			{
 				if (!buf_append(&buf, 'e'))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				state = S_EXPONENT;
 				break;
 			}
@@ -471,10 +455,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (isdigit(c))
 			{
 				if (!buf_append(&buf, (char)c))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				break;
 			}
 
@@ -487,10 +469,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (c == '.')
 			{
 				if (!buf_append(&buf, (char)c))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				state = S_DOT;
 				break;
 			}
@@ -498,10 +478,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (c == 'e' || c == 'E')
 			{
 				if (!buf_append(&buf, 'e'))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				state = S_EXPONENT;
 				break;
 			}
@@ -521,10 +499,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				goto fail;
 
 			if (!buf_append(&buf, (char)c))
-			{
-				err = ERR_INTERNAL;
-				goto fail;
-			}
+				goto internal_error;
+
 			state = S_NUMBER_INT;
 			break;
 
@@ -533,10 +509,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				goto fail;
 
 			if (!buf_append(&buf, (char)c))
-			{
-				err = ERR_INTERNAL;
-				goto fail;
-			}
+				goto internal_error;
+
 			state = S_NUMBER_DOUBLE;
 			break;
 
@@ -544,10 +518,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (isdigit(c))
 			{
 				if (!buf_append(&buf, (char)c))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				break;
 			}
 
@@ -560,10 +532,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (c == 'e' || c == 'E')
 			{
 				if (!buf_append(&buf, 'e'))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				state = S_EXPONENT;
 				break;
 			}
@@ -589,10 +559,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				goto fail;
 
 			if (!buf_append(&buf, (char)c))
-			{
-				err = ERR_INTERNAL;
-				goto fail;
-			}
+				goto internal_error;
+
 			state = S_NUMBER_DOUBLE;
 			break;
 
@@ -600,10 +568,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (c == '+' || c == '-')
 			{
 				if (!buf_append(&buf, (char)c))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				state = S_EXP_SIGN;
 				break;
 			}
@@ -614,10 +580,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				goto fail;
 
 			if (!buf_append(&buf, (char)c))
-			{
-				err = ERR_INTERNAL;
-				goto fail;
-			}
+				goto internal_error;
+
 			state = S_EXP_END;
 			break;
 
@@ -625,10 +589,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			if (isdigit(c))
 			{
 				if (!buf_append(&buf, (char)c))
-				{
-					err = ERR_INTERNAL;
-					goto fail;
-				}
+					goto internal_error;
+
 				break;
 			}
 
@@ -659,10 +621,8 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				goto fail;
 
 			if (!buf_append(&buf, (char)c))
-			{
-				err = ERR_INTERNAL;
-				goto fail;
-			}
+				goto internal_error;
+
 			state = S_EXP_END;
 			break;
 
@@ -680,6 +640,10 @@ accept:
 	buf_free(&buf);
 	(void)eol; // TODO: check EOL
 	return ERR_OK;
+
+internal_error:
+	err = ERR_INTERNAL;
+	// fall through
 
 fail:
 	buf_free(&buf);
