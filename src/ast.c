@@ -485,7 +485,39 @@ ast_node_t *ast_var_def_make(char *identifier)
 	return node;
 }
 
-ast_node_t *ast_make_identifier(char *i, data_type_t i_type)
+err_t ast_var_def_set_assignment(ast_node_t *var_def_node, ast_node_t *assigned_value_node)
+{
+	if (var_def_node == NULL || assigned_value_node == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_var_def_set_assignment()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	var_def_node->variable_definition.assigned_value = assigned_value_node;
+	return ERR_OK;
+}
+
+ast_node_t *ast_var_assign_make(char *identifier, ast_node_t *assigned_value)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_VAR_ASSIGN;
+
+	char *id;
+	id = save_identifier(identifier);
+	node->variable_assignment.identifier = id;
+	node->variable_assignment.assigned_value = assigned_value;
+	return node;
+}
+
+ast_node_t *ast_var_use_make(char *identifier, data_type_t var_type)
 {
 	ast_node_t *leaf;
 	leaf = malloc(sizeof(ast_node_t));
@@ -495,12 +527,71 @@ ast_node_t *ast_make_identifier(char *i, data_type_t i_type)
 		return NULL;
 	}
 
-	// Setting values
-	leaf->eval_type = i_type;
-	leaf->node_type = AST_IDENTIFIER;
-	leaf->ast_node_value.identifier = i;
+	leaf->eval_type = var_type;
+	leaf->node_type = AST_VAR_USE;
 
+	char *id;
+	id = save_identifier(identifier);
+	leaf->variable_use = id;
 	return leaf;
+}
+
+ast_node_t *ast_return_call_make(ast_node_t *return_value_node)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	node->eval_type = return_value_node->eval_type;
+	node->node_type = AST_RETURN_CALL;
+	node->return_call = return_value_node;
+	return node;
+}
+
+ast_node_t *ast_if_make(ast_node_t *condition_node)
+{
+	ast_node_t *node;
+	node = malloc(sizeof(ast_node_t));
+
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_IF;
+	node->if_statement.condition = condition_node;
+	node->if_statement.else_block = NULL;
+	node->if_statement.else_block = NULL;
+	return node;
+}
+
+err_t ast_if_set_then_block(ast_node_t *if_node, ast_node_t *block)
+{
+	if (if_node == NULL || block == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_if_set_then_block()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	if_node->if_statement.if_block = block;
+	return ERR_OK;
+}
+
+err_t ast_if_set_else_block(ast_node_t *if_node, ast_node_t *block)
+{
+	if (if_node == NULL || block == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_if_set_else_block()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	if_node->if_statement.else_block = block;
+	return ERR_OK;
 }
 
 ast_node_t *ast_make_int_to_double(ast_node_t *operand)
@@ -573,25 +664,6 @@ ast_node_t *ast_make_while(ast_node_t *condition, ast_node_t *block)
 	node->node_type = AST_WHILE;
 	node->ast_node_value.while_loop.block = block;
 	node->ast_node_value.while_loop.condition = condition;
-	return node;
-}
-
-ast_node_t *ast_make_if(ast_node_t *condition, ast_node_t *if_block, ast_node_t *else_block)
-{
-	ast_node_t *node;
-	node = malloc(sizeof(ast_node_t));
-
-	if (node == NULL)
-	{
-		return NULL;
-	}
-
-	// Setting values
-	node->eval_type = TYPE_NONE;
-	node->node_type = AST_IF;
-	node->ast_node_value.if_statement.condition = condition;
-	node->ast_node_value.if_statement.if_block = if_block;
-	node->ast_node_value.if_statement.else_block = else_block;
 	return node;
 }
 
