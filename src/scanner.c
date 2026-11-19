@@ -289,6 +289,9 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			case '*':
 				token->type = TOKEN_ASTERISK;
 				goto accept;
+			case ';':
+				token->type = TOKEN_SEMICOLON;
+				goto accept;
 			case '=':
 				token->type = next_is('=') ? TOKEN_EQUAL : TOKEN_ASSIGN;
 				goto accept;
