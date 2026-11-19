@@ -1268,7 +1268,8 @@ err_t val_var_def(parser_data_t *pdata)
 			return result;
 
 		// <type>
-		result = type(pdata);
+		data_type_t tmp_type; // FIXME:
+		result = type(pdata, &tmp_type);
 		if (result)
 			return result;
 
