@@ -7,8 +7,20 @@
  * @date 2026-11-15
  */
 
-#include "ast.h"
+#include "codegen.h"
 #include <stdio.h>
+
+/**
+ * @brief Structure to help make labels for if, for and while
+ *
+ */
+typedef struct names_counter
+{
+	char *func_name;
+	unsigned if_counter;
+	unsigned for_counter;
+	unsigned while_counter;
+} names_counter;
 
 /**
  * @brief Prints build-in function subStr
@@ -250,14 +262,11 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
 }
 
 /*
-	AST_PROGRAM,
 	AST_FUNC_DEF,
 	AST_FUNC_CALL,
 	AST_EXT_DEF,
 	AST_EXT_CALL,
 
-	AST_RETURN_CALL,
-	AST_IF,
 	AST_WHILE,
 	AST_FOR,
 */
@@ -267,7 +276,7 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
  *
  * @param node Node for wich the code should be generated
  */
-void generate_nodes(const ast_node_t *node)
+err_t generate_nodes(const ast_node_t *node, names_counter *new_func_def)
 {
 	node_type_t type = node->node_type;
 
@@ -298,6 +307,7 @@ void generate_nodes(const ast_node_t *node)
 		break;
 
 	case AST_LITERAL_UNIT:
+		printf("PUSHS nil@nil\n");
 		break;
 
 	case AST_VAR_USE:
@@ -305,7 +315,7 @@ void generate_nodes(const ast_node_t *node)
 		break;
 
 	case AST_UN_OPERATOR:
-		generate_nodes(node->un_operator.operand);
+		generate_nodes(node->un_operator.operand, new_func_def);
 
 		// Multiply by -1
 		if (node->un_operator.operator == OP_UMINUS)
@@ -320,59 +330,85 @@ void generate_nodes(const ast_node_t *node)
 		break; // For unary + value stays the same
 
 	case AST_BIN_OPERATOR:
-		generate_nodes(node->bin_operator.operand_left);
-		generate_nodes(node->bin_operator.operand_right);
+		generate_nodes(node->bin_operator.operand_left, new_func_def);
+		generate_nodes(node->bin_operator.operand_right, new_func_def);
 		print_bin_operation(node->bin_operator.operator, node->eval_type);
 		break;
 
 	case AST_VAR_DEF:
 		printf("DEFVAR LF@%s\n", node->variable_definition.unique_id);
-		generate_nodes(node->variable_definition.assigned_value);
+		generate_nodes(node->variable_definition.assigned_value, new_func_def);
 		printf("POPS LF@%s\n", node->variable_definition.unique_id);
 		break;
 
 	case AST_VAR_ASSIGN:
-		generate_nodes(node->variable_assignment.assigned_value);
+		generate_nodes(node->variable_assignment.assigned_value, new_func_def);
 		printf("POPS LF@%s\n", node->variable_assignment.unique_id);
 		break;
 
 	case AST_INT_TO_DOUBLE:
-		generate_nodes(node->int2double);
+		generate_nodes(node->int2double, new_func_def);
 		printf("INT2FLOATS\n");
 		break;
 
 	case AST_BLOCK:
 		for (size_t i = 0; i < node->block.statement_count; i++)
 		{
-			generate_nodes(node->block.statements[i]);
+			generate_nodes(node->block.statements[i], new_func_def);
 		}
 		break;
 
 	case AST_PROGRAM:
 		for (size_t i = 0; i < node->program.func_def_count; i++)
 		{
-			generate_nodes(node->program.func_defs[i]);
+			generate_nodes(node->program.func_defs[i], new_func_def);
 		}
 
 		for (size_t i = 0; i < node->program.ext_def_count; i++)
 		{
-			generate_nodes(node->program.ext_defs[i]);
+			generate_nodes(node->program.ext_defs[i], new_func_def);
 		}
+		break;
+
+	case AST_RETURN_CALL:
+		printf("CLEARS\n");
+		generate_nodes(node->return_call, new_func_def);
+		printf("POPFRAME\n");
+		printf("RETURN\n");
+		break;
+
+	case AST_FUNC_DEF:
+		new_func_def->func_name = node->func_def.unique_id;
+		new_func_def->for_counter = 0;
+		new_func_def->if_counter = 0;
+		new_func_def->while_counter = 0;
+
+		printf("LABEL %s\n", node->func_def.unique_id);
+		printf("CREATEFRAME\n");
+		printf("PUSHFRAME\n");
+		break;
+
+	case AST_IF:
+		generate_nodes(node->if_statement.condition, new_func_def);
+
 		break;
 
 	default:
 		break;
 	}
-	return;
+	return ERR_OK;
 }
 
-/**
- * @brief Function for code generation
- *
- * @param root Pointer to node of ast containing the root
- */
-void generate_code(const ast_node_t *root)
+err_t generate_code(const ast_node_t *root)
 {
+	names_counter *new_func_def = calloc(1, sizeof(names_counter));
+
+	if (new_func_def == NULL)
+	{
+		print_err("Failed to allocate memory in generate_nodes()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	printf(".IFJcode26\n");
 
 	printf("JUMP main\n");
@@ -384,5 +420,8 @@ void generate_code(const ast_node_t *root)
 	print_substr();
 	print_ord();
 
-	generate_nodes(root);
+	generate_nodes(root, new_func_def);
+
+	free(new_func_def);
+	return ERR_OK;
 }
