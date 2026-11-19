@@ -158,7 +158,7 @@ param_t *symbol_top_param(symbol_data_t *symbol);
  * @param symbol Function or extension symbol
  * @return err_t Error code
  */
-err_t param_list_add_param(symbol_data_t *symbol);
+err_t symbol_add_param(symbol_data_t *symbol);
 
 /**
  * @brief Destroys all symbols of the symbol tree
