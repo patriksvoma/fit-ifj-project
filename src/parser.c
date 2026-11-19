@@ -441,10 +441,11 @@ err_t func_def(parser_data_t *pdata, ast_node_t *program_node)
 
 	// Destroy the local var table;
 	pdata->local_var_table = local_table_destroy(pdata->local_var_table);
-	if (pdata->local_var_table)
+	if (pdata->local_var_table->parent)
 	{
-		print_err_l("A symbol table destroyed in func_def() still has a parent, this should not happen.", ERR_INTERNAL,
-					pdata->token.line);
+		print_err_l("A symbol table destroyed in func_def() does not have the function table as a parent, this should "
+					"not happen.",
+					ERR_INTERNAL, pdata->token.line);
 		return ERR_INTERNAL;
 	}
 
