@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-check:
-    name: build-check
+    name: Static checks and build
     runs-on: ubuntu-latest
 
     steps:
@@ -19,5 +19,23 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y gcc-14 clang-format cppcheck
 
-    - name: Run tests and build
+    - name: Run build checks and build
       run: make build-check
+
+  unit-test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v7
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-14
+
+    - name: Run unit tests
+      run: make test
