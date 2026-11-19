@@ -79,6 +79,7 @@ void print_substr()
 	printf("PUSHS LF@result\n");
 	printf("POPFRAME\n");
 	printf("RETURN\n");
+	return;
 }
 
 /**
@@ -125,8 +126,13 @@ void print_ord()
 	printf("PUSHS LF@result\n");
 	printf("POPFRAME\n");
 	printf("RETURN\n");
+	return;
 }
 
+/**
+ * @brief Prints function to help with build-in function toStr when used on boolean
+ *
+ */
 void print_bool2str()
 {
 	printf("LABEL bool2str\n");
@@ -138,6 +144,7 @@ void print_bool2str()
 	printf("PUSHS string@true\n");
 	printf("LABEL bool2str$end\n");
 	printf("RETURN\n");
+	return;
 }
 
 /**
@@ -299,17 +306,20 @@ void print_func_def(char *identifier, const char *unique_id, symtable_t *symtabl
 			printf("POPS LF@%s$%s\n", unique_id, func_params->data.function.param_lists[i]->params[j]->identifier);
 		}
 	}
+	return;
 }
 
-void print_func_call(const char *unique_id, param_node_list_t **param_lists, symtable_t *symtables,
-					 names_counter *new_func_def)
+void print_build_in_func_call(const char *unique_id, param_node_list_t **param_lists, symtable_t *symtables,
+							  names_counter *new_func_def)
 {
 	const char *id = unique_id;
 
 	if (strcmp(id, "print") == 0)
 	{
-		if (param_lists[0]->param_count == 0)
+		if (param_lists[0]->param_node[0]->eval_type == TYPE_UNIT)
 		{
+			generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+			printf("POPS GF@temp1\n");
 			printf("WRITE string@()\n");
 		}
 		else
@@ -367,6 +377,37 @@ void print_func_call(const char *unique_id, param_node_list_t **param_lists, sym
 			break;
 		}
 	}
+	else if (strcmp(id, "toInt") == 0)
+	{
+		generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+		printf("FLOAT2INTS\n");
+	}
+	else if (strcmp(id, "strLength") == 0)
+	{
+		generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+		printf("POPS GF@temp1\n");
+		printf("STRLEN GF@temp1 GF@temp1\n");
+		printf("PUSHS GF@temp1\n");
+	}
+	else if (strcmp(id, "subStr") == 0)
+	{
+		generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+		generate_nodes(param_lists[0]->param_node[1], symtables, new_func_def);
+		generate_nodes(param_lists[0]->param_node[2], symtables, new_func_def);
+		printf("CALL subStr\n");
+	}
+	else if (strcmp(id, "ord") == 0)
+	{
+		generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+		generate_nodes(param_lists[0]->param_node[1], symtables, new_func_def);
+		printf("CALL ord\n");
+	}
+	else if (strcmp(id, "chr") == 0)
+	{
+		generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
+		printf("INT2CHARS\n");
+	}
+	return;
 }
 
 /*
@@ -488,7 +529,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		break;
 
 	case AST_FUNC_CALL:
-		print_func_call(node->func_call.unique_id, node->func_call.param_lists, symtables, new_func_def);
+		print_build_in_func_call(node->func_call.unique_id, node->func_call.param_lists, symtables, new_func_def);
 		break;
 
 	case AST_IF:
