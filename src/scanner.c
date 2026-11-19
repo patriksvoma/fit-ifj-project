@@ -252,6 +252,7 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 	state_t state = S_START;
 	bool newline_seen = false;
 	err_t err = ERR_SCANNER;
+	unsigned depth = 0;
 	int c;
 
 	memset(token, 0, sizeof(*token));
@@ -757,6 +758,13 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				break;
 			}
 
+			if (c == '*')
+			{
+				depth = 1;
+				state = S_COMMENT_BLOCK;
+				break;
+			}
+
 			unread_char(c);
 			token->type = TOKEN_DIV;
 			goto accept;
@@ -766,6 +774,47 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 			{
 				unread_char(c);
 				state = S_START;
+			}
+			break;
+
+		case S_COMMENT_BLOCK:
+			if (c == EOF)
+				goto fail;
+
+			if (c == '/')
+				state = S_COMMENT_BLOCK_1;
+			else if (c == '*')
+				state = S_COMMENT_BLOCK_2;
+
+			break;
+
+		case S_COMMENT_BLOCK_1:
+			if (c == EOF)
+				goto fail;
+
+			if (c == '*')
+			{
+				depth++;
+				state = S_COMMENT_BLOCK;
+			}
+			else if (c != '/')
+			{
+				state = S_COMMENT_BLOCK;
+			}
+			break;
+
+		case S_COMMENT_BLOCK_2:
+			if (c == EOF)
+				goto fail;
+
+			if (c == '/')
+			{
+				depth--;
+				state = (depth == 0) ? S_START : S_COMMENT_BLOCK;
+			}
+			else if (c != '*')
+			{
+				state = S_COMMENT_BLOCK;
 			}
 			break;
 
