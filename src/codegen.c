@@ -286,6 +286,7 @@ void print_func_def(char *identifier, const char *unique_id, symtable_t *symtabl
 	if (func_params->data.function.is_main)
 	{
 		printf("LABEL main\n");
+		printf("LABEL %s\n", unique_id);
 		new_func_def->func_name = "main";
 	}
 	else
@@ -309,7 +310,7 @@ void print_func_def(char *identifier, const char *unique_id, symtable_t *symtabl
 	return;
 }
 
-void print_build_in_func_call(const char *unique_id, param_node_list_t **param_lists, symtable_t *symtables,
+bool print_build_in_func_call(const char *unique_id, param_node_list_t **param_lists, symtable_t *symtables,
 							  names_counter *new_func_def)
 {
 	const char *id = unique_id;
@@ -407,11 +408,31 @@ void print_build_in_func_call(const char *unique_id, param_node_list_t **param_l
 		generate_nodes(param_lists[0]->param_node[0], symtables, new_func_def);
 		printf("INT2CHARS\n");
 	}
+	else
+	{
+		return false;
+	}
+	return true;
+}
+
+void print_user_func_call(const char *unique_id, param_node_list_t **param_lists, size_t param_list_count,
+						  symtable_t *symtables, names_counter *new_func_def)
+{
+	const char *id = unique_id;
+
+	for (size_t i = 0; i < param_list_count; i++)
+	{
+		for (size_t j = 0; j < param_lists[i]->param_count; j++)
+		{
+			generate_nodes(param_lists[i]->param_node[j], symtables, new_func_def);
+		}
+	}
+
+	printf("CALL %s\n", id);
 	return;
 }
 
 /*
-	AST_FUNC_CALL,
 	AST_EXT_DEF,
 	AST_EXT_CALL,
 
@@ -529,7 +550,14 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		break;
 
 	case AST_FUNC_CALL:
-		print_build_in_func_call(node->func_call.unique_id, node->func_call.param_lists, symtables, new_func_def);
+		bool is_build_in =
+			print_build_in_func_call(node->func_call.unique_id, node->func_call.param_lists, symtables, new_func_def);
+
+		if (!is_build_in)
+		{
+			print_user_func_call(node->func_call.unique_id, node->func_call.param_lists,
+								 node->func_call.param_list_count, symtables, new_func_def);
+		}
 		break;
 
 	case AST_IF:
