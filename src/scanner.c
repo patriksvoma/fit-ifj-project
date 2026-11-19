@@ -2,6 +2,7 @@
  * @file scanner.c
  * @brief Scanner module for the IFJ26 compiler
  *
+ * @author Jan Šerák (xserakj00@stud.fit.vut.cz)
  * @author Patrik Švoma (xsvomap00@stud.fit.vut.cz)
  *
  * @date 2026-11-10
@@ -246,7 +247,7 @@ err_t convert_number(const char *text, token_t *token)
  * @param eol
  * @return err_t
  */
-err_t get_next_token(token_t *token, eol_rule_t eol)
+err_t scan_next_token(token_t *token, eol_rule_t eol)
 {
 	buffer_t buf = {0};
 	state_t state = S_START;
@@ -783,4 +784,37 @@ internal_error:
 fail:
 	buf_free(&buf);
 	return err;
+}
+
+static bool token_cached;
+static token_t token_cache;
+
+err_t get_next_token(token_t *token, eol_rule_t eol)
+{
+	if (token_cached)
+	{
+		*token = token_cache;
+		token_cached = false;
+	}
+	else
+	{
+		return scan_next_token(token, eol);
+	}
+
+	return ERR_OK;
+}
+
+err_t peek_next_token(token_t *token, eol_rule_t eol)
+{
+	if (!token_cached)
+	{
+		err_t result = scan_next_token(&token_cache, eol);
+		if (result)
+			return result;
+		token_cached = true;
+	}
+
+	*token = token_cache;
+
+	return ERR_OK;
 }
