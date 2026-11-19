@@ -185,9 +185,58 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
 		printf("SUBS\n");
 		break;
 
+	case OP_LESS:
+		printf("LTS\n");
+		break;
+
+	case OP_GREATER:
+		printf("GTS\n");
+		break;
+
+	case OP_EQUAL:
+		printf("EQS\n");
+		break;
+
+	case OP_NOT_EQUAL:
+		printf("EQS\n");
+		printf("NOTS\n");
+		break;
+
+	case OP_LOGIC_AND:
+		printf("ANDS\n");
+		break;
+
+	case OP_LOGIC_OR:
+		printf("ORS\n");
+		break;
+
+	case OP_LESS_EQUAL:
+	case OP_GREATER_EQUAL:
+		// The values on stack need to be copied to use LTS and EQS
+		printf("POPS GF@temp2\n");
+		printf("POPS GF@temp1\n");
+		printf("PUSHS GF@temp1\n");
+		printf("PUSHS GF@temp2\n");
+
+		if (operator == OP_LESS_EQUAL)
+		{
+			printf("LTS\n");
+		}
+		else
+		{
+			printf("GTS\n");
+		}
+
+		printf("PUSHS GF@temp1\n");
+		printf("PUSHS GF@temp2\n");
+		printf("EQS\n");
+		printf("ORS\n");
+		break;
+
 	default:
 		break;
 	}
+	return;
 }
 
 /*
@@ -198,7 +247,6 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
 	AST_EXT_CALL,
 	AST_BLOCK,
 
-	AST_BIN_OPERATOR,
 	AST_VAR_DEF,
 	AST_VAR_ASSIGN,
 
@@ -269,6 +317,7 @@ void generate_nodes(const ast_node_t *node)
 	case AST_BIN_OPERATOR:
 		generate_nodes(node->bin_operator.operand_left);
 		generate_nodes(node->bin_operator.operand_right);
+		print_bin_operation(node->bin_operator.operator, node->eval_type);
 
 	default:
 		break;
@@ -286,6 +335,10 @@ void generate_code(const ast_node_t *root)
 	printf(".IFJcode26\n");
 
 	printf("JUMP main\n");
+
+	// Variables for coping values on stack
+	printf("DEFVAR GF@temp1\n");
+	printf("DEFVAR GF@temp2\n");
 
 	print_substr();
 	print_ord();
