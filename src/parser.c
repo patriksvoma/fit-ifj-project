@@ -884,7 +884,8 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 			return result;
 
 		// <block-start>
-		result = block_start(pdata, statement_indent_level);
+		ast_node_t *inner_block_node = NULL; // FIXME:
+		result = block_start(pdata, inner_block_node, statement_indent_level);
 		if (result)
 			return result;
 
@@ -915,7 +916,8 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 			return result;
 
 		// <block-start>
-		return block_start(pdata, statement_indent_level);
+		ast_node_t *inner_block_node = NULL; // FIXME:
+		return block_start(pdata, inner_block_node, statement_indent_level);
 	}
 	// for
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_FOR)
@@ -971,7 +973,8 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 			return result;
 
 		// <block-start>
-		return block_start(pdata, statement_indent_level);
+		ast_node_t *inner_block_node = NULL; // FIXME:
+		return block_start(pdata, inner_block_node, statement_indent_level);
 	}
 	// return
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_RETURN)
@@ -1134,7 +1137,8 @@ err_t else_if_opt(parser_data_t *pdata, unsigned header_indent_level)
 			return result;
 
 		// <block-start>
-		result = block_start(pdata, header_indent_level);
+		ast_node_t *inner_block_node = NULL; // FIXME:
+		result = block_start(pdata, inner_block_node, header_indent_level);
 		if (result)
 			return result;
 
@@ -1143,7 +1147,8 @@ err_t else_if_opt(parser_data_t *pdata, unsigned header_indent_level)
 	}
 
 	// <block_start>
-	return block_start(pdata, header_indent_level);
+	ast_node_t *inner_block_node = NULL; // FIXME:
+	return block_start(pdata, inner_block_node, header_indent_level);
 }
 
 /**
