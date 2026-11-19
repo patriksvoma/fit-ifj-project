@@ -601,7 +601,7 @@ err_t return_type(parser_data_t *pdata, ast_node_t *func_call_node)
 
 	symbol_data_t *entry;
 	if (pdata->in_extension)
-		entry = symtable_item_find(&pdata->extension_table, func_call_node->ext_def.identifier);
+		entry = symtable_item_find(&pdata->extension_table, func_call_node->ext_def.unique_id);
 	else
 		entry = symtable_item_find(&pdata->function_table, func_call_node->func_def.unique_id);
 	if (!entry)

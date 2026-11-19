@@ -296,7 +296,7 @@ ast_node_t *ast_ext_def_make(data_type_t extended_type)
 
 	node->eval_type = extended_type;
 	node->node_type = AST_EXT_DEF;
-	node->ext_def.identifier = NULL;
+	node->ext_def.unique_id = NULL;
 	node->ext_def.block = NULL;
 	return node;
 }
@@ -311,7 +311,7 @@ err_t ast_ext_def_set_id(ast_node_t *func_def_node, const char *newId)
 
 	char *id;
 	id = save_identifier(newId);
-	func_def_node->ext_def.identifier = id;
+	func_def_node->ext_def.unique_id = id;
 	return ERR_OK;
 }
 
@@ -797,7 +797,7 @@ void destruct(ast_node_t *root)
 
 	case AST_EXT_DEF:
 		destruct(root->ext_def.block);
-		free(root->ext_def.identifier);
+		free(root->ext_def.unique_id);
 		break;
 
 	case AST_EXT_CALL:
