@@ -285,6 +285,107 @@ void test_invalid_at_words()
 	expect_error("@ main", ERR_SCANNER);
 }
 
+// Integer literals
+void test_integer_literals()
+{
+	long long expected[] = {0, 7, 42, 1000000, 10};
+
+	set_input("0 7 42 1_000_000 1__0");
+
+	for (size_t i = 0; i < sizeof(expected) / sizeof(expected[0]); i++)
+	{
+		token_t token = next_ok();
+		TEST_ASSERT_EQUAL(TOKEN_INT, token.type);
+		TEST_ASSERT_EQUAL_INT64(expected[i], token.attribute.integer);
+	}
+
+	TEST_ASSERT_EQUAL(TOKEN_EOF, next_ok().type);
+}
+
+void test_large_integer_fits_in_64_bits()
+{
+	set_input("9223372036854775807");
+
+	token_t token = next_ok();
+	TEST_ASSERT_EQUAL(TOKEN_INT, token.type);
+	TEST_ASSERT_EQUAL_INT64(9223372036854775807LL, token.attribute.integer);
+}
+
+void test_invalid_integers()
+{
+	expect_error("01", ERR_SCANNER);
+	expect_error("0_1", ERR_SCANNER);
+	expect_error("1_", ERR_SCANNER);
+	expect_error("1_+2", ERR_SCANNER);
+	expect_error("123abc", ERR_SCANNER);
+	expect_error("0x10", ERR_SCANNER);
+	expect_error("1d", ERR_SCANNER);
+	expect_error("99999999999999999999", ERR_SCANNER);
+}
+
+void test_negative_number_is_minus_and_literal()
+{
+	EXPECT_TYPES("-5", TOKEN_MINUS, TOKEN_INT);
+}
+
+// Double literals
+/**
+ * @brief Expect the next token to be a double with exactly the given value
+ *
+ * Both values are parsed from the same decimal text, so they must be equal.
+ *
+ * @param expected Expected value
+ */
+static void expect_double(double expected)
+{
+	token_t token = next_ok();
+	TEST_ASSERT_EQUAL(TOKEN_DOUBLE, token.type);
+	TEST_ASSERT_TRUE_MESSAGE(token.attribute.decimal == expected, "unexpected double value");
+}
+
+void test_double_literals()
+{
+	set_input("0.5 1.5 .5 1_0.2_5 3.14d 1.0D");
+
+	expect_double(0.5);
+	expect_double(1.5);
+	expect_double(0.5);
+	expect_double(10.25);
+	expect_double(3.14);
+	expect_double(1.0);
+
+	TEST_ASSERT_EQUAL(TOKEN_EOF, next_ok().type);
+}
+
+void test_exponent_literals()
+{
+	set_input("1e10 1E+3 2.5e-3 0e5 .5e2 1e1_0 1e5d");
+
+	expect_double(1e10);
+	expect_double(1e3);
+	expect_double(2.5e-3);
+	expect_double(0.0);
+	expect_double(50.0);
+	expect_double(1e10);
+	expect_double(1e5);
+
+	TEST_ASSERT_EQUAL(TOKEN_EOF, next_ok().type);
+}
+
+void test_invalid_doubles()
+{
+	expect_error("1.", ERR_SCANNER);
+	expect_error("1.e5", ERR_SCANNER);
+	expect_error("1._5", ERR_SCANNER);
+	expect_error("1.5_", ERR_SCANNER);
+	expect_error("1.5.3", ERR_SCANNER);
+	expect_error("1.5x", ERR_SCANNER);
+	expect_error("1e", ERR_SCANNER);
+	expect_error("1e+", ERR_SCANNER);
+	expect_error("1e5_", ERR_SCANNER);
+	expect_error("1e400", ERR_SCANNER);
+}
+
 int main()
 {
 	UNITY_BEGIN();
@@ -307,6 +408,15 @@ int main()
 	RUN_TEST(test_boolean_literals);
 	RUN_TEST(test_lone_underscore);
 	RUN_TEST(test_invalid_at_words);
+
+	RUN_TEST(test_integer_literals);
+	RUN_TEST(test_large_integer_fits_in_64_bits);
+	RUN_TEST(test_invalid_integers);
+	RUN_TEST(test_negative_number_is_minus_and_literal);
+
+	RUN_TEST(test_double_literals);
+	RUN_TEST(test_exponent_literals);
+	RUN_TEST(test_invalid_doubles);
 
 	return UNITY_END();
 }
