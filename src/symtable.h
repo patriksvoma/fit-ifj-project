@@ -137,6 +137,30 @@ bool symtable_item_exists(symtable_t *table, const char *key);
 bool symtable_item_defined(symtable_t *table, const char *key);
 
 /**
+ * @brief Adds an empty param list to a function or an extension
+ *
+ * @param symbol Function or extension symbol
+ * @return err_t Error code
+ */
+err_t symbol_add_param_list(symbol_data_t *symbol);
+
+/**
+ * @brief Finds the parameter with the highest index in a parameter list with the highest index
+ *
+ * @param symbol Function or extension symbol
+ * @return param_t Pointer to the parameter
+ */
+param_t *symbol_top_param(symbol_data_t *symbol);
+
+/**
+ * @brief Appends a new empty parameter into the parameter list with the highest index
+ *
+ * @param symbol Function or extension symbol
+ * @return err_t Error code
+ */
+err_t param_list_add_param(symbol_data_t *symbol);
+
+/**
  * @brief Destroys all symbols of the symbol tree
  *
  * @param table Pointer to the symbol tree which will be destroyed
