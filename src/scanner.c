@@ -9,6 +9,9 @@
 
 #include "scanner.h"
 
+#include <ctype.h>
+#include <errno.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -206,6 +209,37 @@ bool next_is(int expected)
 }
 
 /**
+ * @brief Convert the text of a number to its value
+ *
+ * @param text Digits of the number
+ * @param token Type of number, TOKEN_INT or TOKEN_DOUBLE
+ * @return err_t ERR_OK or ERR_SCANNER if the value is out of range
+ */
+err_t convert_number(const char *text, token_t *token)
+{
+	errno = 0;
+
+	if (token->type == TOKEN_INT)
+	{
+		long long value = strtoll(text, NULL, 10);
+
+		if (errno == ERANGE)
+			return ERR_SCANNER;
+
+		token->attribute.integer = value;
+		return ERR_OK;
+	}
+
+	double value = strtod(text, NULL);
+
+	if (errno == ERANGE && (value == HUGE_VAL || value == -HUGE_VAL))
+		return ERR_SCANNER;
+
+	token->attribute.decimal = value;
+	return ERR_OK;
+}
+
+/**
  * @brief Get the next token object
  *
  * @param token
@@ -217,6 +251,7 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 	buffer_t buf = {0};
 	state_t state = S_START;
 	bool newline_seen = false;
+	err_t err = ERR_SCANNER;
 	int c;
 
 	memset(token, 0, sizeof(*token));
@@ -238,6 +273,51 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 
 			token->line = scanner_line;
 			token->starts_logical_line = newline_seen;
+
+			if (isalpha(c) || c == '@')
+			{
+				if (!buf_append(&buf, (char)c))
+					goto internal_error;
+
+				state = S_IDENTIFIER;
+				break;
+			}
+
+			if (c == '_')
+			{
+				if (!buf_append(&buf, (char)c))
+					goto internal_error;
+
+				state = S_UNDERSCORE;
+				break;
+			}
+
+			if (isdigit(c))
+			{
+				if (!buf_append(&buf, (char)c))
+					goto internal_error;
+
+				state = (c == '0') ? S_ZERO : S_NUMBER_INT;
+				break;
+			}
+
+			if (c == '.')
+			{
+				int next = next_char();
+				unread_char(next);
+
+				if (!isdigit(next))
+				{
+					token->type = TOKEN_DOT;
+					goto accept;
+				}
+
+				if (!buf_append(&buf, '.'))
+					goto internal_error;
+
+				state = S_DOT;
+				break;
+			}
 
 			switch (c)
 			{
@@ -264,6 +344,9 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				goto accept;
 			case '*':
 				token->type = TOKEN_ASTERISK;
+				goto accept;
+			case ';':
+				token->type = TOKEN_SEMICOLON;
 				goto accept;
 			case '=':
 				token->type = next_is('=') ? TOKEN_EQUAL : TOKEN_ASSIGN;
@@ -296,17 +379,273 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 				goto fail;
 			}
 
+		case S_IDENTIFIER:
+			if (isalnum(c) || c == '_')
+			{
+				if (!buf_append(&buf, (char)c))
+					goto internal_error;
+
+				break;
+			}
+
+			unread_char(c);
+
+			if (find_keyword(buf.data, &token->attribute.keyword))
+			{
+				token->type = TOKEN_KEYWORD;
+				goto accept;
+			}
+
+			if (buf.data[0] == '@')
+				goto fail;
+
+			if (strcmp(buf.data, "true") == 0 || strcmp(buf.data, "false") == 0)
+			{
+				token->type = TOKEN_BOOLEAN;
+				token->attribute.boolean = (buf.data[0] == 't');
+				goto accept;
+			}
+
+			token->type = TOKEN_IDENTIFIER;
+			token->attribute.string = buf.data;
+			buf.data = NULL;
+			goto accept;
+
+		case S_UNDERSCORE:
+			if (isalnum(c) || c == '_')
+			{
+				if (!buf_append(&buf, (char)c))
+					goto internal_error;
+
+				state = S_IDENTIFIER;
+				break;
+			}
+
+			unread_char(c);
+			token->type = TOKEN_UNDERSCORE;
+			goto accept;
+
+		case S_ZERO:
+			if (c == '.')
+			{
+				if (!buf_append(&buf, (char)c))
+					goto internal_error;
+
+				state = S_DOT;
+				break;
+			}
+
+			if (c == 'e' || c == 'E')
+			{
+				if (!buf_append(&buf, 'e'))
+					goto internal_error;
+
+				state = S_EXPONENT;
+				break;
+			}
+
+			if (isalnum(c) || c == '_')
+				goto fail;
+
+			unread_char(c);
+			token->type = TOKEN_INT;
+			goto number;
+
+		case S_NUMBER_INT:
+			if (isdigit(c))
+			{
+				if (!buf_append(&buf, (char)c))
+					goto internal_error;
+
+				break;
+			}
+
+			if (c == '_')
+			{
+				state = S_NUM_INT_UNDERSCORE;
+				break;
+			}
+
+			if (c == '.')
+			{
+				if (!buf_append(&buf, (char)c))
+					goto internal_error;
+
+				state = S_DOT;
+				break;
+			}
+
+			if (c == 'e' || c == 'E')
+			{
+				if (!buf_append(&buf, 'e'))
+					goto internal_error;
+
+				state = S_EXPONENT;
+				break;
+			}
+
+			if (isalpha(c))
+				goto fail;
+
+			unread_char(c);
+			token->type = TOKEN_INT;
+			goto number;
+
+		case S_NUM_INT_UNDERSCORE:
+			if (c == '_')
+				break;
+
+			if (!isdigit(c))
+				goto fail;
+
+			if (!buf_append(&buf, (char)c))
+				goto internal_error;
+
+			state = S_NUMBER_INT;
+			break;
+
+		case S_DOT:
+			if (!isdigit(c))
+				goto fail;
+
+			if (!buf_append(&buf, (char)c))
+				goto internal_error;
+
+			state = S_NUMBER_DOUBLE;
+			break;
+
+		case S_NUMBER_DOUBLE:
+			if (isdigit(c))
+			{
+				if (!buf_append(&buf, (char)c))
+					goto internal_error;
+
+				break;
+			}
+
+			if (c == '_')
+			{
+				state = S_NUM_DOUBLE_UNDERSCORE;
+				break;
+			}
+
+			if (c == 'e' || c == 'E')
+			{
+				if (!buf_append(&buf, 'e'))
+					goto internal_error;
+
+				state = S_EXPONENT;
+				break;
+			}
+
+			if (c == 'd' || c == 'D')
+			{
+				token->type = TOKEN_DOUBLE;
+				goto number;
+			}
+
+			if (isalpha(c) || c == '.')
+				goto fail;
+
+			unread_char(c);
+			token->type = TOKEN_DOUBLE;
+			goto number;
+
+		case S_NUM_DOUBLE_UNDERSCORE:
+			if (c == '_')
+				break;
+
+			if (!isdigit(c))
+				goto fail;
+
+			if (!buf_append(&buf, (char)c))
+				goto internal_error;
+
+			state = S_NUMBER_DOUBLE;
+			break;
+
+		case S_EXPONENT:
+			if (c == '+' || c == '-')
+			{
+				if (!buf_append(&buf, (char)c))
+					goto internal_error;
+
+				state = S_EXP_SIGN;
+				break;
+			}
+			// fall through
+
+		case S_EXP_SIGN:
+			if (!isdigit(c))
+				goto fail;
+
+			if (!buf_append(&buf, (char)c))
+				goto internal_error;
+
+			state = S_EXP_END;
+			break;
+
+		case S_EXP_END:
+			if (isdigit(c))
+			{
+				if (!buf_append(&buf, (char)c))
+					goto internal_error;
+
+				break;
+			}
+
+			if (c == '_')
+			{
+				state = S_EXP_END_UNDERSCORE;
+				break;
+			}
+
+			if (c == 'd' || c == 'D')
+			{
+				token->type = TOKEN_DOUBLE;
+				goto number;
+			}
+
+			if (isalpha(c) || c == '.')
+				goto fail;
+
+			unread_char(c);
+			token->type = TOKEN_DOUBLE;
+			goto number;
+
+		case S_EXP_END_UNDERSCORE:
+			if (c == '_')
+				break;
+
+			if (!isdigit(c))
+				goto fail;
+
+			if (!buf_append(&buf, (char)c))
+				goto internal_error;
+
+			state = S_EXP_END;
+			break;
+
 		default:
 			break;
 		}
 	}
+
+number:
+	err = convert_number(buf.data, token);
+	if (err != ERR_OK)
+		goto fail;
 
 accept:
 	buf_free(&buf);
 	(void)eol; // TODO: check EOL
 	return ERR_OK;
 
+internal_error:
+	err = ERR_INTERNAL;
+	// fall through
+
 fail:
 	buf_free(&buf);
-	return ERR_SCANNER;
+	return err;
 }
