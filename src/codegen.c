@@ -272,6 +272,14 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
 	return;
 }
 
+/**
+ * @brief Prints header code for function definition and saves parameters
+ *
+ * @param identifier Identifier of the function
+ * @param unique_id Unique name for the function
+ * @param symtables Symtables with functions to find parameters
+ * @param new_func_def Struct with couter for loops and function name, to name labels corectly
+ */
 void print_func_def(char *identifier, const char *unique_id, symtable_t *symtables, names_counter *new_func_def)
 {
 	new_func_def->for_counter = 0;
@@ -310,10 +318,20 @@ void print_func_def(char *identifier, const char *unique_id, symtable_t *symtabl
 	return;
 }
 
-bool print_build_in_func_call(const char *unique_id, param_node_list_t **param_lists, symtable_t *symtables,
+/**
+ * @brief Prints code for build-in function calling
+ *
+ * @param identifier Name of the functions
+ * @param param_lists Pointer to array of lists of parameters
+ * @param symtables Passed only so generate_nodes() can be called and not to be lost
+ * @param new_func_def Passed only so generate_nodes() can be called and not to be lost
+ * @return true When the function as a built-in function
+ * @return false When it wasn't a built-in function
+ */
+bool print_build_in_func_call(const char *identifier, param_node_list_t **param_lists, symtable_t *symtables,
 							  names_counter *new_func_def)
 {
-	const char *id = unique_id;
+	const char *id = identifier;
 
 	if (strcmp(id, "print") == 0)
 	{
@@ -415,6 +433,15 @@ bool print_build_in_func_call(const char *unique_id, param_node_list_t **param_l
 	return true;
 }
 
+/**
+ * @brief Prints code for user function calling
+ *
+ * @param unique_id Unique name of the function
+ * @param param_lists Pointer to array of lists of parameters
+ * @param param_list_count Count of the lists
+ * @param symtables Passed only so generate_nodes() can be called and not to be lost
+ * @param new_func_def Passed only so generate_nodes() can be called and not to be lost
+ */
 void print_user_func_call(const char *unique_id, param_node_list_t **param_lists, size_t param_list_count,
 						  symtable_t *symtables, names_counter *new_func_def)
 {
@@ -444,6 +471,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 {
 	node_type_t type = node->node_type;
 
+	// Recursively calling the function to search the tree, leaf nodes leave a value on stack
 	switch (type)
 	{
 	case AST_LITERAL_INT:
@@ -592,6 +620,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 
 err_t generate_code(const ast_node_t *root, const parser_data_t *parser_data)
 {
+	// Make structures to help with unique names for if, while and for
 	names_counter *new_func_def = calloc(1, sizeof(names_counter));
 	symtable_t *symtables = calloc(2, sizeof(symtable_t));
 
@@ -606,7 +635,7 @@ err_t generate_code(const ast_node_t *root, const parser_data_t *parser_data)
 
 	printf(".IFJcode26\n");
 
-	// Variables for coping values on stack
+	// Variables to help with values on stack
 	printf("DEFVAR GF@temp1\n");
 	printf("DEFVAR GF@temp2\n");
 
