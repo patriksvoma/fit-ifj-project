@@ -1,0 +1,8 @@
+import ifj26.*
+
+def foo(a: Int, Boolean): Int =
+  return 5 + 4
+
+@main
+def main(): Unit =
+  foo(67, false)

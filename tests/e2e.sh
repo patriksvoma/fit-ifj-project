@@ -71,6 +71,14 @@ run_case "func-call-extra-param-1" 2 "functions/invalid/func-call-extra-param-1.
 run_case "func-call-extra-param-2" 2 "functions/invalid/func-call-extra-param-2.ifj"
 run_case "func-call-extra-param-3" 2 "functions/invalid/func-call-extra-param-3.ifj"
 
+run_case "func-call-missing-par-type-1" 2 "functions/invalid/func-call-missing-par-type-1.ifj"
+run_case "func-call-missing-par-type-2" 2 "functions/invalid/func-call-missing-par-type-2.ifj"
+run_case "func-call-missing-par-type-3" 2 "functions/invalid/func-call-missing-par-type-3.ifj"
+
+run_case "func-call-missing-par-name-1" 2 "functions/invalid/func-call-missing-par-name-1.ifj"
+run_case "func-call-missing-par-name-2" 2 "functions/invalid/func-call-missing-par-name-2.ifj"
+run_case "func-call-missing-par-colon" 2 "functions/invalid/func-call-missing-par-colon.ifj"
+
 run_case "valid-main" 0 "valid-main.ifj"
 run_case "invalid-prologue" 2 "invalid-prologue.ifj"
 run_case "duplicate-function" 4 "duplicate-function.ifj"
