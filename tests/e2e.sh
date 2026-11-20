@@ -102,6 +102,9 @@ run_case "func-call-missing-par-name-1" 2 "functions/invalid/func-call-missing-p
 run_case "func-call-missing-par-name-2" 2 "functions/invalid/func-call-missing-par-name-2.ifj"
 run_case "func-call-missing-par-colon" 2 "functions/invalid/func-call-missing-par-colon.ifj"
 
+run_case "func-call-def-later-1" 0 "functions/valid/func-call-def-later-1.ifj"
+run_case "func-call-def-later-2" 0 "functions/valid/func-call-def-later-2.ifj"
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
