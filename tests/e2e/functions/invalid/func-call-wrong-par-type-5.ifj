@@ -1,0 +1,8 @@
+import ifj26.*
+
+def foo(a: Int, b: String): Int =
+  return 5 + 4
+
+@main
+def main(): Unit =
+  foo("str", 8888)
