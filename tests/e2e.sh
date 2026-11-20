@@ -43,6 +43,7 @@ run_case()
 	fi
 }
 
+# Function calls
 run_case "valid-func-call-no-list" 0 "functions/valid/valid-func-call-no-list"
 run_case "valid-func-call-one-list-empty" 0 "functions/valid/valid-func-call-one-list-empty"
 run_case "valid-func-call-one-list-one-param" 0 "functions/valid/valid-func-call-one-list-one-param"
@@ -51,6 +52,41 @@ run_case "valid-func-call-mul-list-empty" 0 "functions/valid/valid-func-call-mul
 run_case "valid-func-call-mul-list-one-param" 0 "functions/valid/valid-func-call-mul-list-one-param"
 run_case "valid-func-call-mul-list-mul-param" 0 "functions/valid/valid-func-call-mul-list-mul-param"
 run_case "valid-func-call-mul-list-mix-param" 0 "functions/valid/valid-func-call-mul-list-mix-param"
+
+run_case "func-call-missing-list-1" 2 "functions/invalid/func-call-missing-list-1.ifj"
+run_case "func-call-missing-list-2" 2 "functions/invalid/func-call-missing-list-2.ifj"
+run_case "func-call-missing-list-3" 2 "functions/invalid/func-call-missing-list-3.ifj"
+run_case "func-call-missing-list-4" 2 "functions/invalid/func-call-missing-list-4.ifj"
+
+run_case "func-call-extra-list-1" 2 "functions/invalid/func-call-extra-list-1.ifj"
+run_case "func-call-extra-list-2" 2 "functions/invalid/func-call-extra-list-2.ifj"
+run_case "func-call-extra-list-3" 2 "functions/invalid/func-call-extra-list-3.ifj"
+run_case "func-call-extra-list-4" 2 "functions/invalid/func-call-extra-list-4.ifj"
+
+run_case "func-call-wrong-par-type-1" 2 "functions/invalid/func-call-wrong-par-type-1.ifj"
+run_case "func-call-wrong-par-type-2" 2 "functions/invalid/func-call-wrong-par-type-2.ifj"
+run_case "func-call-wrong-par-type-3" 2 "functions/invalid/func-call-wrong-par-type-3.ifj"
+run_case "func-call-wrong-par-type-4" 2 "functions/invalid/func-call-wrong-par-type-4.ifj"
+run_case "func-call-wrong-par-type-5" 2 "functions/invalid/func-call-wrong-par-type-5.ifj"
+run_case "func-call-wrong-par-type-6" 2 "functions/invalid/func-call-wrong-par-type-6.ifj"
+run_case "func-call-wrong-par-type-7" 2 "functions/invalid/func-call-wrong-par-type-7.ifj"
+run_case "func-call-wrong-par-type-8" 2 "functions/invalid/func-call-wrong-par-type-8.ifj"
+
+run_case "func-call-missing-param-1" 2 "functions/invalid/func-call-missing-param-1.ifj"
+run_case "func-call-missing-param-2" 2 "functions/invalid/func-call-missing-param-2.ifj"
+run_case "func-call-missing-param-3" 2 "functions/invalid/func-call-missing-param-3.ifj"
+
+run_case "func-call-extra-param-1" 2 "functions/invalid/func-call-extra-param-1.ifj"
+run_case "func-call-extra-param-2" 2 "functions/invalid/func-call-extra-param-2.ifj"
+run_case "func-call-extra-param-3" 2 "functions/invalid/func-call-extra-param-3.ifj"
+
+run_case "func-call-missing-par-type-1" 2 "functions/invalid/func-call-missing-par-type-1.ifj"
+run_case "func-call-missing-par-type-2" 2 "functions/invalid/func-call-missing-par-type-2.ifj"
+run_case "func-call-missing-par-type-3" 2 "functions/invalid/func-call-missing-par-type-3.ifj"
+
+run_case "func-call-missing-par-name-1" 2 "functions/invalid/func-call-missing-par-name-1.ifj"
+run_case "func-call-missing-par-name-2" 2 "functions/invalid/func-call-missing-par-name-2.ifj"
+run_case "func-call-missing-par-colon" 2 "functions/invalid/func-call-missing-par-colon.ifj"
 
 run_case "valid-main" 0 "valid-main.ifj"
 run_case "invalid-prologue" 2 "invalid-prologue.ifj"
