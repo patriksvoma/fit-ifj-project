@@ -223,8 +223,38 @@ ast_node_t *ast_func_call_make(const char *unique_id)
 	return node;
 }
 
+err_t ast_func_call_add_empty_param_list(ast_node_t *func_call_node)
+{
+	if (func_call_node == NULL || func_call_node->node_type != AST_FUNC_CALL)
+	{
+		print_err("Invalid function-call node in ast_func_call_add_empty_param_list().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	size_t list_count = func_call_node->func_call.param_list_count;
+	param_node_list_t **new_lists =
+		realloc(func_call_node->func_call.param_lists, (list_count + 1) * sizeof(param_node_list_t *));
+	if (new_lists == NULL)
+	{
+		print_err("Failed to allocate memory in ast_func_call_add_empty_param_list().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	func_call_node->func_call.param_lists = new_lists;
+
+	param_node_list_t *new_list = calloc(1, sizeof(param_node_list_t));
+	if (new_list == NULL)
+	{
+		print_err("Failed to allocate memory in ast_func_call_add_empty_param_list().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	func_call_node->func_call.param_lists[list_count] = new_list;
+	func_call_node->func_call.param_list_count++;
+	return ERR_OK;
+}
+
 // TODO: Předělat (upravit)
-err_t ast_func_call_add_param(ast_node_t *func_call_node, ast_node_t *param_node, unsigned param_list_index)
+err_t ast_func_call_add_param(ast_node_t *func_call_node, ast_node_t *param_node, size_t param_list_index)
 {
 	if (func_call_node == NULL || param_node == NULL)
 	{
