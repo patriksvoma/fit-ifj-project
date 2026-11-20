@@ -518,6 +518,86 @@ void test_short_program()
 				 TOKEN_ASSIGN, TOKEN_INT, TOKEN_PLUS, TOKEN_DOUBLE, TOKEN_ASTERISK, TOKEN_STRING);
 }
 
+// Comments
+void test_division_is_not_comment()
+{
+	EXPECT_TYPES("a / b", TOKEN_IDENTIFIER, TOKEN_DIV, TOKEN_IDENTIFIER);
+	EXPECT_TYPES("a/b", TOKEN_IDENTIFIER, TOKEN_DIV, TOKEN_IDENTIFIER);
+}
+
+void test_line_comment_acts_as_newline()
+{
+	set_input("a // komentar\nb");
+
+	TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER, next_ok().type);
+
+	token_t token = next_ok();
+	TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER, token.type);
+	TEST_ASSERT_TRUE(token.starts_logical_line);
+	TEST_ASSERT_EQUAL_UINT(2, token.line);
+}
+
+void test_line_comment_at_end_of_file()
+{
+	EXPECT_TYPES("a // bez konce radku", TOKEN_IDENTIFIER);
+	EXPECT_TYPES("//\n//\nx", TOKEN_IDENTIFIER);
+}
+
+void test_block_comment_acts_as_space()
+{
+	set_input("a/* x */b");
+
+	TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER, next_ok().type);
+
+	token_t token = next_ok();
+	TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER, token.type);
+	TEST_ASSERT_FALSE(token.starts_logical_line);
+}
+
+void test_nested_block_comments()
+{
+	EXPECT_TYPES("/* a /* b */ c */ x", TOKEN_IDENTIFIER);
+	EXPECT_TYPES("/* /* /* */ */ */ x", TOKEN_IDENTIFIER);
+}
+
+void test_block_comment_with_extra_characters()
+{
+	EXPECT_TYPES("/** x **/ y", TOKEN_IDENTIFIER);
+	EXPECT_TYPES("/***/x", TOKEN_IDENTIFIER);
+	EXPECT_TYPES("/*//* x */ y */ z", TOKEN_IDENTIFIER);
+}
+
+void test_unterminated_block_comment()
+{
+	expect_error("/* abc", ERR_SCANNER);
+	expect_error("/* abc *", ERR_SCANNER);
+	expect_error("/* /* */", ERR_SCANNER);
+}
+
+void test_multiline_block_comment_acts_as_newline()
+{
+	set_input("a /* x\ny */\nb");
+
+	TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER, next_ok().type);
+
+	token_t token = next_ok();
+	TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER, token.type);
+	TEST_ASSERT_TRUE(token.starts_logical_line);
+	TEST_ASSERT_EQUAL_UINT(3, token.line);
+}
+
+void test_token_after_multiline_block_comment_is_error()
+{
+	expect_error("a /* x\ny */ b", ERR_SYNTAX);
+	expect_error("/* \n */ \"s\"", ERR_SYNTAX);
+}
+
+void test_multiline_block_comment_before_eof_or_line_comment()
+{
+	EXPECT_TYPES("a /* \n */", TOKEN_IDENTIFIER);
+	EXPECT_TYPES("a /* \n */ // ok\nb", TOKEN_IDENTIFIER, TOKEN_IDENTIFIER);
+}
+
 int main()
 {
 	UNITY_BEGIN();
@@ -567,6 +647,17 @@ int main()
 	RUN_TEST(test_starts_logical_line_after_newline);
 	RUN_TEST(test_token_ending_at_newline_keeps_newline);
 	RUN_TEST(test_short_program);
+
+	RUN_TEST(test_division_is_not_comment);
+	RUN_TEST(test_line_comment_acts_as_newline);
+	RUN_TEST(test_line_comment_at_end_of_file);
+	RUN_TEST(test_block_comment_acts_as_space);
+	RUN_TEST(test_nested_block_comments);
+	RUN_TEST(test_block_comment_with_extra_characters);
+	RUN_TEST(test_unterminated_block_comment);
+	RUN_TEST(test_multiline_block_comment_acts_as_newline);
+	RUN_TEST(test_token_after_multiline_block_comment_is_error);
+	RUN_TEST(test_multiline_block_comment_before_eof_or_line_comment);
 
 	return UNITY_END();
 }
