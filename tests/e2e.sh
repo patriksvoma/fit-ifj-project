@@ -43,15 +43,17 @@ run_case()
 	fi
 }
 
-
+# Function calls
 run_case "func-call-missing-list-1" 2 "functions/invalid/func-call-missing-list-1.ifj"
 run_case "func-call-missing-list-2" 2 "functions/invalid/func-call-missing-list-2.ifj"
 run_case "func-call-missing-list-3" 2 "functions/invalid/func-call-missing-list-3.ifj"
 run_case "func-call-missing-list-4" 2 "functions/invalid/func-call-missing-list-4.ifj"
+
 run_case "func-call-extra-list-1" 2 "functions/invalid/func-call-extra-list-1.ifj"
 run_case "func-call-extra-list-2" 2 "functions/invalid/func-call-extra-list-2.ifj"
 run_case "func-call-extra-list-3" 2 "functions/invalid/func-call-extra-list-3.ifj"
 run_case "func-call-extra-list-4" 2 "functions/invalid/func-call-extra-list-4.ifj"
+
 run_case "func-call-wrong-par-type-1" 2 "functions/invalid/func-call-wrong-par-type-1.ifj"
 run_case "func-call-wrong-par-type-2" 2 "functions/invalid/func-call-wrong-par-type-2.ifj"
 run_case "func-call-wrong-par-type-3" 2 "functions/invalid/func-call-wrong-par-type-3.ifj"
@@ -60,9 +62,14 @@ run_case "func-call-wrong-par-type-5" 2 "functions/invalid/func-call-wrong-par-t
 run_case "func-call-wrong-par-type-6" 2 "functions/invalid/func-call-wrong-par-type-6.ifj"
 run_case "func-call-wrong-par-type-7" 2 "functions/invalid/func-call-wrong-par-type-7.ifj"
 run_case "func-call-wrong-par-type-8" 2 "functions/invalid/func-call-wrong-par-type-8.ifj"
+
 run_case "func-call-missing-param-1" 2 "functions/invalid/func-call-missing-param-1.ifj"
 run_case "func-call-missing-param-2" 2 "functions/invalid/func-call-missing-param-2.ifj"
 run_case "func-call-missing-param-3" 2 "functions/invalid/func-call-missing-param-3.ifj"
+
+run_case "func-call-extra-param-1" 2 "functions/invalid/func-call-extra-param-1.ifj"
+run_case "func-call-extra-param-2" 2 "functions/invalid/func-call-extra-param-2.ifj"
+run_case "func-call-extra-param-3" 2 "functions/invalid/func-call-extra-param-3.ifj"
 
 run_case "valid-main" 0 "valid-main.ifj"
 run_case "invalid-prologue" 2 "invalid-prologue.ifj"
