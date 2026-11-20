@@ -1,8 +1,0 @@
-// Tento soubor byl napsan pomoci AI
-// Model: Copilot Fusion (gp6-luna)
-// Prompt: make e2e tests for function call behaviour
-
-import ifj26.*
-@main
-def main() =
-  val result = missing()
