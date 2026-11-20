@@ -1432,9 +1432,9 @@ err_t expression_seeded(parser_data_t *pdata, ast_node_t **return_node, token_t 
 	return parse_expression(pdata, seed_token, return_node);
 }
 
-err_t parse(ast_node_t *program_node, parser_data_t pdata)
+err_t parse(ast_node_t *program_node, parser_data_t *pdata)
 {
-	err_t result = prologue(&pdata, program_node);
+	err_t result = prologue(pdata, program_node);
 
 	return result;
 }

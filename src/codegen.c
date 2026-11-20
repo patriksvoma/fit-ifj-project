@@ -280,16 +280,20 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
  * @param symtables Symtables with functions to find parameters
  * @param new_func_def Struct with couter for loops and function name, to name labels corectly
  */
-void print_func_def(char *identifier, const char *unique_id, symtable_t *symtables, names_counter *new_func_def)
+void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_func_def)
 {
 	new_func_def->for_counter = 0;
 	new_func_def->if_counter = 0;
 	new_func_def->while_counter = 0;
 
-	new_func_def->func_name = identifier;
+	new_func_def->func_name = unique_id;
 
 	// Get data for the function to find parameters
-	const symbol_data_t *func_params = symtable_item_find(&symtables[0], identifier);
+	const symbol_data_t *func_params = symtable_item_find(&symtables[0], unique_id);
+	if (func_params == NULL)
+	{
+		return;
+	}
 
 	if (func_params->data.function.is_main)
 	{
@@ -569,7 +573,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		break;
 
 	case AST_FUNC_DEF:
-		print_func_def(node->func_def.identificator, node->func_def.unique_id, symtables, new_func_def);
+		print_func_def(node->func_def.unique_id, symtables, new_func_def);
 		generate_nodes(node->func_def.block, symtables, new_func_def);
 
 		// If there isnt a return, the frame must be cleaned
