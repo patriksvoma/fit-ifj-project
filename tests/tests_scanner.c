@@ -386,6 +386,138 @@ void test_invalid_doubles()
 	expect_error("1e400", ERR_SCANNER);
 }
 
+// String literals
+/**
+ * @brief Expect the next token to be a string with the given value
+ *
+ * @param expected Expected value of the string
+ */
+static void expect_string(const char *expected)
+{
+	token_t token = next_ok();
+	TEST_ASSERT_EQUAL(TOKEN_STRING, token.type);
+	TEST_ASSERT_NOT_NULL(token.attribute.string);
+	TEST_ASSERT_EQUAL_STRING(expected, token.attribute.string);
+}
+
+void test_string_literal()
+{
+	set_input("\"ahoj svete\" x");
+	expect_string("ahoj svete");
+	TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER, next_ok().type);
+}
+
+void test_empty_string_is_not_null()
+{
+	set_input("\"\" x");
+	expect_string("");
+	TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER, next_ok().type);
+}
+
+void test_string_may_contain_tab()
+{
+	set_input("\"a\tb\"");
+	expect_string("a\tb");
+}
+
+void test_escape_sequences()
+{
+	set_input("\"x\\ty\\nz\\r\\\"\\\\\"");
+	expect_string("x\ty\nz\r\"\\");
+}
+
+void test_quote_inside_string()
+{
+	set_input("\"q\\\"q\"");
+	expect_string("q\"q");
+}
+
+void test_invalid_strings()
+{
+	expect_error("\"abc", ERR_SCANNER);
+	expect_error("\"ab\ncd\"", ERR_SCANNER);
+	expect_error("\"a\\x\"", ERR_SCANNER);
+	expect_error("\"a\\u0041\"", ERR_SCANNER);
+	expect_error("\"a\\", ERR_SCANNER);
+	expect_error("\"a\\\nb\"", ERR_SCANNER);
+}
+
+// Multiline string literals
+void test_multiline_string_from_specification()
+{
+	set_input("\"\"\"A\n  hoj s\\nvete\n   \"\"\"");
+	expect_string("A\n  hoj s\\nvete\n   ");
+}
+
+void test_multiline_string_with_quotes()
+{
+	set_input("\"\"\"a\"b\"\"c\"\"\"");
+	expect_string("a\"b\"\"c");
+}
+
+void test_multiline_string_ends_with_last_three_quotes()
+{
+	set_input("\"\"\"x\"\"\"\"");
+	expect_string("x\"");
+	TEST_ASSERT_EQUAL(TOKEN_EOF, next_ok().type);
+}
+
+void test_empty_multiline_string()
+{
+	set_input("\"\"\"\"\"\" 1");
+	expect_string("");
+	TEST_ASSERT_EQUAL(TOKEN_INT, next_ok().type);
+}
+
+void test_unterminated_multiline_string()
+{
+	expect_error("\"\"\"abc", ERR_SCANNER);
+	expect_error("\"\"\"abc\"", ERR_SCANNER);
+	expect_error("\"\"\"abc\"\"", ERR_SCANNER);
+}
+
+// Position and lines
+void test_token_line_numbers()
+{
+	set_input("a\nb\n\nc");
+
+	TEST_ASSERT_EQUAL_UINT(1, next_ok().line);
+	TEST_ASSERT_EQUAL_UINT(2, next_ok().line);
+	TEST_ASSERT_EQUAL_UINT(4, next_ok().line);
+}
+
+void test_starts_logical_line_after_newline()
+{
+	set_input("a b\nc");
+
+	TEST_ASSERT_FALSE(next_ok().starts_logical_line);
+	TEST_ASSERT_FALSE(next_ok().starts_logical_line);
+	TEST_ASSERT_TRUE(next_ok().starts_logical_line);
+}
+
+void test_token_ending_at_newline_keeps_newline()
+{
+	set_input("x = 5\nval");
+
+	next_ok();
+	next_ok();
+
+	token_t number = next_ok();
+	TEST_ASSERT_EQUAL(TOKEN_INT, number.type);
+	TEST_ASSERT_EQUAL_UINT(1, number.line);
+
+	token_t keyword = next_ok();
+	TEST_ASSERT_EQUAL(TOKEN_KEYWORD, keyword.type);
+	TEST_ASSERT_TRUE(keyword.starts_logical_line);
+	TEST_ASSERT_EQUAL_UINT(2, keyword.line);
+}
+
+void test_short_program()
+{
+	EXPECT_TYPES("val x: Int = 1_000 + 2.5e-3 * \"a\"", TOKEN_KEYWORD, TOKEN_IDENTIFIER, TOKEN_COLON, TOKEN_KEYWORD,
+				 TOKEN_ASSIGN, TOKEN_INT, TOKEN_PLUS, TOKEN_DOUBLE, TOKEN_ASTERISK, TOKEN_STRING);
+}
+
 int main()
 {
 	UNITY_BEGIN();
@@ -417,6 +549,24 @@ int main()
 	RUN_TEST(test_double_literals);
 	RUN_TEST(test_exponent_literals);
 	RUN_TEST(test_invalid_doubles);
+
+	RUN_TEST(test_string_literal);
+	RUN_TEST(test_empty_string_is_not_null);
+	RUN_TEST(test_string_may_contain_tab);
+	RUN_TEST(test_escape_sequences);
+	RUN_TEST(test_quote_inside_string);
+	RUN_TEST(test_invalid_strings);
+
+	RUN_TEST(test_multiline_string_from_specification);
+	RUN_TEST(test_multiline_string_with_quotes);
+	RUN_TEST(test_multiline_string_ends_with_last_three_quotes);
+	RUN_TEST(test_empty_multiline_string);
+	RUN_TEST(test_unterminated_multiline_string);
+
+	RUN_TEST(test_token_line_numbers);
+	RUN_TEST(test_starts_logical_line_after_newline);
+	RUN_TEST(test_token_ending_at_newline_keeps_newline);
+	RUN_TEST(test_short_program);
 
 	return UNITY_END();
 }
