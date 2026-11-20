@@ -112,6 +112,9 @@ run_case "func-redefinition-3" 4 "functions/invalid/func-redefinition-3.ifj"
 run_case "func-call-undefined-1" 3 "functions/invalid/func-call-undefined-1.ifj"
 run_case "func-call-undefined-2" 3 "functions/invalid/func-call-undefined-2.ifj"
 
+run_case "func-missing-main-1" 3 "functions/invalid/func-missing-main-1.ifj"
+run_case "func-missing-main-2" 3 "functions/invalid/func-missing-main-2.ifj"
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
