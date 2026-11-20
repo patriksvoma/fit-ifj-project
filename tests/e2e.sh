@@ -137,6 +137,9 @@ run_case "func-main-return-type-2" 0 "functions/valid/func-main-return-type-2.if
 run_case "func-main-parameter-1" 5 "functions/invalid/func-main-parameter-1.ifj"
 run_case "func-main-parameter-2" 5 "functions/invalid/func-main-parameter-2.ifj"
 
+run_case "func-unit-empty-return" 6 "functions/invalid/func-unit-empty-return.ifj"
+run_case "func-unit-explicit-return" 0 "functions/valid/func-unit-explicit-return.ifj"
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
