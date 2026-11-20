@@ -1,6 +1,6 @@
 import ifj26.*
 
-def foo(Int): Int =
+def foo(a: Int): Int =
   return 5 + 4
 
 @main
