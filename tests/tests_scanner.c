@@ -236,9 +236,9 @@ void test_identifier()
 
 void test_keywords()
 {
-	keyword_t expected[] = {KW_DEF,	 KW_DO,	   KW_DOUBLE, KW_ELSE,	  KW_IF,		KW_IMPORT,
-							KW_INT,	 KW_RETURN, KW_STRING, KW_THEN,	  KW_UNIT,		KW_VAL,
-							KW_VAR,	 KW_WHILE,  KW_BOOLEAN, KW_EXTENSION, KW_FOR,		KW_MAIN};
+	keyword_t expected[] = {KW_DEF, KW_DO,	   KW_DOUBLE,  KW_ELSE,		 KW_IF,	  KW_IMPORT,
+							KW_INT, KW_RETURN, KW_STRING,  KW_THEN,		 KW_UNIT, KW_VAL,
+							KW_VAR, KW_WHILE,  KW_BOOLEAN, KW_EXTENSION, KW_FOR,  KW_MAIN};
 
 	set_input("def do Double else if import Int return String then Unit val var while Boolean extension for @main");
 
