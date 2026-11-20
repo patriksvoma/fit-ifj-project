@@ -53,15 +53,19 @@ run_case()
 	fi
 }
 
+# Main
+run_case "valid-main" 0 "main/valid/valid-main.ifj"
+run_case "invalid-prologue" 2 "main/invalid/invalid-prologue.ifj"
+
 # Function calls
-run_case "valid-func-call-no-list" 0 "functions/valid/valid-func-call-no-list"
-run_case "valid-func-call-one-list-empty" 0 "functions/valid/valid-func-call-one-list-empty"
-run_case "valid-func-call-one-list-one-param" 0 "functions/valid/valid-func-call-one-list-one-param"
-run_case "valid-func-call-one-list-mul-param" 0 "functions/valid/valid-func-call-one-list-mul-param"
-run_case "valid-func-call-mul-list-empty" 0 "functions/valid/valid-func-call-mul-list-empty"
-run_case "valid-func-call-mul-list-one-param" 0 "functions/valid/valid-func-call-mul-list-one-param"
-run_case "valid-func-call-mul-list-mul-param" 0 "functions/valid/valid-func-call-mul-list-mul-param"
-run_case "valid-func-call-mul-list-mix-param" 0 "functions/valid/valid-func-call-mul-list-mix-param"
+run_case "valid-func-call-no-list" 0 "functions/valid/valid-func-call-no-list.ifj"
+run_case "valid-func-call-one-list-empty" 0 "functions/valid/valid-func-call-one-list-empty.ifj"
+run_case "valid-func-call-one-list-one-param" 0 "functions/valid/valid-func-call-one-list-one-param.ifj"
+run_case "valid-func-call-one-list-mul-param" 0 "functions/valid/valid-func-call-one-list-mul-param.ifj"
+run_case "valid-func-call-mul-list-empty" 0 "functions/valid/valid-func-call-mul-list-empty.ifj"
+run_case "valid-func-call-mul-list-one-param" 0 "functions/valid/valid-func-call-mul-list-one-param.ifj"
+run_case "valid-func-call-mul-list-mul-param" 0 "functions/valid/valid-func-call-mul-list-mul-param.ifj"
+run_case "valid-func-call-mul-list-mix-param" 0 "functions/valid/valid-func-call-mul-list-mix-param.ifj"
 
 run_case "func-call-missing-list-1" 5 "functions/invalid/func-call-missing-list-1.ifj"
 run_case "func-call-missing-list-2" 5 "functions/invalid/func-call-missing-list-2.ifj"
@@ -97,9 +101,6 @@ run_case "func-call-missing-par-type-3" 2 "functions/invalid/func-call-missing-p
 run_case "func-call-missing-par-name-1" 2 "functions/invalid/func-call-missing-par-name-1.ifj"
 run_case "func-call-missing-par-name-2" 2 "functions/invalid/func-call-missing-par-name-2.ifj"
 run_case "func-call-missing-par-colon" 2 "functions/invalid/func-call-missing-par-colon.ifj"
-
-run_case "valid-main" 0 "valid-main.ifj"
-run_case "invalid-prologue" 2 "invalid-prologue.ifj"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
