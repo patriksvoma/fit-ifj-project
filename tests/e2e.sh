@@ -77,10 +77,10 @@ run_case "func-call-extra-list-2" 5 "functions/invalid/func-call-extra-list-2.if
 run_case "func-call-extra-list-3" 5 "functions/invalid/func-call-extra-list-3.ifj"
 run_case "func-call-extra-list-4" 5 "functions/invalid/func-call-extra-list-4.ifj"
 
+run_case "func-call-wrong-par-type-1" 5 "functions/invalid/func-call-wrong-par-type-1.ifj"
 run_case "func-call-wrong-par-type-2" 5 "functions/invalid/func-call-wrong-par-type-2.ifj"
 run_case "func-call-wrong-par-type-3" 5 "functions/invalid/func-call-wrong-par-type-3.ifj"
 run_case "func-call-wrong-par-type-4" 5 "functions/invalid/func-call-wrong-par-type-4.ifj"
-run_case "func-call-wrong-par-type-1" 5 "functions/invalid/func-call-wrong-par-type-1.ifj"
 run_case "func-call-wrong-par-type-5" 5 "functions/invalid/func-call-wrong-par-type-5.ifj"
 run_case "func-call-wrong-par-type-6" 5 "functions/invalid/func-call-wrong-par-type-6.ifj"
 run_case "func-call-wrong-par-type-7" 5 "functions/invalid/func-call-wrong-par-type-7.ifj"
@@ -125,6 +125,14 @@ run_case "func-main-diff-line" 0 "functions/valid/func-main-diff-line.ifj"
 
 run_case "func-main-wrong-annotation-1" 1 "functions/invalid/func-main-wrong-annotation-1.ifj"
 run_case "func-main-wrong-annotation-2" 1 "functions/invalid/func-main-wrong-annotation-2.ifj"
+
+run_case "func-main-wrong-return-type-1" 6 "functions/invalid/func-main-wrong-return-type-1.ifj"
+run_case "func-main-wrong-return-type-2" 6 "functions/invalid/func-main-wrong-return-type-2.ifj"
+run_case "func-main-wrong-return-type-3" 6 "functions/invalid/func-main-wrong-return-type-3.ifj"
+run_case "func-main-wrong-return-type-4" 6 "functions/invalid/func-main-wrong-return-type-4.ifj"
+
+run_case "func-main-return-type-1" 0 "functions/valid/func-main-return-type-1.ifj"
+run_case "func-main-return-type-2" 0 "functions/valid/func-main-return-type-2.ifj"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
