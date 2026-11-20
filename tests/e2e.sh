@@ -44,10 +44,14 @@ run_case()
 }
 
 
-run_case "func-call-missing-list-1" 2 "functions/invalid/func-call-missing-list-1"
-run_case "func-call-missing-list-2" 2 "functions/invalid/func-call-missing-list-2"
-run_case "func-call-missing-list-3" 2 "functions/invalid/func-call-missing-list-3"
-run_case "func-call-missing-list-4" 2 "functions/invalid/func-call-missing-list-4"
+run_case "func-call-missing-list-1" 2 "functions/invalid/func-call-missing-list-1.ifj"
+run_case "func-call-missing-list-2" 2 "functions/invalid/func-call-missing-list-2.ifj"
+run_case "func-call-missing-list-3" 2 "functions/invalid/func-call-missing-list-3.ifj"
+run_case "func-call-missing-list-4" 2 "functions/invalid/func-call-missing-list-4.ifj"
+run_case "func-call-extra-list-1" 2 "functions/invalid/func-call-extra-list-1.ifj"
+run_case "func-call-extra-list-2" 2 "functions/invalid/func-call-extra-list-2.ifj"
+run_case "func-call-extra-list-3" 2 "functions/invalid/func-call-extra-list-3.ifj"
+run_case "func-call-extra-list-4" 2 "functions/invalid/func-call-extra-list-4.ifj"
 
 run_case "valid-main" 0 "valid-main.ifj"
 run_case "invalid-prologue" 2 "invalid-prologue.ifj"
