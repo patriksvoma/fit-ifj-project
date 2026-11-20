@@ -36,7 +36,6 @@ err_t for_by(parser_data_t *pdata);
 err_t for_guard(parser_data_t *pdata);
 err_t val_var_def(parser_data_t *pdata, ast_node_t *var_def_node, symbol_data_t *table_entry);
 err_t expression(parser_data_t *pdata, ast_node_t **return_node);
-err_t expression_seeded(parser_data_t *pdata, ast_node_t **return_node, token_t *seed_token);
 
 /**
  * @brief The entry rule of syntax analysis | <prologue>
@@ -1086,15 +1085,15 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 		// id = <expression>
 		// <expression>
 
-		// FIXME: The string most probably needs to be copied here
 		token_t id_token = pdata->token;
+		token_t next_token;
 
-		result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+		result = peek_next_token(&next_token, EOL_FORBIDDEN);
 		if (result)
 			return result;
 
 		// id = <expression>
-		if (pdata->token.type == TOKEN_ASSIGN)
+		if (next_token.type == TOKEN_ASSIGN)
 		{
 			result = get_next_token(&pdata->token, EOL_FORBIDDEN);
 			if (result)
@@ -1117,8 +1116,7 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 		}
 
 		// <expression>
-		// The expression parser needs to have the id token seeded before the token in pdata
-		result = expression_seeded(pdata, &statement_node, &id_token);
+		result = expression(pdata, &statement_node);
 		if (result)
 			return result;
 		return ast_block_add_statement(block_node, statement_node);
@@ -1415,21 +1413,7 @@ err_t val_var_def(parser_data_t *pdata, ast_node_t *var_def_node, symbol_data_t 
  */
 err_t expression(parser_data_t *pdata, ast_node_t **return_node)
 {
-	return parse_expression(pdata, NULL, return_node);
-}
-
-/**
- * @brief Expression rule with a seeded token at the beginning | <expression>
- *
- * @param pdata Parser data
- * @param return_node Address to which the address of the created AST note should be written
- * @param seed_token If specified, this token is used as the first token in the expression.
- * 					 If NULL, works the same as expression().
- * @return err_t Error code
- */
-err_t expression_seeded(parser_data_t *pdata, ast_node_t **return_node, token_t *seed_token)
-{
-	return parse_expression(pdata, seed_token, return_node);
+	return parse_expression(pdata, return_node);
 }
 
 err_t parse(ast_node_t *program_node, parser_data_t *pdata)

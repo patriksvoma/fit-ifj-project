@@ -1,0 +1,8 @@
+import ifj26.*
+
+def foo()(x: Int, y: Int): Int =
+  return x - y
+
+@main
+def main(): Unit =
+  foo()(48, 32)
