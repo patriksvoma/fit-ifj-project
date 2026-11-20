@@ -6,3 +6,4 @@ def foo(aaa: Int, ccc: Int)(bbb: Int, ddd: Int): Int =
 @main
 def main(): Unit =
   foo(5, 10)(5, 10)
+  return

@@ -1,5 +1,5 @@
 import ifj26.*
 
-@main def func() =
+@main def func(): Unit =
   1 + 2
   return
