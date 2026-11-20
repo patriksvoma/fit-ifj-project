@@ -43,14 +43,14 @@ run_case()
 	fi
 }
 
-run_case "valid-func-call-no-list" 0 "valid/valid-func-call-no-list"
-run_case "valid-func-call-one-list-empty" 0 "valid/valid-func-call-one-list-empty"
-run_case "valid-func-call-one-list-one-param" 0 "valid/valid-func-call-one-list-one-param"
-run_case "valid-func-call-one-list-mul-param" 0 "valid/valid-func-call-one-list-mul-param"
-run_case "valid-func-call-mul-list-empty" 0 "valid/valid-func-call-mul-list-empty"
-run_case "valid-func-call-mul-list-one-param" 0 "valid/valid-func-call-mul-list-one-param"
-run_case "valid-func-call-mul-list-mul-param" 0 "valid/valid-func-call-mul-list-mul-param"
-run_case "valid-func-call-mul-list-mix-param" 0 "valid/valid-func-call-mul-list-mix-param"
+run_case "valid-func-call-no-list" 0 "functions/valid/valid-func-call-no-list"
+run_case "valid-func-call-one-list-empty" 0 "functions/valid/valid-func-call-one-list-empty"
+run_case "valid-func-call-one-list-one-param" 0 "functions/valid/valid-func-call-one-list-one-param"
+run_case "valid-func-call-one-list-mul-param" 0 "functions/valid/valid-func-call-one-list-mul-param"
+run_case "valid-func-call-mul-list-empty" 0 "functions/valid/valid-func-call-mul-list-empty"
+run_case "valid-func-call-mul-list-one-param" 0 "functions/valid/valid-func-call-mul-list-one-param"
+run_case "valid-func-call-mul-list-mul-param" 0 "functions/valid/valid-func-call-mul-list-mul-param"
+run_case "valid-func-call-mul-list-mix-param" 0 "functions/valid/valid-func-call-mul-list-mix-param"
 
 run_case "valid-main" 0 "valid-main.ifj"
 run_case "invalid-prologue" 2 "invalid-prologue.ifj"
