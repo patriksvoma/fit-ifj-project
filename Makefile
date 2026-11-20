@@ -3,7 +3,7 @@
 # Authors:
 #	xsvomap00 (Patrik Švoma)
 
-.PHONY: build check build-check test test-e2e format clean
+.PHONY: build check build-check test e2e-test format clean
 
 CC = gcc-14
 CFLAGS = -Wall -Wextra -Werror -MMD -MP
@@ -15,7 +15,7 @@ DEP = $(OBJ:.o=.d)
 TARGET = ifj-project
 
 TEST_SRC = $(wildcard tests/*.c)
-TEST_BIN = $(TEST_SRC:.c=)
+TEST_BIN = $(TEST_SRC:.c=.test)
 LIB_SRC = $(filter-out src/main.c,$(SRC))
 UNITY_DIR = third-party/Unity/src
 
@@ -42,13 +42,12 @@ build-check: check build
 test: $(TEST_BIN)
 	@status=0; for t in $(TEST_BIN); do ./$$t || status=1; done; exit $$status
 
-tests/%: tests/%.c $(LIB_SRC) $(UNITY_DIR)/unity.c
+tests/%.test: tests/%.c $(LIB_SRC) $(UNITY_DIR)/unity.c
 	$(CC) $(CFLAGS) -D UNITY_OUTPUT_COLOR -Isrc -I$(UNITY_DIR) $^ -o $@
 
 # Run compiler integration tests against source fixtures
-test-e2e: build
+e2e-test: build
 	sh ./tests/e2e.sh
-
 
 # Formats all .c and .h files
 format:
@@ -56,4 +55,4 @@ format:
 
 # Cleans files created during a build
 clean:
-	rm -f $(OBJ) $(DEP) $(TARGET) $(TEST_BIN) $(TEST_BIN:=.d)
+	rm -f $(OBJ) $(DEP) $(TARGET) $(TEST_BIN) $(TEST_BIN:.test=.d) $(TEST_BIN:=.test)
