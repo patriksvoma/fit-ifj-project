@@ -43,6 +43,12 @@ run_case()
 	fi
 }
 
+
+run_case "func-call-missing-list-1" 2 "functions/invalid/func-call-missing-list-1"
+run_case "func-call-missing-list-2" 2 "functions/invalid/func-call-missing-list-2"
+run_case "func-call-missing-list-3" 2 "functions/invalid/func-call-missing-list-3"
+run_case "func-call-missing-list-4" 2 "functions/invalid/func-call-missing-list-4"
+
 run_case "valid-main" 0 "valid-main.ifj"
 run_case "invalid-prologue" 2 "invalid-prologue.ifj"
 run_case "duplicate-function" 4 "duplicate-function.ifj"
