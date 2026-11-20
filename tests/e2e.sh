@@ -134,6 +134,9 @@ run_case "func-main-wrong-return-type-4" 6 "functions/invalid/func-main-wrong-re
 run_case "func-main-return-type-1" 0 "functions/valid/func-main-return-type-1.ifj"
 run_case "func-main-return-type-2" 0 "functions/valid/func-main-return-type-2.ifj"
 
+run_case "func-main-parameter-1" 5 "functions/invalid/func-main-parameter-1.ifj"
+run_case "func-main-parameter-2" 5 "functions/invalid/func-main-parameter-2.ifj"
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
