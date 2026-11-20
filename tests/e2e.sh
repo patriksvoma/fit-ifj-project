@@ -1,4 +1,4 @@
-# Tento soubor byl napsan pomoci AI
+# Tento soubor byl puvodne napsan pomoci AI (nasledne upraven)
 # Model: Copilot Fusion (gp6-luna)
 # Prompt: can you write me a simple extendable script with a few test cases
 
@@ -21,6 +21,16 @@ fi
 passed=0
 failed=0
 
+if [ -t 1 ] && [ -t 2 ] && [ -z "${NO_COLOR+x}" ] && [ "${TERM:-}" != "dumb" ]; then
+	GREEN=$(printf '\033[32m')
+	RED=$(printf '\033[31m')
+	RESET=$(printf '\033[0m')
+else
+	GREEN=''
+	RED=''
+	RESET=''
+fi
+
 run_case()
 {
 	name=$1
@@ -32,10 +42,10 @@ run_case()
 	actual=$?
 
 	if [ "$actual" -eq "$expected" ]; then
-		printf 'PASS: %s (exit %s)\n' "$name" "$actual"
+		printf '%sPASS%s: %s (exit %s)\n' "$GREEN" "$RESET" "$name" "$actual"
 		passed=$((passed + 1))
 	else
-		printf 'FAIL: %s (expected exit %s, got %s)\n' "$name" "$expected" "$actual" >&2
+		printf '%sFAIL%s: %s (expected exit %s, got %s)\n' "$RED" "$RESET" "$name" "$expected" "$actual" >&2
 		if [ -s "$stderr_file" ]; then
 			cat "$stderr_file" >&2
 		fi
@@ -99,7 +109,10 @@ run_case "function-call-wrong-type" 6 "function-call-wrong-type.ifj"
 run_case "function-call-unexpected-empty-list" 5 "function-call-unexpected-empty-list.ifj"
 run_case "function-call-omitted-empty-list" 5 "function-call-omitted-empty-list.ifj"
 
-printf '\n%d passed, %d failed\n' "$passed" "$failed"
+printf '\n'
 if [ "$failed" -ne 0 ]; then
+printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
 	exit 1
 fi
+
+printf '%s%d passed, %d failed%s\n' "$GREEN" "$passed" "$failed" "$RESET"
