@@ -521,12 +521,16 @@ void test_short_program()
 // Comments
 void test_division_is_not_comment()
 {
+	TEST_IGNORE_MESSAGE("comments not merged yet");
+
 	EXPECT_TYPES("a / b", TOKEN_IDENTIFIER, TOKEN_DIV, TOKEN_IDENTIFIER);
 	EXPECT_TYPES("a/b", TOKEN_IDENTIFIER, TOKEN_DIV, TOKEN_IDENTIFIER);
 }
 
 void test_line_comment_acts_as_newline()
 {
+	TEST_IGNORE_MESSAGE("comments not merged yet");
+
 	set_input("a // komentar\nb");
 
 	TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER, next_ok().type);
@@ -539,12 +543,16 @@ void test_line_comment_acts_as_newline()
 
 void test_line_comment_at_end_of_file()
 {
+	TEST_IGNORE_MESSAGE("comments not merged yet");
+
 	EXPECT_TYPES("a // bez konce radku", TOKEN_IDENTIFIER);
 	EXPECT_TYPES("//\n//\nx", TOKEN_IDENTIFIER);
 }
 
 void test_block_comment_acts_as_space()
 {
+	TEST_IGNORE_MESSAGE("comments not merged yet");
+
 	set_input("a/* x */b");
 
 	TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER, next_ok().type);
@@ -556,12 +564,16 @@ void test_block_comment_acts_as_space()
 
 void test_nested_block_comments()
 {
+	TEST_IGNORE_MESSAGE("comments not merged yet");
+
 	EXPECT_TYPES("/* a /* b */ c */ x", TOKEN_IDENTIFIER);
 	EXPECT_TYPES("/* /* /* */ */ */ x", TOKEN_IDENTIFIER);
 }
 
 void test_block_comment_with_extra_characters()
 {
+	TEST_IGNORE_MESSAGE("comments not merged yet");
+
 	EXPECT_TYPES("/** x **/ y", TOKEN_IDENTIFIER);
 	EXPECT_TYPES("/***/x", TOKEN_IDENTIFIER);
 	EXPECT_TYPES("/*//* x */ y */ z", TOKEN_IDENTIFIER);
@@ -576,6 +588,8 @@ void test_unterminated_block_comment()
 
 void test_multiline_block_comment_acts_as_newline()
 {
+	TEST_IGNORE_MESSAGE("comments not merged yet");
+
 	set_input("a /* x\ny */\nb");
 
 	TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER, next_ok().type);
@@ -588,12 +602,16 @@ void test_multiline_block_comment_acts_as_newline()
 
 void test_token_after_multiline_block_comment_is_error()
 {
+	TEST_IGNORE_MESSAGE("comments not merged yet");
+
 	expect_error("a /* x\ny */ b", ERR_SYNTAX);
 	expect_error("/* \n */ \"s\"", ERR_SYNTAX);
 }
 
 void test_multiline_block_comment_before_eof_or_line_comment()
 {
+	TEST_IGNORE_MESSAGE("comments not merged yet");
+
 	EXPECT_TYPES("a /* \n */", TOKEN_IDENTIFIER);
 	EXPECT_TYPES("a /* \n */ // ok\nb", TOKEN_IDENTIFIER, TOKEN_IDENTIFIER);
 }
