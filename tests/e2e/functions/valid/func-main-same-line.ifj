@@ -1,0 +1,5 @@
+import ifj26.*
+
+@main def func() =
+  1 + 2
+  return

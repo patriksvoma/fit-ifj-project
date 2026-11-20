@@ -120,6 +120,12 @@ run_case "func-multiple-main-2" 4 "functions/invalid/func-multiple-main-2.ifj"
 
 run_case "func-main-space" 1 "functions/invalid/func-main-space.ifj"
 
+run_case "func-main-same-line" 0 "functions/valid/func-main-same-line.ifj"
+run_case "func-main-diff-line" 0 "functions/valid/func-main-diff-line.ifj"
+
+run_case "func-main-wrong-annotation-1" 1 "functions/invalid/func-main-wrong-annotation-1.ifj"
+run_case "func-main-wrong-annotation-2" 1 "functions/invalid/func-main-wrong-annotation-2.ifj"
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
