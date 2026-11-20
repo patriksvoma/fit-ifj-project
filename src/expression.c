@@ -12,6 +12,9 @@
 
 #define PREC_TABLE_SIZE 20
 
+static err_t parse_expression_internal(parser_data_t *pdata, ast_node_t **return_node, bool stop_at_call_delimiter);
+static err_t parse_function_call(parser_data_t *pdata, const token_t *identifier_token, ast_node_t **return_node);
+
 /**
  * @brief All possible grammar rules
  *
@@ -85,6 +88,7 @@ err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item, boo
 	symstack_item_t item;
 	item.next = NULL;
 	item.source_token = *token;
+	item.node = NULL;
 	// TODO: Maybe copy the string if the token is an identificator
 
 	switch (token->type)
@@ -357,10 +361,11 @@ prec_rule_t find_rule(const symstack_t *stack)
  *
  * @param rule Rule to apply
  * @param stack Symbol stack
+ * @param pdata Parser data
  * @param line Line on which the expression is located
  * @return err_t Error code
  */
-err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
+err_t apply_rule(prec_rule_t rule, symstack_t *stack, parser_data_t *pdata, unsigned line)
 {
 	err_t result;
 
@@ -373,7 +378,13 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// i
 	case RULE_I:
 		token_t token = stack->top->source_token;
-		if (token.type == TOKEN_BOOLEAN)
+		// If the stack item has a node, it is a parsed function call, and the node can be reused
+		if (stack->top->node)
+		{
+			node = stack->top->node;
+			stack->top->node = NULL;
+		}
+		else if (token.type == TOKEN_BOOLEAN)
 		{
 			literal_t lit;
 			lit.literal_type = TYPE_BOOLEAN;
@@ -407,13 +418,49 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		}
 		else if (token.type == TOKEN_IDENTIFIER)
 		{
-			// TODO: Check the symbol table, figure out if it is a function or a variable.
-			// If it is a visible variable, call add_identifier().
-			// If not, make a function call, the existence of the function will be checked
-			// before generating output code, as the function can be declared later
-			//
-			// Probably will need lookahead to be implemented into the scanner to support calls without parameter lists
-			node = ast_var_use_make(token.attribute.string, TYPE_INT);
+			// Find the identifier_token in the symbol table
+			symbol_data_t *entry = symtable_item_find(pdata->local_var_table, token.attribute.string);
+			if (!entry)
+			{
+				print_err_l("Identifier is not defined.", ERR_SEMANTIC_UNDEFINED, token.line);
+				return ERR_SEMANTIC_UNDEFINED;
+			}
+
+			// Variable use
+			if (entry->symbol_type == SYM_VARIABLE)
+			{
+				if (!entry->data.variable.is_defined)
+				{
+					print_err_l("Variable is not defined.", ERR_SEMANTIC_UNDEFINED, token.line);
+					return ERR_SEMANTIC_UNDEFINED;
+				}
+				node = ast_var_use_make(entry->data.variable.unique_name, entry->data.variable.type);
+			}
+			// Function call
+			else if (entry->symbol_type == SYM_FUNCTION)
+			{
+				if (!entry->data.function.is_defined)
+				{
+					print_err_l("Function is not defined.", ERR_SEMANTIC_UNDEFINED, token.line);
+					return ERR_SEMANTIC_UNDEFINED;
+				}
+
+				if (entry->data.function.param_list_count != 0)
+				{
+					print_err_l("A function call is missing the parameter list.", ERR_SEMANTIC_INVALID_ARG, token.line);
+					return ERR_SEMANTIC_INVALID_ARG;
+				}
+
+				// Create the AST node
+				node = ast_func_call_make(token.attribute.string);
+				if (node)
+					node->eval_type = entry->data.function.return_type;
+			}
+			else
+			{
+				print_err_l("Identifier cannot be used as an expression.", ERR_SEMANTIC_INVALID_TYPE, token.line);
+				return ERR_SEMANTIC_INVALID_TYPE;
+			}
 		}
 
 		result = symstack_pop_multiple(stack, 2);
@@ -426,7 +473,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		if (result)
 			return result;
 
-		node = stack->top->data.expression_node;
+		node = stack->top->node;
 
 		result = symstack_pop_multiple(stack, 3);
 		if (result)
@@ -440,14 +487,14 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// !E
 	case RULE_NEG:
 		// Type check
-		op2_type = stack->top->data.expression_node->eval_type;
+		op2_type = stack->top->node->eval_type;
 		if (op2_type != TYPE_BOOLEAN)
 		{
 			print_err_l("Invalid operand type for unary operator \"!\".", ERR_SEMANTIC_INVALID_TYPE, line);
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_unary_op_make(OP_NEG, stack->top->data.expression_node);
+		node = ast_unary_op_make(OP_NEG, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 3);
 		if (result)
@@ -456,14 +503,14 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// +E
 	case RULE_UPLUS:
 		// Type check
-		op2_type = stack->top->data.expression_node->eval_type;
+		op2_type = stack->top->node->eval_type;
 		if (op2_type != TYPE_INT && op2_type != TYPE_DOUBLE)
 		{
 			print_err_l("Invalid operand type for unary operator \"+\".", ERR_SEMANTIC_INVALID_TYPE, line);
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_unary_op_make(OP_UPLUS, stack->top->data.expression_node);
+		node = ast_unary_op_make(OP_UPLUS, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 3);
 		if (result)
@@ -472,14 +519,14 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// -E
 	case RULE_UMINUS:
 		// Type check
-		op2_type = stack->top->data.expression_node->eval_type;
+		op2_type = stack->top->node->eval_type;
 		if (op2_type != TYPE_INT && op2_type != TYPE_DOUBLE)
 		{
 			print_err_l("Invalid operand type for unary operator \"-\".", ERR_SEMANTIC_INVALID_TYPE, line);
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_unary_op_make(OP_UMINUS, stack->top->data.expression_node);
+		node = ast_unary_op_make(OP_UMINUS, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 3);
 		if (result)
@@ -488,14 +535,13 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// E*E
 	case RULE_MUL:
 		// Type check
-		op1_type = stack->top->next->next->data.expression_node->eval_type;
-		op2_type = stack->top->data.expression_node->eval_type;
+		op1_type = stack->top->next->next->node->eval_type;
+		op2_type = stack->top->node->eval_type;
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			stack->top->next->next->data.expression_node =
-				ast_int2double_make(stack->top->next->next->data.expression_node);
-			if (stack->top->next->next->data.expression_node == NULL)
+			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
+			if (stack->top->next->next->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -503,8 +549,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			stack->top->data.expression_node = ast_int2double_make(stack->top->data.expression_node);
-			if (stack->top->data.expression_node == NULL)
+			stack->top->node = ast_int2double_make(stack->top->node);
+			if (stack->top->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -517,8 +563,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node =
-			ast_binary_op_make(OP_MUL, stack->top->next->next->data.expression_node, stack->top->data.expression_node);
+		node = ast_binary_op_make(OP_MUL, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -527,14 +572,13 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// E/E
 	case RULE_DIV:
 		// Type check
-		op1_type = stack->top->next->next->data.expression_node->eval_type;
-		op2_type = stack->top->data.expression_node->eval_type;
+		op1_type = stack->top->next->next->node->eval_type;
+		op2_type = stack->top->node->eval_type;
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			stack->top->next->next->data.expression_node =
-				ast_int2double_make(stack->top->next->next->data.expression_node);
-			if (stack->top->next->next->data.expression_node == NULL)
+			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
+			if (stack->top->next->next->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -542,8 +586,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			stack->top->data.expression_node = ast_int2double_make(stack->top->data.expression_node);
-			if (stack->top->data.expression_node == NULL)
+			stack->top->node = ast_int2double_make(stack->top->node);
+			if (stack->top->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -556,8 +600,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node =
-			ast_binary_op_make(OP_DIV, stack->top->next->next->data.expression_node, stack->top->data.expression_node);
+		node = ast_binary_op_make(OP_DIV, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -566,14 +609,13 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// E+E
 	case RULE_ADD:
 		// Type check
-		op1_type = stack->top->next->next->data.expression_node->eval_type;
-		op2_type = stack->top->data.expression_node->eval_type;
+		op1_type = stack->top->next->next->node->eval_type;
+		op2_type = stack->top->node->eval_type;
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			stack->top->next->next->data.expression_node =
-				ast_int2double_make(stack->top->next->next->data.expression_node);
-			if (stack->top->next->next->data.expression_node == NULL)
+			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
+			if (stack->top->next->next->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -581,8 +623,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			stack->top->data.expression_node = ast_int2double_make(stack->top->data.expression_node);
-			if (stack->top->data.expression_node == NULL)
+			stack->top->node = ast_int2double_make(stack->top->node);
+			if (stack->top->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -596,8 +638,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node =
-			ast_binary_op_make(OP_PLUS, stack->top->next->next->data.expression_node, stack->top->data.expression_node);
+		node = ast_binary_op_make(OP_PLUS, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -606,14 +647,13 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// E-E
 	case RULE_SUB:
 		// Type check
-		op1_type = stack->top->next->next->data.expression_node->eval_type;
-		op2_type = stack->top->data.expression_node->eval_type;
+		op1_type = stack->top->next->next->node->eval_type;
+		op2_type = stack->top->node->eval_type;
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			stack->top->next->next->data.expression_node =
-				ast_int2double_make(stack->top->next->next->data.expression_node);
-			if (stack->top->next->next->data.expression_node == NULL)
+			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
+			if (stack->top->next->next->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -621,8 +661,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			stack->top->data.expression_node = ast_int2double_make(stack->top->data.expression_node);
-			if (stack->top->data.expression_node == NULL)
+			stack->top->node = ast_int2double_make(stack->top->node);
+			if (stack->top->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -635,8 +675,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_binary_op_make(OP_MINUS, stack->top->next->next->data.expression_node,
-								  stack->top->data.expression_node);
+		node = ast_binary_op_make(OP_MINUS, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -645,14 +684,13 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// E<E
 	case RULE_LT:
 		// Type check
-		op1_type = stack->top->next->next->data.expression_node->eval_type;
-		op2_type = stack->top->data.expression_node->eval_type;
+		op1_type = stack->top->next->next->node->eval_type;
+		op2_type = stack->top->node->eval_type;
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			stack->top->next->next->data.expression_node =
-				ast_int2double_make(stack->top->next->next->data.expression_node);
-			if (stack->top->next->next->data.expression_node == NULL)
+			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
+			if (stack->top->next->next->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -660,8 +698,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			stack->top->data.expression_node = ast_int2double_make(stack->top->data.expression_node);
-			if (stack->top->data.expression_node == NULL)
+			stack->top->node = ast_int2double_make(stack->top->node);
+			if (stack->top->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -675,8 +713,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node =
-			ast_binary_op_make(OP_LESS, stack->top->next->next->data.expression_node, stack->top->data.expression_node);
+		node = ast_binary_op_make(OP_LESS, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -685,14 +722,13 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// E<=E
 	case RULE_LE:
 		// Type check
-		op1_type = stack->top->next->next->data.expression_node->eval_type;
-		op2_type = stack->top->data.expression_node->eval_type;
+		op1_type = stack->top->next->next->node->eval_type;
+		op2_type = stack->top->node->eval_type;
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			stack->top->next->next->data.expression_node =
-				ast_int2double_make(stack->top->next->next->data.expression_node);
-			if (stack->top->next->next->data.expression_node == NULL)
+			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
+			if (stack->top->next->next->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -700,8 +736,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			stack->top->data.expression_node = ast_int2double_make(stack->top->data.expression_node);
-			if (stack->top->data.expression_node == NULL)
+			stack->top->node = ast_int2double_make(stack->top->node);
+			if (stack->top->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -715,8 +751,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_binary_op_make(OP_LESS_EQUAL, stack->top->next->next->data.expression_node,
-								  stack->top->data.expression_node);
+		node = ast_binary_op_make(OP_LESS_EQUAL, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -725,14 +760,13 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// E>E
 	case RULE_GT:
 		// Type check
-		op1_type = stack->top->next->next->data.expression_node->eval_type;
-		op2_type = stack->top->data.expression_node->eval_type;
+		op1_type = stack->top->next->next->node->eval_type;
+		op2_type = stack->top->node->eval_type;
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			stack->top->next->next->data.expression_node =
-				ast_int2double_make(stack->top->next->next->data.expression_node);
-			if (stack->top->next->next->data.expression_node == NULL)
+			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
+			if (stack->top->next->next->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -740,8 +774,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			stack->top->data.expression_node = ast_int2double_make(stack->top->data.expression_node);
-			if (stack->top->data.expression_node == NULL)
+			stack->top->node = ast_int2double_make(stack->top->node);
+			if (stack->top->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -755,8 +789,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_binary_op_make(OP_GREATER, stack->top->next->next->data.expression_node,
-								  stack->top->data.expression_node);
+		node = ast_binary_op_make(OP_GREATER, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -765,14 +798,13 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// E>=E
 	case RULE_GE:
 		// Type check
-		op1_type = stack->top->next->next->data.expression_node->eval_type;
-		op2_type = stack->top->data.expression_node->eval_type;
+		op1_type = stack->top->next->next->node->eval_type;
+		op2_type = stack->top->node->eval_type;
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			stack->top->next->next->data.expression_node =
-				ast_int2double_make(stack->top->next->next->data.expression_node);
-			if (stack->top->next->next->data.expression_node == NULL)
+			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
+			if (stack->top->next->next->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -780,8 +812,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			stack->top->data.expression_node = ast_int2double_make(stack->top->data.expression_node);
-			if (stack->top->data.expression_node == NULL)
+			stack->top->node = ast_int2double_make(stack->top->node);
+			if (stack->top->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -795,8 +827,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_binary_op_make(OP_GREATER_EQUAL, stack->top->next->next->data.expression_node,
-								  stack->top->data.expression_node);
+		node = ast_binary_op_make(OP_GREATER_EQUAL, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -805,14 +836,13 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// E==E
 	case RULE_EQ:
 		// Type check
-		op1_type = stack->top->next->next->data.expression_node->eval_type;
-		op2_type = stack->top->data.expression_node->eval_type;
+		op1_type = stack->top->next->next->node->eval_type;
+		op2_type = stack->top->node->eval_type;
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			stack->top->next->next->data.expression_node =
-				ast_int2double_make(stack->top->next->next->data.expression_node);
-			if (stack->top->next->next->data.expression_node == NULL)
+			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
+			if (stack->top->next->next->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -820,8 +850,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			stack->top->data.expression_node = ast_int2double_make(stack->top->data.expression_node);
-			if (stack->top->data.expression_node == NULL)
+			stack->top->node = ast_int2double_make(stack->top->node);
+			if (stack->top->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -837,8 +867,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_binary_op_make(OP_EQUAL, stack->top->next->next->data.expression_node,
-								  stack->top->data.expression_node);
+		node = ast_binary_op_make(OP_EQUAL, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -847,14 +876,13 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// E!=E
 	case RULE_NE:
 		// Type check
-		op1_type = stack->top->next->next->data.expression_node->eval_type;
-		op2_type = stack->top->data.expression_node->eval_type;
+		op1_type = stack->top->next->next->node->eval_type;
+		op2_type = stack->top->node->eval_type;
 
 		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
 		{
-			stack->top->next->next->data.expression_node =
-				ast_int2double_make(stack->top->next->next->data.expression_node);
-			if (stack->top->next->next->data.expression_node == NULL)
+			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
+			if (stack->top->next->next->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -862,8 +890,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 		}
 		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
 		{
-			stack->top->data.expression_node = ast_int2double_make(stack->top->data.expression_node);
-			if (stack->top->data.expression_node == NULL)
+			stack->top->node = ast_int2double_make(stack->top->node);
+			if (stack->top->node == NULL)
 			{
 				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
 				return ERR_INTERNAL;
@@ -879,8 +907,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_binary_op_make(OP_NOT_EQUAL, stack->top->next->next->data.expression_node,
-								  stack->top->data.expression_node);
+		node = ast_binary_op_make(OP_NOT_EQUAL, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -889,8 +916,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// E&&E
 	case RULE_AND:
 		// Type check
-		op1_type = stack->top->next->next->data.expression_node->eval_type;
-		op2_type = stack->top->data.expression_node->eval_type;
+		op1_type = stack->top->next->next->node->eval_type;
+		op2_type = stack->top->node->eval_type;
 
 		if (!(op1_type == TYPE_BOOLEAN && op2_type == TYPE_BOOLEAN))
 		{
@@ -898,8 +925,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_binary_op_make(OP_LOGIC_AND, stack->top->next->next->data.expression_node,
-								  stack->top->data.expression_node);
+		node = ast_binary_op_make(OP_LOGIC_AND, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -908,8 +934,8 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	// E||E
 	case RULE_OR:
 		// Type check
-		op1_type = stack->top->next->next->data.expression_node->eval_type;
-		op2_type = stack->top->data.expression_node->eval_type;
+		op1_type = stack->top->next->next->node->eval_type;
+		op2_type = stack->top->node->eval_type;
 
 		if (!(op1_type == TYPE_BOOLEAN && op2_type == TYPE_BOOLEAN))
 		{
@@ -917,8 +943,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		node = ast_binary_op_make(OP_LOGIC_OR, stack->top->next->next->data.expression_node,
-								  stack->top->data.expression_node);
+		node = ast_binary_op_make(OP_LOGIC_OR, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
 		if (result)
@@ -943,7 +968,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 
 	item->type = STACKITEM_TYPE_EXPRESSION;
 
-	item->data.expression_node = node;
+	item->node = node;
 	result = symstack_push(stack, item);
 	if (result)
 		return result;
@@ -951,15 +976,206 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, unsigned line)
 	return ERR_OK;
 }
 
-err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **return_node)
+/**
+ * @brief Checks if the next item is a function call by peeking the next token. If so, parses the function call.
+ *
+ * @param pdata Parser data
+ * @param item Symstack item to be checked
+ * @param call_consumed If a function call was parsed
+ * @return err_t Error code
+ */
+err_t try_parse_func_call(parser_data_t *pdata, symstack_item_t *item, bool *call_consumed)
 {
-	bool use_seed = seed_token;
+	if (!pdata || !item || !call_consumed)
+	{
+		print_err("Null-reference error in try_parse_func_call().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
 
+	// Only identifiers can be the start of function calls
+	*call_consumed = false;
+	if (item->source_token.type != TOKEN_IDENTIFIER)
+		return ERR_OK;
+
+	// Check if the next token is an opening bracket
+	token_t next_token;
+	err_t result = peek_next_token(&next_token, EOL_OPTIONAL);
+	if (result)
+		return result;
+	if (next_token.type != TOKEN_OPENING_BRACKET)
+		return ERR_OK;
+
+	// Parse the function call
+	result = parse_function_call(pdata, &item->source_token, &item->node);
+	if (result)
+		return result;
+
+	*call_consumed = true;
+	return ERR_OK;
+}
+
+/**
+ * @brief Parses a function call, consumes all its tokens and gives back a func_call node
+ *
+ * @param pdata Parser data
+ * @param identifier_token Identifier of the function
+ * @param return_node Pointer to where the AST func_call node should be saved
+ * @return err_t Error code
+ */
+err_t parse_function_call(parser_data_t *pdata, const token_t *identifier_token, ast_node_t **return_node)
+{
+	// Find the identifer in the table
+	// TODO: Support calling before definition
+	symbol_data_t *entry = symtable_item_find(pdata->local_var_table, identifier_token->attribute.string);
+	if (!entry || entry->symbol_type != SYM_FUNCTION || !entry->data.function.is_defined)
+	{
+		print_err_l("Function is not defined.", ERR_SEMANTIC_UNDEFINED, identifier_token->line);
+		return ERR_SEMANTIC_UNDEFINED;
+	}
+
+	// Create the function call node
+	ast_node_t *call_node = ast_func_call_make(identifier_token->attribute.string);
+	if (!call_node)
+	{
+		print_err_l("Failed to create a function-call AST node.", ERR_INTERNAL, identifier_token->line);
+		return ERR_INTERNAL;
+	}
+	call_node->eval_type = entry->data.function.return_type;
+
+	// Parse the parameter lists
+	size_t param_list_count = 0;
+	err_t result = get_next_token(&pdata->token, EOL_OPTIONAL);
+	if (result)
+		return result;
+
+	// Cycle through parameter lists
+	while (pdata->token.type == TOKEN_OPENING_BRACKET)
+	{
+		// Add an empty parameter list into the AST
+		result = ast_func_call_add_empty_param_list(call_node);
+		if (result)
+			return result;
+
+		// Consume (
+		result = get_next_token(&pdata->token, EOL_OPTIONAL);
+		if (result)
+			return result;
+
+		// Cycle through all parameters inside the parameter list
+		size_t param_count = 0;
+		if (pdata->token.type != TOKEN_CLOSING_BRACKET)
+		{
+			while (true)
+			{
+				// Parse the parameter with the expression parser
+				ast_node_t *parameter = NULL;
+				result = parse_expression_internal(pdata, &parameter, true);
+				if (result)
+					return result;
+
+				// Check if the call was made with too many parameters
+				if (param_list_count >= entry->data.function.param_list_count ||
+					param_count >= entry->data.function.param_lists[param_list_count]->param_count)
+				{
+					print_err_l("Function call has too many parameters.", ERR_SEMANTIC_INVALID_ARG,
+								identifier_token->line);
+					return ERR_SEMANTIC_INVALID_ARG;
+				}
+
+				// Check the type of the parameter
+				data_type_t expected_type =
+					entry->data.function.param_lists[param_list_count]->params[param_count]->type;
+				if (parameter->eval_type != expected_type)
+				{
+					print_err_l("Function called with a different parameter type than defined.",
+								ERR_SEMANTIC_INVALID_TYPE, identifier_token->line);
+					return ERR_SEMANTIC_INVALID_TYPE;
+				}
+
+				// Add the parameter into the AST node
+				result = ast_func_call_add_param(call_node, parameter, param_list_count);
+				if (result)
+				{
+					return result;
+				}
+				param_count++;
+
+				// Check for a comma separating the parameters
+				if (pdata->token.type == TOKEN_COMMA)
+				{
+					result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+					if (result)
+						return result;
+
+					// FIXME: allow the trailing comma in certain situations
+					if (pdata->token.type == TOKEN_CLOSING_BRACKET)
+					{
+						print_err_l("Expected an parameter after the comma.", ERR_SYNTAX, pdata->token.line);
+						return ERR_SYNTAX;
+					}
+					continue;
+				}
+
+				if (pdata->token.type == TOKEN_CLOSING_BRACKET)
+				{
+					break;
+				}
+
+				print_err_l("Expected a comma or closing parenthesis in a function call.", ERR_SYNTAX,
+							pdata->token.line);
+				return ERR_SYNTAX;
+			}
+		}
+
+		// Check if the call was made with too many parameters
+		if (param_list_count >= entry->data.function.param_list_count ||
+			param_count != entry->data.function.param_lists[param_list_count]->param_count)
+		{
+			print_err_l("Function call has an incorrect number of arguments.", ERR_SEMANTIC_INVALID_ARG,
+						identifier_token->line);
+			return ERR_SEMANTIC_INVALID_ARG;
+		}
+
+		param_list_count++;
+
+		// Break out of the parameter list loop
+		result = get_next_token(&pdata->token, EOL_OPTIONAL);
+		if (result)
+			return result;
+		if (pdata->token.type != TOKEN_OPENING_BRACKET)
+			break;
+	}
+
+	if (param_list_count != entry->data.function.param_list_count)
+	{
+		print_err_l("Function call has an incorrect number of parameter lists.", ERR_SEMANTIC_INVALID_ARG,
+					identifier_token->line);
+		return ERR_SEMANTIC_INVALID_ARG;
+	}
+
+	*return_node = call_node;
+	return ERR_OK;
+}
+
+/**
+ * @brief Parses an expression
+ *
+ * @param pdata Parser data
+ * @param return_node Address to which the address of the created AST note should be written
+ * @param stop_at_call_delimiter If true, the parser will stop successfuly at a ) if the expression was reduced
+ *                               completely and it is not inside parenthesis. If false, this situation will cause an
+ *                               error
+ *
+ * @return err_t Error code
+ */
+err_t parse_expression_internal(parser_data_t *pdata, ast_node_t **return_node, bool stop_at_call_delimiter)
+{
 	symstack_t stack;
 	unsigned expression_start_line;
 	bool expect_unary = true;
 	unsigned parenthesis_level = 0;
 	bool expression_started = false;
+	bool call_consumed;
 
 	err_t result = symstack_init(&stack);
 	if (result)
@@ -972,23 +1188,25 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **r
 		return ERR_INTERNAL;
 	}
 
-	if (use_seed)
-	{
-		result = token_to_stack_item(seed_token, b, &expect_unary);
-		expression_start_line = seed_token->line;
-	}
-	else
-	{
-		result = token_to_stack_item(&pdata->token, b, &expect_unary);
-		expression_start_line = pdata->token.line;
-	}
+	result = token_to_stack_item(&pdata->token, b, &expect_unary);
 	if (result)
 		return result;
+
+	result = try_parse_func_call(pdata, b, &call_consumed);
+	if (result)
+		return result;
+
+	expression_start_line = pdata->token.line;
 
 	while (!((b->type == STACKITEM_TYPE_TERMINAL && b->data.terminal == TERMINAL_DOLLAR) &&
 			 (stack.top->type == STACKITEM_TYPE_EXPRESSION && stack.top->next->type == STACKITEM_TYPE_TERMINAL &&
 			  stack.top->next->data.terminal == TERMINAL_DOLLAR)))
 	{
+		if (stop_at_call_delimiter && pdata->token.type == TOKEN_CLOSING_BRACKET && parenthesis_level == 0 &&
+			stack.top->type == STACKITEM_TYPE_EXPRESSION && stack.top->next->type == STACKITEM_TYPE_TERMINAL &&
+			stack.top->next->data.terminal == TERMINAL_DOLLAR)
+			break;
+
 		// If the new token is the first one on a line, is not the first token of the expression,
 		// and is not inside parenthesis, it marks the end of the expression
 		if (expression_started && parenthesis_level == 0 && b->source_token.starts_logical_line)
@@ -1011,15 +1229,26 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **r
 			else if (b->source_token.type == TOKEN_CLOSING_BRACKET && parenthesis_level > 0)
 				parenthesis_level--;
 
-			if (use_seed)
-				use_seed = false;
-			else
+			//  Only get the next token if it wasn't already requested while parsing a function call
+			if (!call_consumed)
+			{
 				result = get_next_token(&pdata->token, EOL_OPTIONAL);
+				if (result)
+					return result;
+			}
+
+			b = symstack_create_item();
+			if (!b)
+			{
+				print_err("Failed to create an item inside parse_expression().", ERR_INTERNAL);
+				return ERR_INTERNAL;
+			}
+			result = token_to_stack_item(&pdata->token, b, &expect_unary);
 			if (result)
 				return result;
 
-			b = symstack_create_item();
-			result = token_to_stack_item(&pdata->token, b, &expect_unary);
+			// Try to parse a function call
+			result = try_parse_func_call(pdata, b, &call_consumed);
 			if (result)
 				return result;
 
@@ -1043,15 +1272,26 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **r
 			else if (b->source_token.type == TOKEN_CLOSING_BRACKET && parenthesis_level > 0)
 				parenthesis_level--;
 
-			if (use_seed)
-				use_seed = false;
-			else
+			//  Only get the next token if it wasn't already requested while parsing a function call
+			if (!call_consumed)
+			{
 				result = get_next_token(&pdata->token, EOL_OPTIONAL);
+				if (result)
+					return result;
+			}
+
+			b = symstack_create_item();
+			if (!b)
+			{
+				print_err("Failed to create an item inside parse_expression().", ERR_INTERNAL);
+				return ERR_INTERNAL;
+			}
+			result = token_to_stack_item(&pdata->token, b, &expect_unary);
 			if (result)
 				return result;
 
-			b = symstack_create_item();
-			result = token_to_stack_item(&pdata->token, b, &expect_unary);
+			// Try to parse a function call
+			result = try_parse_func_call(pdata, b, &call_consumed);
 			if (result)
 				return result;
 
@@ -1065,7 +1305,7 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **r
 				return ERR_SYNTAX;
 			}
 
-			result = apply_rule(rule, &stack, expression_start_line);
+			result = apply_rule(rule, &stack, pdata, expression_start_line);
 			if (result)
 				return result;
 			break;
@@ -1075,10 +1315,15 @@ err_t parse_expression(parser_data_t *pdata, token_t *seed_token, ast_node_t **r
 		}
 	}
 
-	*return_node = stack.top->data.expression_node;
+	*return_node = stack.top->node;
 
 	symstack_destroy(&stack);
 	free(b);
 
 	return ERR_OK;
+}
+
+err_t parse_expression(parser_data_t *pdata, ast_node_t **return_node)
+{
+	return parse_expression_internal(pdata, return_node, false);
 }

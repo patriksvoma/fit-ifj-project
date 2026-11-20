@@ -17,6 +17,7 @@ symstack_item_t *symstack_create_item()
 
 	item->next = NULL;
 	item->source_token.type = TOKEN_NONE;
+	item->node = NULL;
 
 	return item;
 }

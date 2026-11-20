@@ -33,11 +33,11 @@ typedef struct symstack_item
 	struct symstack_item *next;
 	token_t source_token;
 	symstack_item_type_t type;
+	ast_node_t *node;
 
 	union {
 		prec_table_operator_t operator;
 		prec_table_terminal_t terminal;
-		ast_node_t *expression_node;
 	} data;
 } symstack_item_t;
 

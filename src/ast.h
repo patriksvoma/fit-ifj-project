@@ -311,14 +311,22 @@ err_t ast_func_def_set_block(ast_node_t *func_def_node, ast_node_t *block);
 ast_node_t *ast_func_call_make(const char *unique_id);
 
 /**
- * @brief Function that adds parameter to function calling
+ * @brief Adds an empty parameter list to a function call
  *
- * @param func_call_node Node of function calling
+ * @param func_call_node Node of the function call
+ * @return err_t Error code
+ */
+err_t ast_func_call_add_empty_param_list(ast_node_t *func_call_node);
+
+/**
+ * @brief Function that adds a parameter to a function call
+ *
+ * @param func_call_node Node of function call
  * @param param_node Node of parameter
  * @param param_list_index Index of parameter list
  * @return err_t Error code
  */
-err_t ast_func_call_add_param(ast_node_t *func_call_node, ast_node_t *param_node, unsigned param_list_index);
+err_t ast_func_call_add_param(ast_node_t *func_call_node, ast_node_t *param_node, size_t param_list_index);
 
 /**
  * @brief Makes a node for extension definition
