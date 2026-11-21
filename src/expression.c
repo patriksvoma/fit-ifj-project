@@ -24,6 +24,7 @@ typedef enum
 	RULE_NONE,		  // Invalid rule
 	RULE_I,			  // E :: i
 	RULE_PARENTHESIS, // E :: (E)
+	RULE_UNIT,		  // E :: ()
 	RULE_DOT,		  // E :: E.E
 	RULE_NEG,		  // E :: !E
 	RULE_UPLUS,		  // E :: +E
@@ -268,10 +269,20 @@ prec_rule_t find_rule(const symstack_t *stack)
 			return RULE_I;
 		}
 	}
-	// <(E)
+	// <(E) or <()
 	else if (top1->type == STACKITEM_TYPE_TERMINAL && top1->data.terminal == TERMINAL_RIGHT_BRACKET)
 	{
-		if (!top3 || !top4)
+		if (!top3)
+			return RULE_NONE;
+
+		// <()
+		if (top2->type == STACKITEM_TYPE_TERMINAL && top2->data.terminal == TERMINAL_LEFT_BRACKET &&
+			top3->type == STACKITEM_TYPE_OPERATOR && top3->data.operator == S)
+		{
+			return RULE_UNIT;
+		}
+
+		if (!top4)
 			return RULE_NONE;
 
 		if (top2->type == STACKITEM_TYPE_EXPRESSION && top3->type == STACKITEM_TYPE_TERMINAL &&
@@ -474,6 +485,22 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, parser_data_t *pdata, unsi
 			return result;
 
 		node = stack->top->node;
+
+		// FIXME: check if there should be 3 or 4 symbols popped here
+		result = symstack_pop_multiple(stack, 3);
+		if (result)
+			return result;
+		break;
+	// ()
+	case RULE_UNIT:
+		literal_t lit;
+		lit.literal_type = TYPE_UNIT;
+		node = ast_literal_make(&lit);
+		if (node == NULL)
+		{
+			print_err_l("Failed to create a unit literal AST node.", ERR_INTERNAL, line);
+			return ERR_INTERNAL;
+		}
 
 		result = symstack_pop_multiple(stack, 3);
 		if (result)
