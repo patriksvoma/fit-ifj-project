@@ -995,7 +995,9 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 			return result;
 
 		// Set the then branch
-		ast_if_set_then_block(statement_node, then_block_node);
+		result = ast_if_set_then_block(statement_node, then_block_node);
+		if (result)
+			return result;
 
 		// Add the else branch. The node will be filled either with a block or an if node.
 		// If the node remains NULL, there was no else branch
@@ -1288,7 +1290,9 @@ err_t else_if_opt(parser_data_t *pdata, ast_node_t **out_node, unsigned header_i
 			return result;
 
 		// Set the then branch
-		ast_if_set_then_block(*out_node, then_block_node);
+		result = ast_if_set_then_block(*out_node, then_block_node);
+		if (result)
+			return result;
 
 		// Add the else branch. The node will be filled either with a block or an if node.
 		// If the node remains NULL, there was no else branch
