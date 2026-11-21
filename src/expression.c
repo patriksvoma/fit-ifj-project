@@ -420,46 +420,62 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, parser_data_t *pdata, unsi
 		{
 			// Find the identifier_token in the symbol table
 			symbol_data_t *entry = symtable_item_find(pdata->local_var_table, token.attribute.string);
-			if (!entry)
+			// If the identifier exists, it is either a variable or a function call
+			if (entry)
 			{
-				print_err_l("Identifier is not defined.", ERR_SEMANTIC_UNDEFINED, token.line);
-				return ERR_SEMANTIC_UNDEFINED;
-			}
-
-			// Variable use
-			if (entry->symbol_type == SYM_VARIABLE)
-			{
-				if (!entry->data.variable.is_defined)
+				if (entry->symbol_type == SYM_VARIABLE)
 				{
-					print_err_l("Variable is not defined.", ERR_SEMANTIC_UNDEFINED, token.line);
-					return ERR_SEMANTIC_UNDEFINED;
+					if (!entry->data.variable.is_defined)
+					{
+						print_err_l("Variable is not defined.", ERR_SEMANTIC_UNDEFINED, token.line);
+						return ERR_SEMANTIC_UNDEFINED;
+					}
+					node = ast_var_use_make(entry->data.variable.unique_name, entry->data.variable.type);
+					if (!node)
+					{
+						print_err_l("Failed to create an AST node in apply_rule()!", ERR_INTERNAL, line);
+						return ERR_INTERNAL;
+					}
 				}
-				node = ast_var_use_make(entry->data.variable.unique_name, entry->data.variable.type);
-			}
-			// Function call
-			else if (entry->symbol_type == SYM_FUNCTION)
-			{
-				if (!entry->data.function.is_defined)
+				else if (entry->symbol_type == SYM_FUNCTION)
 				{
-					print_err_l("Function is not defined.", ERR_SEMANTIC_UNDEFINED, token.line);
-					return ERR_SEMANTIC_UNDEFINED;
-				}
+					if (!entry->data.function.is_defined)
+					{
+						print_err_l("Function is not defined.", ERR_SEMANTIC_UNDEFINED, token.line);
+						return ERR_SEMANTIC_UNDEFINED;
+					}
 
-				if (entry->data.function.param_list_count != 0)
-				{
-					print_err_l("A function call is missing the parameter list.", ERR_SEMANTIC_INVALID_ARG, token.line);
-					return ERR_SEMANTIC_INVALID_ARG;
-				}
+					if (entry->data.function.param_list_count != 0)
+					{
+						print_err_l("A function call is missing the parameter list.", ERR_SEMANTIC_INVALID_ARG,
+									token.line);
+						return ERR_SEMANTIC_INVALID_ARG;
+					}
 
-				// Create the AST node
-				node = ast_func_call_make(token.attribute.string);
-				if (node)
+					// Create the AST node
+					node = ast_func_call_make(token.attribute.string);
+					if (!node)
+					{
+						print_err_l("Failed to create an AST node in apply_rule()!", ERR_INTERNAL, line);
+						return ERR_INTERNAL;
+					}
+
 					node->eval_type = entry->data.function.return_type;
+				}
 			}
+			// If it is not defined, it is a call of a not-yet defined function
 			else
 			{
-				print_err_l("Identifier cannot be used as an expression.", ERR_SEMANTIC_INVALID_TYPE, token.line);
-				return ERR_SEMANTIC_INVALID_TYPE;
+				// Create the AST node
+				node = ast_func_call_make(token.attribute.string);
+
+				if (!node)
+				{
+					print_err_l("Failed to create an AST node in apply_rule()!", ERR_INTERNAL, line);
+					return ERR_INTERNAL;
+				}
+
+				node->eval_type = TYPE_NONE;
 			}
 		}
 
@@ -1026,7 +1042,7 @@ err_t parse_function_call(parser_data_t *pdata, const token_t *identifier_token,
 {
 	// Find the identifer in the table
 	// TODO: Support calling before definition
-	symbol_data_t *entry = symtable_item_find(pdata->local_var_table, identifier_token->attribute.string);
+	symbol_data_t *entry = symtable_item_find(&pdata->function_table, identifier_token->attribute.string);
 	if (!entry || entry->symbol_type != SYM_FUNCTION || !entry->data.function.is_defined)
 	{
 		print_err_l("Function is not defined.", ERR_SEMANTIC_UNDEFINED, identifier_token->line);
