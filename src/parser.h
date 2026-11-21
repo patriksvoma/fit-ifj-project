@@ -27,6 +27,7 @@ typedef struct
 	symtable_t function_table;
 	symtable_t extension_table;
 	symtable_t *local_var_table;
+	bool main_defined;
 } parser_data_t;
 
 /**
