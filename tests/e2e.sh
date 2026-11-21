@@ -77,10 +77,10 @@ run_case "func-call-extra-list-2" 5 "functions/invalid/func-call-extra-list-2.if
 run_case "func-call-extra-list-3" 5 "functions/invalid/func-call-extra-list-3.ifj"
 run_case "func-call-extra-list-4" 5 "functions/invalid/func-call-extra-list-4.ifj"
 
+run_case "func-call-wrong-par-type-1" 5 "functions/invalid/func-call-wrong-par-type-1.ifj"
 run_case "func-call-wrong-par-type-2" 5 "functions/invalid/func-call-wrong-par-type-2.ifj"
 run_case "func-call-wrong-par-type-3" 5 "functions/invalid/func-call-wrong-par-type-3.ifj"
 run_case "func-call-wrong-par-type-4" 5 "functions/invalid/func-call-wrong-par-type-4.ifj"
-run_case "func-call-wrong-par-type-1" 5 "functions/invalid/func-call-wrong-par-type-1.ifj"
 run_case "func-call-wrong-par-type-5" 5 "functions/invalid/func-call-wrong-par-type-5.ifj"
 run_case "func-call-wrong-par-type-6" 5 "functions/invalid/func-call-wrong-par-type-6.ifj"
 run_case "func-call-wrong-par-type-7" 5 "functions/invalid/func-call-wrong-par-type-7.ifj"
@@ -101,6 +101,44 @@ run_case "func-call-missing-par-type-3" 2 "functions/invalid/func-call-missing-p
 run_case "func-call-missing-par-name-1" 2 "functions/invalid/func-call-missing-par-name-1.ifj"
 run_case "func-call-missing-par-name-2" 2 "functions/invalid/func-call-missing-par-name-2.ifj"
 run_case "func-call-missing-par-colon" 2 "functions/invalid/func-call-missing-par-colon.ifj"
+
+run_case "func-call-def-later-1" 0 "functions/valid/func-call-def-later-1.ifj"
+run_case "func-call-def-later-2" 0 "functions/valid/func-call-def-later-2.ifj"
+
+run_case "func-redefinition-1" 4 "functions/invalid/func-redefinition-1.ifj"
+run_case "func-redefinition-2" 4 "functions/invalid/func-redefinition-2.ifj"
+run_case "func-redefinition-3" 4 "functions/invalid/func-redefinition-3.ifj"
+
+run_case "func-call-undefined-1" 3 "functions/invalid/func-call-undefined-1.ifj"
+run_case "func-call-undefined-2" 3 "functions/invalid/func-call-undefined-2.ifj"
+
+run_case "func-missing-main-1" 3 "functions/invalid/func-missing-main-1.ifj"
+run_case "func-missing-main-2" 3 "functions/invalid/func-missing-main-2.ifj"
+
+run_case "func-multiple-main-1" 4 "functions/invalid/func-multiple-main-1.ifj"
+run_case "func-multiple-main-2" 4 "functions/invalid/func-multiple-main-2.ifj"
+
+run_case "func-main-space" 1 "functions/invalid/func-main-space.ifj"
+
+run_case "func-main-same-line" 0 "functions/valid/func-main-same-line.ifj"
+run_case "func-main-diff-line" 0 "functions/valid/func-main-diff-line.ifj"
+
+run_case "func-main-wrong-annotation-1" 1 "functions/invalid/func-main-wrong-annotation-1.ifj"
+run_case "func-main-wrong-annotation-2" 1 "functions/invalid/func-main-wrong-annotation-2.ifj"
+
+run_case "func-main-wrong-return-type-1" 6 "functions/invalid/func-main-wrong-return-type-1.ifj"
+run_case "func-main-wrong-return-type-2" 6 "functions/invalid/func-main-wrong-return-type-2.ifj"
+run_case "func-main-wrong-return-type-3" 6 "functions/invalid/func-main-wrong-return-type-3.ifj"
+run_case "func-main-wrong-return-type-4" 6 "functions/invalid/func-main-wrong-return-type-4.ifj"
+
+run_case "func-main-return-type-1" 0 "functions/valid/func-main-return-type-1.ifj"
+run_case "func-main-return-type-2" 0 "functions/valid/func-main-return-type-2.ifj"
+
+run_case "func-main-parameter-1" 5 "functions/invalid/func-main-parameter-1.ifj"
+run_case "func-main-parameter-2" 5 "functions/invalid/func-main-parameter-2.ifj"
+
+run_case "func-unit-empty-return" 6 "functions/invalid/func-unit-empty-return.ifj"
+run_case "func-unit-explicit-return" 0 "functions/valid/func-unit-explicit-return.ifj"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then

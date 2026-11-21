@@ -6,3 +6,4 @@ def foo: Int =
 @main
 def main(): Unit =
   foo
+  return

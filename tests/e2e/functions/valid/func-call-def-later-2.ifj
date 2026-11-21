@@ -1,0 +1,13 @@
+import ifj26.*
+
+@main
+def main() =
+  func1("ahoj")
+  func2(54)
+  ()
+
+def func1(str: String) =
+  "abc" + "def"
+
+def func2(a: Int) =
+  a + 5

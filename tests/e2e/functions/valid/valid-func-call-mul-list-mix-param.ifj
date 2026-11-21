@@ -6,3 +6,4 @@ def foo()(x: Int, y: Int): Int =
 @main
 def main(): Unit =
   foo()(48, 32)
+  return

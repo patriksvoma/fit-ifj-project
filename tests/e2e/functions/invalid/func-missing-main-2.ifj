@@ -1,0 +1,7 @@
+import ifj26.*
+
+def abc() =
+  12
+
+def xyz() =
+  "cau"
