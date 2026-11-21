@@ -673,6 +673,13 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 					return ERR_INTERNAL;
 				}
 
+				// Check for redefinitions
+				if (symtable_item_defined_local(table, param->identifier))
+				{
+					print_err("Multiple parameters of the same name are not allowed.", ERR_SEMANTIC_REDEFINITION);
+					return ERR_SEMANTIC_REDEFINITION;
+				}
+
 				symbol_data_t *entry = symtable_item_create(table, param->identifier);
 				if (!entry)
 				{
@@ -711,6 +718,13 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 					return ERR_INTERNAL;
 				}
 
+				// Check for redefinitions
+				if (symtable_item_defined_local(table, param->identifier))
+				{
+					print_err("Multiple parameters of the same name are not allowed.", ERR_SEMANTIC_REDEFINITION);
+					return ERR_SEMANTIC_REDEFINITION;
+				}
+
 				symbol_data_t *entry = symtable_item_create(table, param->identifier);
 				if (!entry)
 				{
@@ -727,7 +741,22 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 		}
 
 		// For extensions, also add the base parameter as a variable
-		symbol_data_t *entry = symtable_item_create(table, symbol->data.extension.base_param.identifier);
+		param_t *base_param = &symbol->data.extension.base_param;
+		if (base_param == NULL)
+		{
+			print_err("Trying to access NULL param inside symbol_func_add_parameters_into_table()!", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
+		// Check for redefinitions first
+		if (symtable_item_defined_local(table, base_param->identifier))
+		{
+			print_err("A parameter of an extension method must not be of the same name as the extension base.",
+					  ERR_SEMANTIC_REDEFINITION);
+			return ERR_SEMANTIC_REDEFINITION;
+		}
+
+		symbol_data_t *entry = symtable_item_create(table, base_param->identifier);
 		if (!entry)
 		{
 			print_err("Failed to create a symbol table entry in symbol_func_add_parameters_into_table()!",
@@ -737,8 +766,8 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 		entry->symbol_type = SYM_VARIABLE;
 		entry->data.variable.is_defined = true;
 		entry->data.variable.mutable = false;
-		entry->data.variable.type = symbol->data.extension.base_param.type;
-		result = symbol_generate_unique_id(symbol->data.extension.base_param.identifier, entry, table);
+		entry->data.variable.type = base_param->type;
+		result = symbol_generate_unique_id(base_param->identifier, entry, table);
 		if (result)
 			return result;
 	}
