@@ -482,10 +482,10 @@ err_t ast_if_set_then_block(ast_node_t *if_node, ast_node_t *block);
  * @brief Sets block for else branch
  *
  * @param if_node Node of the if statement
- * @param block Node containing the code block
+ * @param else_node Node for the else branch. If NULL, there is no else branch
  * @return err_t Error code
  */
-err_t ast_if_set_else_block(ast_node_t *if_node, ast_node_t *block);
+err_t ast_if_set_else_node(ast_node_t *if_node, ast_node_t *else_node);
 
 /**
  * @brief Makes a node for while loop
