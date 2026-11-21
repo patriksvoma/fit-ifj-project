@@ -24,10 +24,14 @@ failed=0
 if [ -t 1 ] && [ -t 2 ] && [ -z "${NO_COLOR+x}" ] && [ "${TERM:-}" != "dumb" ]; then
 	GREEN=$(printf '\033[32m')
 	RED=$(printf '\033[31m')
+	YELLOW=$(printf '\033[33m')
+	BLUE=$(printf '\033[34m')
 	RESET=$(printf '\033[0m')
 else
 	GREEN=''
 	RED=''
+	YELLOW=''
+	BLUE=''
 	RESET=''
 fi
 
@@ -54,10 +58,13 @@ run_case()
 }
 
 # Main
+echo "$YELLOW-----Generic tests-----$RESET"
 run_case "valid-main" 0 "main/valid/valid-main.ifj"
 run_case "invalid-prologue" 2 "main/invalid/invalid-prologue.ifj"
 
 # Function calls
+echo "$YELLOW-----Function definitions and calls-----$RESET"
+echo "$BLUE-----Parameter and parameter lists-----$RESET"
 run_case "valid-func-call-no-list" 0 "functions/valid/valid-func-call-no-list.ifj"
 run_case "valid-func-call-one-list-empty" 0 "functions/valid/valid-func-call-one-list-empty.ifj"
 run_case "valid-func-call-one-list-one-param" 0 "functions/valid/valid-func-call-one-list-one-param.ifj"
@@ -77,6 +84,7 @@ run_case "func-call-extra-list-2" 5 "functions/invalid/func-call-extra-list-2.if
 run_case "func-call-extra-list-3" 5 "functions/invalid/func-call-extra-list-3.ifj"
 run_case "func-call-extra-list-4" 5 "functions/invalid/func-call-extra-list-4.ifj"
 
+echo "$BLUE-----Parameter types-----$RESET"
 run_case "func-call-wrong-par-type-1" 5 "functions/invalid/func-call-wrong-par-type-1.ifj"
 run_case "func-call-wrong-par-type-2" 5 "functions/invalid/func-call-wrong-par-type-2.ifj"
 run_case "func-call-wrong-par-type-3" 5 "functions/invalid/func-call-wrong-par-type-3.ifj"
@@ -86,6 +94,7 @@ run_case "func-call-wrong-par-type-6" 5 "functions/invalid/func-call-wrong-par-t
 run_case "func-call-wrong-par-type-7" 5 "functions/invalid/func-call-wrong-par-type-7.ifj"
 run_case "func-call-wrong-par-type-8" 5 "functions/invalid/func-call-wrong-par-type-8.ifj"
 
+echo "$BLUE-----Parameter counts-----$RESET"
 run_case "func-call-missing-param-1" 5 "functions/invalid/func-call-missing-param-1.ifj"
 run_case "func-call-missing-param-2" 5 "functions/invalid/func-call-missing-param-2.ifj"
 run_case "func-call-missing-param-3" 5 "functions/invalid/func-call-missing-param-3.ifj"
@@ -102,6 +111,7 @@ run_case "func-call-missing-par-name-1" 2 "functions/invalid/func-call-missing-p
 run_case "func-call-missing-par-name-2" 2 "functions/invalid/func-call-missing-par-name-2.ifj"
 run_case "func-call-missing-par-colon" 2 "functions/invalid/func-call-missing-par-colon.ifj"
 
+echo "$BLUE-----Function definitions-----$RESET"
 run_case "func-call-def-later-1" 0 "functions/valid/func-call-def-later-1.ifj"
 run_case "func-call-def-later-2" 0 "functions/valid/func-call-def-later-2.ifj"
 
@@ -112,6 +122,7 @@ run_case "func-redefinition-3" 4 "functions/invalid/func-redefinition-3.ifj"
 run_case "func-call-undefined-1" 3 "functions/invalid/func-call-undefined-1.ifj"
 run_case "func-call-undefined-2" 3 "functions/invalid/func-call-undefined-2.ifj"
 
+echo "$BLUE-----Main function and annotiation-----$RESET"
 run_case "func-missing-main-1" 3 "functions/invalid/func-missing-main-1.ifj"
 run_case "func-missing-main-2" 3 "functions/invalid/func-missing-main-2.ifj"
 
@@ -137,6 +148,7 @@ run_case "func-main-return-type-2" 0 "functions/valid/func-main-return-type-2.if
 run_case "func-main-parameter-1" 5 "functions/invalid/func-main-parameter-1.ifj"
 run_case "func-main-parameter-2" 5 "functions/invalid/func-main-parameter-2.ifj"
 
+echo "$BLUE-----Unit type return-----$RESET"
 run_case "func-unit-empty-return" 6 "functions/invalid/func-unit-empty-return.ifj"
 run_case "func-unit-explicit-return" 0 "functions/valid/func-unit-explicit-return.ifj"
 
