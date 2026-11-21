@@ -434,7 +434,9 @@ err_t func_def(parser_data_t *pdata, ast_node_t *program_node)
 		return result;
 
 	// Add parameters and extension base into the symbol table
-	symbol_add_parameters_into_table(table_entry, pdata->local_var_table);
+	result = symbol_add_parameters_into_table(table_entry, pdata->local_var_table);
+	if (result)
+		return result;
 
 	// <return-type>
 	result = return_type(pdata, def_node);
