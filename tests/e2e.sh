@@ -24,10 +24,14 @@ failed=0
 if [ -t 1 ] && [ -t 2 ] && [ -z "${NO_COLOR+x}" ] && [ "${TERM:-}" != "dumb" ]; then
 	GREEN=$(printf '\033[32m')
 	RED=$(printf '\033[31m')
+	YELLOW=$(printf '\033[33m')
+	BLUE=$(printf '\033[34m')
 	RESET=$(printf '\033[0m')
 else
 	GREEN=''
 	RED=''
+	YELLOW=''
+	BLUE=''
 	RESET=''
 fi
 
@@ -139,6 +143,11 @@ run_case "func-main-parameter-2" 5 "functions/invalid/func-main-parameter-2.ifj"
 
 run_case "func-unit-empty-return" 6 "functions/invalid/func-unit-empty-return.ifj"
 run_case "func-unit-explicit-return" 0 "functions/valid/func-unit-explicit-return.ifj"
+
+echo "$BLUE-----Parameter redefintions-----$RESET"
+run_case "func-param-redefinition-1" 4 "functions/invalid/func-param-redefinition-1.ifj"
+run_case "func-param-redefinition-2" 4 "functions/invalid/func-param-redefinition-2.ifj"
+run_case "func-param-redefinition-3" 4 "functions/invalid/func-param-redefinition-3.ifj"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
