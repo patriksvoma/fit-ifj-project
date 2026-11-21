@@ -636,3 +636,142 @@ err_t symbol_generate_unique_id(const char *identifier, symbol_data_t *symbol, c
 	}
 	return ERR_OK;
 }
+
+err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
+{
+	if (!symbol || !table)
+	{
+		print_err("Null-pointer exception in symbol_func_add_parameters_into_table()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	err_t result;
+
+	if (symbol->symbol_type == SYM_VARIABLE)
+	{
+		print_err("symbol_func_add_parameters_into_table() called on a variable!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	else if (symbol->symbol_type == SYM_FUNCTION)
+	{
+		for (unsigned list_index = 0; list_index < symbol->data.function.param_list_count; list_index++)
+		{
+			param_list_t *list = symbol->data.function.param_lists[list_index];
+			if (list == NULL)
+			{
+				print_err("Trying to access a NULL list inside symbol_func_add_parameters_into_table()!", ERR_INTERNAL);
+				return ERR_INTERNAL;
+			}
+
+			for (unsigned param_index = 0; param_index < list->param_count; param_index++)
+			{
+				const param_t *param = list->params[param_index];
+				if (param == NULL)
+				{
+					print_err("Trying to access NULL param inside symbol_func_add_parameters_into_table()!",
+							  ERR_INTERNAL);
+					return ERR_INTERNAL;
+				}
+
+				// Check for redefinitions
+				if (symtable_item_defined_local(table, param->identifier))
+				{
+					print_err("Multiple parameters of the same name are not allowed.", ERR_SEMANTIC_REDEFINITION);
+					return ERR_SEMANTIC_REDEFINITION;
+				}
+
+				symbol_data_t *entry = symtable_item_create(table, param->identifier);
+				if (!entry)
+				{
+					print_err("Failed to create a symbol table entry in symbol_func_add_parameters_into_table()!",
+							  ERR_INTERNAL);
+					return ERR_INTERNAL;
+				}
+				entry->symbol_type = SYM_VARIABLE;
+				entry->data.variable.is_defined = true;
+				entry->data.variable.mutable = false;
+				entry->data.variable.type = param->type;
+				result = symbol_generate_unique_id(param->identifier, entry, table);
+				if (result)
+					return result;
+			}
+		}
+	}
+	else if (symbol->symbol_type == SYM_EXTENSION)
+	{
+		for (unsigned list_index = 0; list_index < symbol->data.extension.param_list_count; list_index++)
+		{
+			param_list_t *list = symbol->data.extension.param_lists[list_index];
+			if (list == NULL)
+			{
+				print_err("Trying to access a NULL list inside symbol_func_add_parameters_into_table()!", ERR_INTERNAL);
+				return ERR_INTERNAL;
+			}
+
+			for (unsigned param_index = 0; param_index < list->param_count; param_index++)
+			{
+				const param_t *param = list->params[param_index];
+				if (param == NULL)
+				{
+					print_err("Trying to access NULL param inside symbol_func_add_parameters_into_table()!",
+							  ERR_INTERNAL);
+					return ERR_INTERNAL;
+				}
+
+				// Check for redefinitions
+				if (symtable_item_defined_local(table, param->identifier))
+				{
+					print_err("Multiple parameters of the same name are not allowed.", ERR_SEMANTIC_REDEFINITION);
+					return ERR_SEMANTIC_REDEFINITION;
+				}
+
+				symbol_data_t *entry = symtable_item_create(table, param->identifier);
+				if (!entry)
+				{
+					print_err("Failed to create a symbol table entry in symbol_func_add_parameters_into_table()!",
+							  ERR_INTERNAL);
+					return ERR_INTERNAL;
+				}
+				entry->symbol_type = SYM_VARIABLE;
+				entry->data.variable.is_defined = true;
+				entry->data.variable.mutable = false;
+				entry->data.variable.type = param->type;
+				result = symbol_generate_unique_id(param->identifier, entry, table);
+				if (result)
+					return result;
+			}
+		}
+
+		// For extensions, also add the base parameter as a variable
+		const param_t *base_param = &symbol->data.extension.base_param;
+
+		// Check for redefinitions first
+		if (symtable_item_defined_local(table, base_param->identifier))
+		{
+			print_err("A parameter of an extension method must not be of the same name as the extension base.",
+					  ERR_SEMANTIC_REDEFINITION);
+			return ERR_SEMANTIC_REDEFINITION;
+		}
+
+		symbol_data_t *entry = symtable_item_create(table, base_param->identifier);
+		if (!entry)
+		{
+			print_err("Failed to create a symbol table entry in symbol_func_add_parameters_into_table()!",
+					  ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+		entry->symbol_type = SYM_VARIABLE;
+		entry->data.variable.is_defined = true;
+		entry->data.variable.mutable = false;
+		entry->data.variable.type = base_param->type;
+		result = symbol_generate_unique_id(base_param->identifier, entry, table);
+		if (result)
+			return result;
+	}
+	else
+	{
+		return ERR_INTERNAL;
+	}
+
+	return ERR_OK;
+}

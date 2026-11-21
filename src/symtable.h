@@ -204,3 +204,12 @@ symtable_t *local_table_destroy(symtable_t *table);
  * @return err_t Error code
  */
 err_t symbol_generate_unique_id(const char *identifier, symbol_data_t *symbol, const symtable_t *table);
+
+/**
+ * @brief Adds all parameters (and the base) of a function/extension into a symbol table as unmutable variables
+ *
+ * @param symbol Function / extension symbol
+ * @param table Symbol table where the variables will be added
+ * @return err_t Error code
+ */
+err_t symbol_add_parameters_into_table(symbol_data_t *func_symbol, symtable_t *table);

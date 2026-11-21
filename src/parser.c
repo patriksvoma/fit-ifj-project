@@ -428,10 +428,13 @@ err_t func_def(parser_data_t *pdata, ast_node_t *program_node)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Add parameters and extension base into the symbol table
-
 	// <func-params>
 	result = func_params(pdata, table_entry);
+	if (result)
+		return result;
+
+	// Add parameters and extension base into the symbol table
+	result = symbol_add_parameters_into_table(table_entry, pdata->local_var_table);
 	if (result)
 		return result;
 

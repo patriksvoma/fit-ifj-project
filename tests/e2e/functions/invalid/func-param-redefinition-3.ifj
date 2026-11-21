@@ -1,0 +1,8 @@
+import ifj26.*
+
+def a(abc: Int)(abc: String): Unit =
+  ()
+
+@main
+def main(): Unit =
+  a(4)("cau")
