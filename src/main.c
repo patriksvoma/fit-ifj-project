@@ -10,6 +10,7 @@
 
 #include "codegen.h"
 #include "parser.h"
+#include "semantics.h"
 
 int main()
 {
@@ -28,6 +29,11 @@ int main()
 		destruct(ast_root);
 		return err_code;
 	}
+
+	// Run additional semantic checks
+	err_code = do_semantic_checks(ast_root, &pdata);
+	if (err_code)
+		return err_code;
 
 	err_code = generate_code(ast_root, &pdata);
 

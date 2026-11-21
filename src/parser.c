@@ -293,6 +293,7 @@ err_t func_annotation(parser_data_t *pdata, ast_node_t *program_node)
 
 		// These flags are used in order to create the correct node in <func-def>
 		pdata->in_main = true;
+		pdata->main_defined = true;
 		pdata->in_extension = false;
 
 		return func_def(pdata, program_node);
