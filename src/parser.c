@@ -956,6 +956,14 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 		if (result)
 			return result;
 
+		// Check if the condition expression results in a boolean
+		if (condition_node->eval_type != TYPE_BOOLEAN)
+		{
+			print_err_l("The condition of an if statement must result in a Boolean.", ERR_SEMANTIC_INVALID_TYPE,
+						pdata->token.line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
 		// then
 		if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_THEN)
 		{
@@ -1240,6 +1248,14 @@ err_t else_if_opt(parser_data_t *pdata, ast_node_t **out_node, unsigned header_i
 		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
+
+		// Check if the condition expression results in a boolean
+		if (condition_node->eval_type != TYPE_BOOLEAN)
+		{
+			print_err_l("The condition of an if statement must result in a Boolean.", ERR_SEMANTIC_INVALID_TYPE,
+						pdata->token.line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
 
 		// then
 		if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_THEN)
