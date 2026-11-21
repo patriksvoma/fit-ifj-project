@@ -736,17 +736,14 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 				entry->data.variable.is_defined = true;
 				entry->data.variable.mutable = false;
 				entry->data.variable.type = param->type;
-				symbol_generate_unique_id(param->identifier, entry, table);
+				result = symbol_generate_unique_id(param->identifier, entry, table);
+				if (result)
+					return result;
 			}
 		}
 
 		// For extensions, also add the base parameter as a variable
-		param_t *base_param = &symbol->data.extension.base_param;
-		if (base_param == NULL)
-		{
-			print_err("Trying to access NULL param inside symbol_func_add_parameters_into_table()!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		const param_t *base_param = &symbol->data.extension.base_param;
 
 		// Check for redefinitions first
 		if (symtable_item_defined_local(table, base_param->identifier))
