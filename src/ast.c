@@ -613,15 +613,15 @@ err_t ast_if_set_then_block(ast_node_t *if_node, ast_node_t *block)
 	return ERR_OK;
 }
 
-err_t ast_if_set_else_block(ast_node_t *if_node, ast_node_t *block)
+err_t ast_if_set_else_node(ast_node_t *if_node, ast_node_t *else_node)
 {
-	if (if_node == NULL || block == NULL)
+	if (if_node == NULL)
 	{
-		print_err("Tried to pass NULL ptr to ast_if_set_else_block()", ERR_INTERNAL);
+		print_err("Tried to pass NULL ptr to ast_if_set_else_node()", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
 
-	if_node->if_statement.else_block = block;
+	if_node->if_statement.else_block = else_node;
 	return ERR_OK;
 }
 

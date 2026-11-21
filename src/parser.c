@@ -29,8 +29,8 @@ err_t block(parser_data_t *pdata, ast_node_t *block_node, unsigned block_indent_
 err_t type(parser_data_t *pdata, data_type_t *return_type);
 err_t statement(parser_data_t *pdata, ast_node_t *block_node);
 err_t expression_opt(parser_data_t *pdata, ast_node_t **return_value);
-err_t else_opt(parser_data_t *pdata, unsigned header_indent_level);
-err_t else_if_opt(parser_data_t *pdata, unsigned header_indent_level);
+err_t else_opt(parser_data_t *pdata, ast_node_t **out_node, unsigned header_indent_level);
+err_t else_if_opt(parser_data_t *pdata, ast_node_t **out_node, unsigned header_indent_level);
 err_t for_generator(parser_data_t *pdata);
 err_t for_by(parser_data_t *pdata);
 err_t for_guard(parser_data_t *pdata);
@@ -951,10 +951,18 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 			return result;
 
 		// <expression>
-		ast_node_t *condition_node; // FIXME:
+		ast_node_t *condition_node;
 		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
+
+		// Check if the condition expression results in a boolean
+		if (condition_node->eval_type != TYPE_BOOLEAN)
+		{
+			print_err_l("The condition of an if statement must result in a Boolean.", ERR_SEMANTIC_INVALID_TYPE,
+						pdata->token.line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
 
 		// then
 		if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_THEN)
@@ -966,14 +974,45 @@ err_t statement(parser_data_t *pdata, ast_node_t *block_node)
 		if (result)
 			return result;
 
+		// Create the AST node
+		statement_node = ast_if_make(condition_node);
+		if (!statement_node)
+		{
+			print_err_l("Failed to create an AST node for and if statement!", ERR_INTERNAL, pdata->token.line);
+			return ERR_INTERNAL;
+		}
+
 		// <block-start>
-		ast_node_t *inner_block_node = NULL; // FIXME:
-		result = block_start(pdata, inner_block_node, statement_indent_level);
+		ast_node_t *then_block_node = ast_block_make();
+		if (!then_block_node)
+		{
+			print_err_l("Failed to create a block node for an if statement!", ERR_INTERNAL, pdata->token.line);
+			return ERR_INTERNAL;
+		}
+
+		result = block_start(pdata, then_block_node, statement_indent_level);
 		if (result)
 			return result;
 
+		// Set the then branch
+		result = ast_if_set_then_block(statement_node, then_block_node);
+		if (result)
+			return result;
+
+		// Add the else branch. The node will be filled either with a block or an if node.
+		// If the node remains NULL, there was no else branch
+		ast_node_t *else_node = NULL;
+
 		// <else-opt>
-		return else_opt(pdata, statement_indent_level);
+		result = else_opt(pdata, &else_node, statement_indent_level);
+		if (result)
+			return result;
+
+		result = ast_if_set_else_node(statement_node, else_node);
+		if (result)
+			return result;
+
+		return ast_block_add_statement(block_node, statement_node);
 	}
 	// while
 	else if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_WHILE)
@@ -1165,10 +1204,12 @@ err_t expression_opt(parser_data_t *pdata, ast_node_t **return_node)
  * @brief Optional else branch of an if, later can be made into an else if branch | <else-opt>
  *
  * @param pdata Parser data
+ * @param out_node Pointer to where the pointer to the resulting node should be written.
+ *                 NULL will be written if there is no else branch.
  * @param header_indent_level Indentation level of the if statement headers (if, else if, else)
  * @return err_t Error code
  */
-err_t else_opt(parser_data_t *pdata, unsigned header_indent_level)
+err_t else_opt(parser_data_t *pdata, ast_node_t **out_node, unsigned header_indent_level)
 {
 	// else
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_ELSE &&
@@ -1179,10 +1220,11 @@ err_t else_opt(parser_data_t *pdata, unsigned header_indent_level)
 			return result;
 
 		// <else-if-opt>
-		return else_if_opt(pdata, header_indent_level);
+		return else_if_opt(pdata, out_node, header_indent_level);
 	}
 
 	// Epsilon rule
+	*out_node = NULL;
 	return ERR_OK;
 }
 
@@ -1190,10 +1232,11 @@ err_t else_opt(parser_data_t *pdata, unsigned header_indent_level)
  * @brief Else, or else if branch of an if statement | <else-if-opt>
  *
  * @param pdata Parser data
+ * @param out_node Pointer to where the pointer to the resulting node should be written.
  * @param header_indent_level Indentation level of the if statement headers (if, else if, else)
  * @return err_t Error code
  */
-err_t else_if_opt(parser_data_t *pdata, unsigned header_indent_level)
+err_t else_if_opt(parser_data_t *pdata, ast_node_t **out_node, unsigned header_indent_level)
 {
 	// if (makes for an else if with the previous rule)
 	if (pdata->token.type == TOKEN_KEYWORD && pdata->token.attribute.keyword == KW_IF)
@@ -1203,10 +1246,18 @@ err_t else_if_opt(parser_data_t *pdata, unsigned header_indent_level)
 			return result;
 
 		// <expression>
-		ast_node_t *condition_node; // FIXME:
+		ast_node_t *condition_node;
 		result = expression(pdata, &condition_node);
 		if (result)
 			return result;
+
+		// Check if the condition expression results in a boolean
+		if (condition_node->eval_type != TYPE_BOOLEAN)
+		{
+			print_err_l("The condition of an if statement must result in a Boolean.", ERR_SEMANTIC_INVALID_TYPE,
+						pdata->token.line);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
 
 		// then
 		if (pdata->token.type != TOKEN_KEYWORD || pdata->token.attribute.keyword != KW_THEN)
@@ -1218,19 +1269,56 @@ err_t else_if_opt(parser_data_t *pdata, unsigned header_indent_level)
 		if (result)
 			return result;
 
+		// Create the AST node
+		*out_node = ast_if_make(condition_node);
+		if (!*out_node)
+		{
+			print_err_l("Failed to create an AST node for and if statement!", ERR_INTERNAL, pdata->token.line);
+			return ERR_INTERNAL;
+		}
+
 		// <block-start>
-		ast_node_t *inner_block_node = NULL; // FIXME:
-		result = block_start(pdata, inner_block_node, header_indent_level);
+		ast_node_t *then_block_node = ast_block_make();
+		if (!then_block_node)
+		{
+			print_err_l("Failed to create a block node for an if statement!", ERR_INTERNAL, pdata->token.line);
+			return ERR_INTERNAL;
+		}
+
+		result = block_start(pdata, then_block_node, header_indent_level);
 		if (result)
 			return result;
 
+		// Set the then branch
+		result = ast_if_set_then_block(*out_node, then_block_node);
+		if (result)
+			return result;
+
+		// Add the else branch. The node will be filled either with a block or an if node.
+		// If the node remains NULL, there was no else branch
+		ast_node_t *else_node = NULL;
+
 		// <else-opt>
-		return else_opt(pdata, header_indent_level);
+		result = else_opt(pdata, &else_node, header_indent_level);
+		if (result)
+			return result;
+
+		result = ast_if_set_else_node(*out_node, else_node);
+		if (result)
+			return result;
+
+		return ERR_OK;
 	}
 
 	// <block_start>
-	ast_node_t *inner_block_node = NULL; // FIXME:
-	return block_start(pdata, inner_block_node, header_indent_level);
+	*out_node = ast_block_make();
+	if (!*out_node)
+	{
+		print_err_l("Failed to create a block node for an else branch of an if statement!", ERR_INTERNAL,
+					pdata->token.line);
+		return ERR_INTERNAL;
+	}
+	return block_start(pdata, *out_node, header_indent_level);
 }
 
 /**
