@@ -291,6 +291,12 @@ err_t func_annotation(parser_data_t *pdata, ast_node_t *program_node)
 		if (result)
 			return result;
 
+		if (pdata->main_defined)
+		{
+			print_err_l("Only one function can be annotated as @main.", ERR_SEMANTIC_REDEFINITION, pdata->token.line);
+			return ERR_SEMANTIC_REDEFINITION;
+		}
+
 		// These flags are used in order to create the correct node in <func-def>
 		pdata->in_main = true;
 		pdata->main_defined = true;
