@@ -529,6 +529,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// !E
 	case RULE_NEG:
+		// TODO: Remove redundant check
 		// Type check
 		op2_type = stack->top->node->eval_type;
 		if (op2_type != TYPE_BOOLEAN)
@@ -545,6 +546,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// +E
 	case RULE_UPLUS:
+		// TODO: Remove redundant check
 		// Type check
 		op2_type = stack->top->node->eval_type;
 		if (op2_type != TYPE_INT && op2_type != TYPE_DOUBLE)
@@ -561,6 +563,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// -E
 	case RULE_UMINUS:
+		// TODO: Remove redundant check
 		// Type check
 		op2_type = stack->top->node->eval_type;
 		if (op2_type != TYPE_INT && op2_type != TYPE_DOUBLE)
@@ -577,6 +580,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E*E
 	case RULE_MUL:
+		// TODO: Remove redundant check
 		// Type check
 		op1_type = stack->top->next->next->node->eval_type;
 		op2_type = stack->top->node->eval_type;
@@ -614,6 +618,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E/E
 	case RULE_DIV:
+		// TODO: Remove redundant check
 		// Type check
 		op1_type = stack->top->next->next->node->eval_type;
 		op2_type = stack->top->node->eval_type;
@@ -651,6 +656,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E+E
 	case RULE_ADD:
+		// TODO: Remove redundant check
 		// Type check
 		op1_type = stack->top->next->next->node->eval_type;
 		op2_type = stack->top->node->eval_type;
@@ -689,6 +695,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E-E
 	case RULE_SUB:
+		// TODO: Remove redundant check
 		// Type check
 		op1_type = stack->top->next->next->node->eval_type;
 		op2_type = stack->top->node->eval_type;
@@ -726,6 +733,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E<E
 	case RULE_LT:
+		// TODO: Remove redundant check
 		// Type check
 		op1_type = stack->top->next->next->node->eval_type;
 		op2_type = stack->top->node->eval_type;
@@ -764,6 +772,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E<=E
 	case RULE_LE:
+		// TODO: Remove redundant check
 		// Type check
 		op1_type = stack->top->next->next->node->eval_type;
 		op2_type = stack->top->node->eval_type;
@@ -802,6 +811,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E>E
 	case RULE_GT:
+		// TODO: Remove redundant check
 		// Type check
 		op1_type = stack->top->next->next->node->eval_type;
 		op2_type = stack->top->node->eval_type;
@@ -840,6 +850,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E>=E
 	case RULE_GE:
+		// TODO: Remove redundant check
 		// Type check
 		op1_type = stack->top->next->next->node->eval_type;
 		op2_type = stack->top->node->eval_type;
@@ -878,6 +889,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E==E
 	case RULE_EQ:
+		// TODO: Remove redundant check
 		// Type check
 		op1_type = stack->top->next->next->node->eval_type;
 		op2_type = stack->top->node->eval_type;
@@ -918,6 +930,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E!=E
 	case RULE_NE:
+		// TODO: Remove redundant check
 		// Type check
 		op1_type = stack->top->next->next->node->eval_type;
 		op2_type = stack->top->node->eval_type;
@@ -958,6 +971,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E&&E
 	case RULE_AND:
+		// TODO: Remove redundant check
 		// Type check
 		op1_type = stack->top->next->next->node->eval_type;
 		op2_type = stack->top->node->eval_type;
@@ -976,6 +990,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E||E
 	case RULE_OR:
+		// TODO: Remove redundant check
 		// Type check
 		op1_type = stack->top->next->next->node->eval_type;
 		op2_type = stack->top->node->eval_type;
