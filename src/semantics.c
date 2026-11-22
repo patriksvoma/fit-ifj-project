@@ -267,6 +267,9 @@ err_t check_func_call(ast_node_t *node, compiler_data_t *cdata)
 		}
 	}
 
+	// Set the correct eval type of the node
+	node->eval_type = entry->data.function.return_type;
+
 	return ERR_OK;
 }
 
@@ -391,6 +394,9 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 			}
 		}
 	}
+
+	// Set the correct eval type of the node
+	node->eval_type = entry->data.extension.return_type;
 
 	return ERR_OK;
 }
