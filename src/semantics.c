@@ -30,6 +30,7 @@ err_t check_if(ast_node_t *node, compiler_data_t *cdata);
 err_t check_while(ast_node_t *node, compiler_data_t *cdata);
 err_t check_for(ast_node_t *node, compiler_data_t *cdata);
 err_t check_int_to_double(ast_node_t *node, compiler_data_t *cdata);
+err_t check_unknown_node(ast_node_t *node, compiler_data_t *cdata);
 
 /**
  * @brief Recursive checks for the literal_int node
@@ -202,9 +203,44 @@ err_t check_func_call(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)cdata;
-	(void)node;
+	if (node->func_call.unique_id == NULL)
+	{
+		print_err("A function calls unique_id is NULL. This should not happen!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	if (!symtable_item_defined_local(&cdata->function_table, node->func_call.unique_id))
+	{
+		// TODO: Formatted output with the function name
+		print_err("A function that was called is not defined.", ERR_SEMANTIC_UNDEFINED);
+		return ERR_SEMANTIC_UNDEFINED;
+	}
+
+	// Check all the parameter nodes
+	for (size_t i = 0; i < node->func_call.param_list_count; i++)
+	{
+		param_node_list_t *list = node->func_call.param_lists[i];
+		if (list == NULL)
+		{
+			print_err("A param node list is NULL. This should not happen!", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
+		for (size_t j = 0; j < list->param_count; j++)
+		{
+			ast_node_t *param = list->param_node[j];
+			if (param == NULL)
+			{
+				print_err("A parameter node is NULL. This should not happen!", ERR_INTERNAL);
+				return ERR_INTERNAL;
+			}
+
+			err_t result = check_unknown_node(param, cdata);
+			if (result)
+				return result;
+		}
+	}
+
 	return ERR_OK;
 }
 
@@ -475,6 +511,28 @@ err_t check_int_to_double(ast_node_t *node, compiler_data_t *cdata)
 	if (!node || !cdata)
 	{
 		print_err("Null-pointer reference in check_int_to_double()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// TODO: Implement
+	(void)cdata;
+	(void)node;
+	return ERR_OK;
+}
+
+/**
+ * @brief Calls the correct check function based on the node type.
+ *        Used for checks where a child can by any node
+ *
+ * @param node
+ * @param cdata
+ * @return err_t
+ */
+err_t check_unknown_node(ast_node_t *node, compiler_data_t *cdata)
+{
+	if (!node || !cdata)
+	{
+		print_err("Null-pointer reference in check_unknown_node()!", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
 
