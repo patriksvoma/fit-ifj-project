@@ -137,216 +137,232 @@ err_t check_literal_unit(const ast_node_t *node, const parser_data_t *pdata)
  */
 err_t check_program(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the func_def node
  *
- * @param node AST program node
+ * @param node AST function definition node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_func_def(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the func_call node
  *
- * @param node AST program node
+ * @param node AST function call node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_func_call(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the ext_def node
  *
- * @param node AST program node
+ * @param node AST extension definition node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_ext_def(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the ext_call node
  *
- * @param node AST program node
+ * @param node AST extension call node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_ext_call(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the block node
  *
- * @param node AST program node
+ * @param node AST block node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_block(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the un_operator node
  *
- * @param node AST program node
+ * @param node AST unary operator node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_un_operator(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the bin_operator node
  *
- * @param node AST program node
+ * @param node AST binary operator node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_bin_operator(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the var_def node
  *
- * @param node AST program node
+ * @param node AST variable definition node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_var_def(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the var_assign node
  *
- * @param node AST program node
+ * @param node AST variable assignment node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_var_assign(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the var_use node
  *
- * @param node AST program node
+ * @param node AST variable use node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_var_use(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the return_call node
  *
- * @param node AST program node
+ * @param node AST return call node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_return_call(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the if node
  *
- * @param node AST program node
+ * @param node AST if node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_if(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the while node
  *
- * @param node AST program node
+ * @param node AST while node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_while(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the for node
  *
- * @param node AST program node
+ * @param node AST for node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_for(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the int_to_double node
  *
- * @param node AST program node
+ * @param node AST in to double conversion node
  * @param pdata Parser data
  * @return err_t Error code
  */
 err_t check_int_to_double(ast_node_t *node, parser_data_t *pdata)
 {
+	// TODO: Implement
 	(void)pdata;
 	(void)node;
 	return ERR_OK;
