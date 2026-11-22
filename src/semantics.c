@@ -209,11 +209,21 @@ err_t check_func_call(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	if (!symtable_item_defined_local(&cdata->function_table, node->func_call.unique_id))
+	const symbol_data_t *entry = symtable_item_find(&cdata->function_table, node->func_call.unique_id);
+
+	if (entry == NULL)
 	{
 		// TODO: Formatted output with the function name
 		print_err("A function that was called is not defined.", ERR_SEMANTIC_UNDEFINED);
 		return ERR_SEMANTIC_UNDEFINED;
+	}
+
+	// Check parameter list count
+	if (node->func_call.param_list_count != entry->data.function.param_list_count)
+	{
+		print_err("A function was called with a different number of parameter lists than defined.",
+				  ERR_SEMANTIC_INVALID_ARG);
+		return ERR_SEMANTIC_INVALID_ARG;
 	}
 
 	// Check all the parameter nodes
@@ -224,6 +234,14 @@ err_t check_func_call(ast_node_t *node, compiler_data_t *cdata)
 		{
 			print_err("A param node list is NULL. This should not happen!", ERR_INTERNAL);
 			return ERR_INTERNAL;
+		}
+
+		// Check parameter count
+		if (list->param_count != entry->data.function.param_lists[i]->param_count)
+		{
+			print_err("A function was called with a different number of parameters than defined.",
+					  ERR_SEMANTIC_INVALID_ARG);
+			return ERR_SEMANTIC_INVALID_ARG;
 		}
 
 		for (size_t j = 0; j < list->param_count; j++)
@@ -238,6 +256,14 @@ err_t check_func_call(ast_node_t *node, compiler_data_t *cdata)
 			err_t result = check_unknown_node(param, cdata);
 			if (result)
 				return result;
+
+			// Check for the parameter type later, as the eval node can be changed during the semantic checks
+			if (param->eval_type != entry->data.function.param_lists[i]->params[j]->type)
+			{
+				print_err("A function was called with a parameter of a different type then its defintion.",
+						  ERR_SEMANTIC_INVALID_ARG);
+				return ERR_SEMANTIC_INVALID_ARG;
+			}
 		}
 	}
 
@@ -280,6 +306,12 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 	if (!node || !cdata)
 	{
 		print_err("Null-pointer reference in check_ext_call()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	if (node->ext_call.unique_id == NULL)
+	{
+		print_err("An extension calls unique_id is NULL. This should not happen!", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
 
