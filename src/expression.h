@@ -55,8 +55,8 @@ typedef enum
 /**
  * @brief Parses an expression
  *
- * @param pdata Parser data
+ * @param cdata Compiler data
  * @param return_node Address to which the address of the created AST note should be written
  * @return err_t Error code
  */
-err_t parse_expression(parser_data_t *pdata, ast_node_t **return_node);
+err_t parse_expression(compiler_data_t *cdata, ast_node_t **return_node);

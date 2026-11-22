@@ -12,8 +12,8 @@
 
 #define PREC_TABLE_SIZE 20
 
-static err_t parse_expression_internal(parser_data_t *pdata, ast_node_t **return_node, bool stop_at_call_delimiter);
-static err_t parse_function_call(parser_data_t *pdata, const token_t *identifier_token, ast_node_t **return_node);
+static err_t parse_expression_internal(compiler_data_t *cdata, ast_node_t **return_node, bool stop_at_call_delimiter);
+static err_t parse_function_call(compiler_data_t *cdata, const token_t *identifier_token, ast_node_t **return_node);
 
 /**
  * @brief All possible grammar rules
@@ -372,11 +372,11 @@ prec_rule_t find_rule(const symstack_t *stack)
  *
  * @param rule Rule to apply
  * @param stack Symbol stack
- * @param pdata Parser data
+ * @param cdata Compiler data
  * @param line Line on which the expression is located
  * @return err_t Error code
  */
-err_t apply_rule(prec_rule_t rule, symstack_t *stack, parser_data_t *pdata, unsigned line)
+err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, unsigned line)
 {
 	err_t result;
 
@@ -430,7 +430,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, parser_data_t *pdata, unsi
 		else if (token.type == TOKEN_IDENTIFIER)
 		{
 			// Find the identifier_token in the symbol table
-			symbol_data_t *entry = symtable_item_find(pdata->local_var_table, token.attribute.string);
+			symbol_data_t *entry = symtable_item_find(cdata->local_var_table, token.attribute.string);
 			// If the identifier exists, it is either a variable or a function call
 			if (entry)
 			{
@@ -1022,14 +1022,14 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, parser_data_t *pdata, unsi
 /**
  * @brief Checks if the next item is a function call by peeking the next token. If so, parses the function call.
  *
- * @param pdata Parser data
+ * @param cdata Compiler data
  * @param item Symstack item to be checked
  * @param call_consumed If a function call was parsed
  * @return err_t Error code
  */
-err_t try_parse_func_call(parser_data_t *pdata, symstack_item_t *item, bool *call_consumed)
+err_t try_parse_func_call(compiler_data_t *cdata, symstack_item_t *item, bool *call_consumed)
 {
-	if (!pdata || !item || !call_consumed)
+	if (!cdata || !item || !call_consumed)
 	{
 		print_err("Null-reference error in try_parse_func_call().", ERR_INTERNAL);
 		return ERR_INTERNAL;
@@ -1049,7 +1049,7 @@ err_t try_parse_func_call(parser_data_t *pdata, symstack_item_t *item, bool *cal
 		return ERR_OK;
 
 	// Parse the function call
-	result = parse_function_call(pdata, &item->source_token, &item->node);
+	result = parse_function_call(cdata, &item->source_token, &item->node);
 	if (result)
 		return result;
 
@@ -1060,15 +1060,15 @@ err_t try_parse_func_call(parser_data_t *pdata, symstack_item_t *item, bool *cal
 /**
  * @brief Parses a function call, consumes all its tokens and gives back a func_call node
  *
- * @param pdata Parser data
+ * @param cdata Compiler data
  * @param identifier_token Identifier of the function
  * @param return_node Pointer to where the AST func_call node should be saved
  * @return err_t Error code
  */
-err_t parse_function_call(parser_data_t *pdata, const token_t *identifier_token, ast_node_t **return_node)
+err_t parse_function_call(compiler_data_t *cdata, const token_t *identifier_token, ast_node_t **return_node)
 {
 	// Find the identifer in the table
-	symbol_data_t *entry = symtable_item_find(&pdata->function_table, identifier_token->attribute.string);
+	symbol_data_t *entry = symtable_item_find(&cdata->function_table, identifier_token->attribute.string);
 	bool func_defined = false;
 
 	if (entry)
@@ -1093,12 +1093,12 @@ err_t parse_function_call(parser_data_t *pdata, const token_t *identifier_token,
 
 	// Parse the parameter lists
 	size_t param_list_count = 0;
-	err_t result = get_next_token(&pdata->token, EOL_OPTIONAL);
+	err_t result = get_next_token(&cdata->token, EOL_OPTIONAL);
 	if (result)
 		return result;
 
 	// Cycle through parameter lists
-	while (pdata->token.type == TOKEN_OPENING_BRACKET)
+	while (cdata->token.type == TOKEN_OPENING_BRACKET)
 	{
 		// Add an empty parameter list into the AST
 		result = ast_func_call_add_empty_param_list(call_node);
@@ -1106,19 +1106,19 @@ err_t parse_function_call(parser_data_t *pdata, const token_t *identifier_token,
 			return result;
 
 		// Consume (
-		result = get_next_token(&pdata->token, EOL_OPTIONAL);
+		result = get_next_token(&cdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
 
 		// Cycle through all parameters inside the parameter list
 		size_t param_count = 0;
-		if (pdata->token.type != TOKEN_CLOSING_BRACKET)
+		if (cdata->token.type != TOKEN_CLOSING_BRACKET)
 		{
 			while (true)
 			{
 				// Parse the parameter with the expression parser
 				ast_node_t *parameter = NULL;
-				result = parse_expression_internal(pdata, &parameter, true);
+				result = parse_expression_internal(cdata, &parameter, true);
 				if (result)
 					return result;
 
@@ -1154,28 +1154,28 @@ err_t parse_function_call(parser_data_t *pdata, const token_t *identifier_token,
 				param_count++;
 
 				// Check for a comma separating the parameters
-				if (pdata->token.type == TOKEN_COMMA)
+				if (cdata->token.type == TOKEN_COMMA)
 				{
-					result = get_next_token(&pdata->token, EOL_FORBIDDEN);
+					result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 					if (result)
 						return result;
 
 					// FIXME: allow the trailing comma in certain situations
-					if (pdata->token.type == TOKEN_CLOSING_BRACKET)
+					if (cdata->token.type == TOKEN_CLOSING_BRACKET)
 					{
-						print_err_l("Expected an parameter after the comma.", ERR_SYNTAX, pdata->token.line);
+						print_err_l("Expected an parameter after the comma.", ERR_SYNTAX, cdata->token.line);
 						return ERR_SYNTAX;
 					}
 					continue;
 				}
 
-				if (pdata->token.type == TOKEN_CLOSING_BRACKET)
+				if (cdata->token.type == TOKEN_CLOSING_BRACKET)
 				{
 					break;
 				}
 
 				print_err_l("Expected a comma or closing parenthesis in a function call.", ERR_SYNTAX,
-							pdata->token.line);
+							cdata->token.line);
 				return ERR_SYNTAX;
 			}
 		}
@@ -1192,10 +1192,10 @@ err_t parse_function_call(parser_data_t *pdata, const token_t *identifier_token,
 		param_list_count++;
 
 		// Break out of the parameter list loop
-		result = get_next_token(&pdata->token, EOL_OPTIONAL);
+		result = get_next_token(&cdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
-		if (pdata->token.type != TOKEN_OPENING_BRACKET)
+		if (cdata->token.type != TOKEN_OPENING_BRACKET)
 			break;
 	}
 
@@ -1213,7 +1213,7 @@ err_t parse_function_call(parser_data_t *pdata, const token_t *identifier_token,
 /**
  * @brief Parses an expression
  *
- * @param pdata Parser data
+ * @param cdata Compiler data
  * @param return_node Address to which the address of the created AST note should be written
  * @param stop_at_call_delimiter If true, the parser will stop successfuly at a ) if the expression was reduced
  *                               completely and it is not inside parenthesis. If false, this situation will cause an
@@ -1221,7 +1221,7 @@ err_t parse_function_call(parser_data_t *pdata, const token_t *identifier_token,
  *
  * @return err_t Error code
  */
-err_t parse_expression_internal(parser_data_t *pdata, ast_node_t **return_node, bool stop_at_call_delimiter)
+err_t parse_expression_internal(compiler_data_t *cdata, ast_node_t **return_node, bool stop_at_call_delimiter)
 {
 	symstack_t stack;
 	unsigned expression_start_line;
@@ -1241,21 +1241,21 @@ err_t parse_expression_internal(parser_data_t *pdata, ast_node_t **return_node, 
 		return ERR_INTERNAL;
 	}
 
-	result = token_to_stack_item(&pdata->token, b, &expect_unary);
+	result = token_to_stack_item(&cdata->token, b, &expect_unary);
 	if (result)
 		return result;
 
-	result = try_parse_func_call(pdata, b, &call_consumed);
+	result = try_parse_func_call(cdata, b, &call_consumed);
 	if (result)
 		return result;
 
-	expression_start_line = pdata->token.line;
+	expression_start_line = cdata->token.line;
 
 	while (!((b->type == STACKITEM_TYPE_TERMINAL && b->data.terminal == TERMINAL_DOLLAR) &&
 			 (stack.top->type == STACKITEM_TYPE_EXPRESSION && stack.top->next->type == STACKITEM_TYPE_TERMINAL &&
 			  stack.top->next->data.terminal == TERMINAL_DOLLAR)))
 	{
-		if (stop_at_call_delimiter && pdata->token.type == TOKEN_CLOSING_BRACKET && parenthesis_level == 0 &&
+		if (stop_at_call_delimiter && cdata->token.type == TOKEN_CLOSING_BRACKET && parenthesis_level == 0 &&
 			stack.top->type == STACKITEM_TYPE_EXPRESSION && stack.top->next->type == STACKITEM_TYPE_TERMINAL &&
 			stack.top->next->data.terminal == TERMINAL_DOLLAR)
 			break;
@@ -1285,7 +1285,7 @@ err_t parse_expression_internal(parser_data_t *pdata, ast_node_t **return_node, 
 			//  Only get the next token if it wasn't already requested while parsing a function call
 			if (!call_consumed)
 			{
-				result = get_next_token(&pdata->token, EOL_OPTIONAL);
+				result = get_next_token(&cdata->token, EOL_OPTIONAL);
 				if (result)
 					return result;
 			}
@@ -1296,12 +1296,12 @@ err_t parse_expression_internal(parser_data_t *pdata, ast_node_t **return_node, 
 				print_err("Failed to create an item inside parse_expression().", ERR_INTERNAL);
 				return ERR_INTERNAL;
 			}
-			result = token_to_stack_item(&pdata->token, b, &expect_unary);
+			result = token_to_stack_item(&cdata->token, b, &expect_unary);
 			if (result)
 				return result;
 
 			// Try to parse a function call
-			result = try_parse_func_call(pdata, b, &call_consumed);
+			result = try_parse_func_call(cdata, b, &call_consumed);
 			if (result)
 				return result;
 
@@ -1328,7 +1328,7 @@ err_t parse_expression_internal(parser_data_t *pdata, ast_node_t **return_node, 
 			//  Only get the next token if it wasn't already requested while parsing a function call
 			if (!call_consumed)
 			{
-				result = get_next_token(&pdata->token, EOL_OPTIONAL);
+				result = get_next_token(&cdata->token, EOL_OPTIONAL);
 				if (result)
 					return result;
 			}
@@ -1339,12 +1339,12 @@ err_t parse_expression_internal(parser_data_t *pdata, ast_node_t **return_node, 
 				print_err("Failed to create an item inside parse_expression().", ERR_INTERNAL);
 				return ERR_INTERNAL;
 			}
-			result = token_to_stack_item(&pdata->token, b, &expect_unary);
+			result = token_to_stack_item(&cdata->token, b, &expect_unary);
 			if (result)
 				return result;
 
 			// Try to parse a function call
-			result = try_parse_func_call(pdata, b, &call_consumed);
+			result = try_parse_func_call(cdata, b, &call_consumed);
 			if (result)
 				return result;
 
@@ -1354,16 +1354,16 @@ err_t parse_expression_internal(parser_data_t *pdata, ast_node_t **return_node, 
 
 			if (rule == RULE_NONE)
 			{
-				print_err_l("Unexpected token in an expression.", ERR_SYNTAX, pdata->token.line);
+				print_err_l("Unexpected token in an expression.", ERR_SYNTAX, cdata->token.line);
 				return ERR_SYNTAX;
 			}
 
-			result = apply_rule(rule, &stack, pdata, expression_start_line);
+			result = apply_rule(rule, &stack, cdata, expression_start_line);
 			if (result)
 				return result;
 			break;
 		case N:
-			print_err_l("Unexpected token sequence in an expression.", ERR_SYNTAX, pdata->token.line);
+			print_err_l("Unexpected token sequence in an expression.", ERR_SYNTAX, cdata->token.line);
 			return ERR_SYNTAX;
 		}
 	}
@@ -1376,7 +1376,7 @@ err_t parse_expression_internal(parser_data_t *pdata, ast_node_t **return_node, 
 	return ERR_OK;
 }
 
-err_t parse_expression(parser_data_t *pdata, ast_node_t **return_node)
+err_t parse_expression(compiler_data_t *cdata, ast_node_t **return_node)
 {
-	return parse_expression_internal(pdata, return_node, false);
+	return parse_expression_internal(cdata, return_node, false);
 }
