@@ -299,7 +299,7 @@ void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 	{
 		printf("LABEL main\n");
 		printf("LABEL %s\n", unique_id);
-		new_func_def->func_name = "main";
+		// new_func_def->func_name = "main";
 	}
 	else
 	{
@@ -503,14 +503,6 @@ err_t var_def(const ast_node_t *block, symtable_t *symtables, names_counter *new
 	return ERR_OK;
 }
 
-/*
-	AST_EXT_DEF,
-	AST_EXT_CALL,
-
-	AST_WHILE,
-	AST_FOR,
-*/
-
 err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counter *new_func_def)
 {
 	node_type_t type = node->node_type;
@@ -633,27 +625,47 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		break;
 
 	case AST_IF:
-		unsigned curr = new_func_def->if_counter;
+		unsigned curr_if = new_func_def->if_counter;
 		new_func_def->if_counter++;
 
 		generate_nodes(node->if_statement.condition, symtables, new_func_def);
 
 		// Condition evaluation
 		printf("PUSHS bool@true\n");
-		printf("JUMPIFNEQS %s$if$%u$else\n", new_func_def->func_name, curr);
+		printf("JUMPIFNEQS %s$if$%u$else\n", new_func_def->func_name, curr_if);
 
 		// If block
 		generate_nodes(node->if_statement.if_block, symtables, new_func_def);
-		printf("JUMP %s$if$%u$end\n", new_func_def->func_name, curr);
+		printf("JUMP %s$if$%u$end\n", new_func_def->func_name, curr_if);
 
 		// Else block
-		printf("LABEL %s$if$%u$else\n", new_func_def->func_name, curr);
+		printf("LABEL %s$if$%u$else\n", new_func_def->func_name, curr_if);
 		if (node->if_statement.else_block != NULL)
 		{
 			generate_nodes(node->if_statement.else_block, symtables, new_func_def);
 		}
 
-		printf("LABEL %s$if$%u$end\n", new_func_def->func_name, curr);
+		printf("LABEL %s$if$%u$end\n", new_func_def->func_name, curr_if);
+		break;
+
+	case AST_WHILE:
+		unsigned curr_while = new_func_def->while_counter;
+		new_func_def->while_counter++;
+
+		printf("LABEL %s$while$%u$start\n", new_func_def->func_name, curr_while);
+
+		generate_nodes(node->while_loop.condition, symtables, new_func_def);
+
+		// Condition evaluation
+		printf("PUSHS bool@true\n");
+		printf("JUMPIFNEQS %s$while$%u$end\n", new_func_def->func_name, curr_while);
+
+		generate_nodes(node->while_loop.block, symtables, new_func_def);
+
+		// Going back to condition evaluation, if its not true jumop back here
+		printf("JUMP %s$while$%u$start\n", new_func_def->func_name, curr_while);
+		printf("LABEL %s$while$%u$end\n", new_func_def->func_name, curr_while);
+
 		break;
 
 	default:
