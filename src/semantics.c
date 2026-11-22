@@ -172,10 +172,13 @@ err_t check_func_def(ast_node_t *node, parser_data_t *pdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)pdata;
-	(void)node;
-	return ERR_OK;
+	if (node->func_def.unique_id == NULL)
+	{
+		print_err("A function definitions unique_id is NULL. This should not happen!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	return check_block(node->func_def.block, pdata);
 }
 
 /**
@@ -214,10 +217,13 @@ err_t check_ext_def(ast_node_t *node, parser_data_t *pdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)pdata;
-	(void)node;
-	return ERR_OK;
+	if (node->ext_def.unique_id == NULL)
+	{
+		print_err("An extension definitions unique_id is NULL. This should not happen!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	return check_block(node->ext_def.block, pdata);
 }
 
 /**
