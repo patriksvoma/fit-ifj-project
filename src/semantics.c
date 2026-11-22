@@ -330,8 +330,8 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 
 	if (node->ext_call.base_node == NULL)
 	{
-		print_err("An extension calls base node is NULL. This should not happen!", ERR_INTERNAL);
-		return ERR_INTERNAL;
+		print_err("An extension calls base node is NULL. This should not happen!", ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
 	}
 
 	err_t result = check_unknown_node(node->ext_call.base_node, cdata);
@@ -804,9 +804,16 @@ err_t check_var_assign(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)cdata;
-	(void)node;
+	if (node->variable_assignment.unique_id == NULL)
+	{
+		print_err("A variable assignments unique_id is NULL. This should not happen!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	err_t result = check_unknown_node(node->variable_assignment.assigned_value, cdata);
+	if (result)
+		return result;
+
 	return ERR_OK;
 }
 
@@ -825,9 +832,12 @@ err_t check_var_use(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)cdata;
-	(void)node;
+	if (node->variable_use_unique_id == NULL)
+	{
+		print_err("A variable use unique_id is NULL. This should not happen!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	return ERR_OK;
 }
 
