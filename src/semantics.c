@@ -315,9 +315,83 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)cdata;
-	(void)node;
+	const symbol_data_t *entry = symtable_item_find(&cdata->extension_table, node->ext_call.unique_id);
+
+	if (entry == NULL)
+	{
+		// TODO: Formatted output with the extension name
+		print_err("An extension that was called is not defined.", ERR_SEMANTIC_UNDEFINED);
+		return ERR_SEMANTIC_UNDEFINED;
+	}
+
+	if (node->ext_call.base_node == NULL)
+	{
+		print_err("An extension calls base node is NULL. This should not happen!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	err_t result = check_unknown_node(node->ext_call.base_node, cdata);
+	if (result)
+		return result;
+
+	// Check extension base type
+	if (node->ext_call.base_node->eval_type != entry->data.extension.base_param.type)
+	{
+		print_err(
+			"An extension was called on a different type than it was defined for. This probably should not happen.",
+			ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// Check parameter list count
+	if (node->ext_call.param_list_count != entry->data.extension.param_list_count)
+	{
+		print_err("An extension was called with a different number of parameter lists than defined.",
+				  ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
+	}
+
+	// Check all the parameter nodes
+	for (size_t i = 0; i < node->ext_call.param_list_count; i++)
+	{
+		param_node_list_t *list = node->ext_call.param_lists[i];
+		if (list == NULL)
+		{
+			print_err("A param node list is NULL. This should not happen!", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
+		// Check parameter count
+		if (list->param_count != entry->data.extension.param_lists[i]->param_count)
+		{
+			print_err("An extension was called with a different number of parameters than defined.",
+					  ERR_SEMANTIC_INVALID_ARG);
+			return ERR_SEMANTIC_INVALID_ARG;
+		}
+
+		for (size_t j = 0; j < list->param_count; j++)
+		{
+			ast_node_t *param = list->param_node[j];
+			if (param == NULL)
+			{
+				print_err("A parameter node is NULL. This should not happen!", ERR_INTERNAL);
+				return ERR_INTERNAL;
+			}
+
+			result = check_unknown_node(param, cdata);
+			if (result)
+				return result;
+
+			// Check for the parameter type later, as the eval node can be changed during the semantic checks
+			if (param->eval_type != entry->data.extension.param_lists[i]->params[j]->type)
+			{
+				print_err("An extension was called with a parameter of a different type then its defintion.",
+						  ERR_SEMANTIC_INVALID_ARG);
+				return ERR_SEMANTIC_INVALID_ARG;
+			}
+		}
+	}
+
 	return ERR_OK;
 }
 
