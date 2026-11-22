@@ -1126,9 +1126,9 @@ err_t parse_function_call(compiler_data_t *cdata, const token_t *identifier_toke
 			return result;
 
 		// Cycle through all parameters inside the parameter list
-		size_t param_count = 0;
 		if (cdata->token.type != TOKEN_CLOSING_BRACKET)
 		{
+			size_t param_count = 0;
 			while (true)
 			{
 				// Parse the parameter with the expression parser
@@ -1136,29 +1136,6 @@ err_t parse_function_call(compiler_data_t *cdata, const token_t *identifier_toke
 				result = parse_expression_internal(cdata, &parameter, true);
 				if (result)
 					return result;
-
-				// Only do semantic checks if the function is already defined
-				if (func_defined)
-				{
-					// Check if the call was made with too many parameters
-					if (param_list_count >= entry->data.function.param_list_count ||
-						param_count >= entry->data.function.param_lists[param_list_count]->param_count)
-					{
-						print_err_l("Function call has too many parameters.", ERR_SEMANTIC_INVALID_ARG,
-									identifier_token->line);
-						return ERR_SEMANTIC_INVALID_ARG;
-					}
-
-					// Check the type of the parameter
-					data_type_t expected_type =
-						entry->data.function.param_lists[param_list_count]->params[param_count]->type;
-					if (parameter->eval_type != expected_type)
-					{
-						print_err_l("Function called with a different parameter type than defined.",
-									ERR_SEMANTIC_INVALID_TYPE, identifier_token->line);
-						return ERR_SEMANTIC_INVALID_TYPE;
-					}
-				}
 
 				// Add the parameter into the AST node
 				result = ast_func_call_add_param(call_node, parameter, param_list_count);
@@ -1195,15 +1172,6 @@ err_t parse_function_call(compiler_data_t *cdata, const token_t *identifier_toke
 			}
 		}
 
-		// Check if the call was made with too many parameters
-		if (func_defined && (param_list_count >= entry->data.function.param_list_count ||
-							 param_count != entry->data.function.param_lists[param_list_count]->param_count))
-		{
-			print_err_l("Function call has an incorrect number of arguments.", ERR_SEMANTIC_INVALID_ARG,
-						identifier_token->line);
-			return ERR_SEMANTIC_INVALID_ARG;
-		}
-
 		param_list_count++;
 
 		// Break out of the parameter list loop
@@ -1212,13 +1180,6 @@ err_t parse_function_call(compiler_data_t *cdata, const token_t *identifier_toke
 			return result;
 		if (cdata->token.type != TOKEN_OPENING_BRACKET)
 			break;
-	}
-
-	if (func_defined && (param_list_count != entry->data.function.param_list_count))
-	{
-		print_err_l("Function call has an incorrect number of parameter lists.", ERR_SEMANTIC_INVALID_ARG,
-					identifier_token->line);
-		return ERR_SEMANTIC_INVALID_ARG;
 	}
 
 	*return_node = call_node;
