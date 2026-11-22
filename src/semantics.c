@@ -143,9 +143,17 @@ err_t check_program(ast_node_t *node, parser_data_t *pdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)pdata;
-	(void)node;
+	// Check all function and extension definitions
+	for (size_t i = 0; i < node->program.func_def_count; i++)
+	{
+		return check_func_def(node->program.func_defs[i], pdata);
+	}
+
+	for (size_t i = 0; i < node->program.ext_def_count; i++)
+	{
+		return check_ext_def(node->program.ext_defs[i], pdata);
+	}
+
 	return ERR_OK;
 }
 
