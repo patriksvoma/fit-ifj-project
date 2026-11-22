@@ -137,6 +137,12 @@ err_t check_literal_unit(const ast_node_t *node, const parser_data_t *pdata)
  */
 err_t check_program(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_program()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -152,6 +158,12 @@ err_t check_program(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_func_def(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_func_def()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -167,6 +179,12 @@ err_t check_func_def(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_func_call(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_func_call()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -182,6 +200,12 @@ err_t check_func_call(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_ext_def(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_ext_def()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -197,6 +221,12 @@ err_t check_ext_def(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_ext_call(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_ext_call()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -212,6 +242,12 @@ err_t check_ext_call(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_block(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_block()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -227,6 +263,12 @@ err_t check_block(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_un_operator(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_un_operator()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -242,6 +284,12 @@ err_t check_un_operator(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_bin_operator(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_bin_operator()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -257,6 +305,12 @@ err_t check_bin_operator(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_var_def(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_var_def()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -272,6 +326,12 @@ err_t check_var_def(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_var_assign(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_var_assign()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -287,6 +347,12 @@ err_t check_var_assign(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_var_use(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_var_use()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -302,6 +368,12 @@ err_t check_var_use(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_return_call(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_return_call()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -317,6 +389,12 @@ err_t check_return_call(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_if(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_if()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -332,6 +410,12 @@ err_t check_if(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_while(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_while()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -347,6 +431,12 @@ err_t check_while(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_for(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_for()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
@@ -362,6 +452,12 @@ err_t check_for(ast_node_t *node, parser_data_t *pdata)
  */
 err_t check_int_to_double(ast_node_t *node, parser_data_t *pdata)
 {
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_int_to_double()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	// TODO: Implement
 	(void)pdata;
 	(void)node;
