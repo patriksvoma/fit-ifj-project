@@ -259,6 +259,15 @@ err_t check_func_call(ast_node_t *node, compiler_data_t *cdata)
 				return result;
 
 			// Check for the parameter type later, as the eval node can be changed during the semantic checks
+			// First try to check for an implicit int to double conversion
+			if (entry->data.function.param_lists[i]->params[j]->type == TYPE_DOUBLE && param->eval_type == TYPE_INT)
+			{
+				result = insert_int_to_double_node(&node->func_call.param_lists[i]->param_node[j]);
+				if (result)
+					return result;
+				param = node->func_call.param_lists[i]->param_node[j];
+			}
+
 			if (param->eval_type != entry->data.function.param_lists[i]->params[j]->type)
 			{
 				print_err("A function was called with a parameter of a different type then its defintion.",
@@ -387,6 +396,15 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 				return result;
 
 			// Check for the parameter type later, as the eval node can be changed during the semantic checks
+			// First try to check for an implicit int to double conversion
+			if (entry->data.extension.param_lists[i]->params[j]->type == TYPE_DOUBLE && param->eval_type == TYPE_INT)
+			{
+				result = insert_int_to_double_node(&node->ext_call.param_lists[i]->param_node[j]);
+				if (result)
+					return result;
+				param = node->ext_call.param_lists[i]->param_node[j];
+			}
+
 			if (param->eval_type != entry->data.extension.param_lists[i]->params[j]->type)
 			{
 				print_err("An extension was called with a parameter of a different type then its defintion.",
