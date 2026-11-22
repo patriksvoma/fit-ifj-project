@@ -856,9 +856,10 @@ err_t check_return_call(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)cdata;
-	(void)node;
+	err_t result = check_unknown_node(node->return_call, cdata);
+	if (result)
+		result;
+
 	return ERR_OK;
 }
 
