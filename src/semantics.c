@@ -343,8 +343,8 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 	{
 		print_err(
 			"An extension was called on a different type than it was defined for. This probably should not happen.",
-			ERR_INTERNAL);
-		return ERR_INTERNAL;
+			ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
 	}
 
 	// Check parameter list count
