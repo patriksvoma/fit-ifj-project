@@ -313,7 +313,7 @@ void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 	// when calling the function
 	for (int i = func_params->data.function.param_list_count - 1; i >= 0; i--)
 	{
-		for (int j = func_params->data.function.param_lists[i]->param_count - 1; j >= 0; j--)
+		for (int j = func_params->data.function.param_lists[i]->param_count - 1; j >= 0; j--) // TODO: Osetrit 0
 		{
 			printf("DEFVAR LF@%s$%s\n", unique_id, func_params->data.function.param_lists[i]->params[j]->identifier);
 			printf("POPS LF@%s$%s\n", unique_id, func_params->data.function.param_lists[i]->params[j]->identifier);
@@ -463,6 +463,46 @@ void print_user_func_call(const char *unique_id, param_node_list_t **param_lists
 	return;
 }
 
+err_t var_def(const ast_node_t *block, symtable_t *symtables, names_counter *new_func_def)
+{
+	if (block == NULL)
+	{
+		return ERR_OK;
+	}
+
+	// Recursively going trough function block tree and printing variable definition
+	switch (block->node_type)
+	{
+	case AST_BLOCK:
+		for (size_t i = 0; i < block->block.statement_count; i++)
+		{
+			var_def(block->block.statements[i], symtables, new_func_def);
+		}
+		break;
+
+	case AST_IF:
+		var_def(block->if_statement.if_block, symtables, new_func_def);
+		var_def(block->if_statement.else_block, symtables, new_func_def);
+		break;
+
+	case AST_WHILE:
+		var_def(block->while_loop.block, symtables, new_func_def);
+		break;
+
+	case AST_FOR:
+		var_def(block->for_loop.block, symtables, new_func_def);
+		break;
+
+	case AST_VAR_DEF:
+		printf("DEFVAR LF@%s\n", block->variable_definition.unique_id);
+		break;
+
+	default:
+		break;
+	}
+	return ERR_OK;
+}
+
 /*
 	AST_EXT_DEF,
 	AST_EXT_CALL,
@@ -510,6 +550,11 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		printf("PUSHS LF@%s\n", node->variable_use_unique_id);
 		break;
 
+	case AST_VAR_DEF:
+		generate_nodes(node->variable_definition.assigned_value, symtables, new_func_def);
+		printf("POPS LF@%s\n", node->variable_definition.unique_id);
+		break;
+
 	case AST_UN_OPERATOR:
 		generate_nodes(node->un_operator.operand, symtables, new_func_def);
 
@@ -529,12 +574,6 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		generate_nodes(node->bin_operator.operand_left, symtables, new_func_def);
 		generate_nodes(node->bin_operator.operand_right, symtables, new_func_def);
 		print_bin_operation(node->bin_operator.operator, node->eval_type);
-		break;
-
-	case AST_VAR_DEF:
-		printf("DEFVAR LF@%s\n", node->variable_definition.unique_id);
-		generate_nodes(node->variable_definition.assigned_value, symtables, new_func_def);
-		printf("POPS LF@%s\n", node->variable_definition.unique_id);
 		break;
 
 	case AST_VAR_ASSIGN:
@@ -574,6 +613,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 
 	case AST_FUNC_DEF:
 		print_func_def(node->func_def.unique_id, symtables, new_func_def);
+		var_def(node->func_def.block, symtables, new_func_def);
 		generate_nodes(node->func_def.block, symtables, new_func_def);
 
 		// If there isnt a return, the frame must be cleaned
@@ -630,6 +670,9 @@ err_t generate_code(const ast_node_t *root, const compiler_data_t *cdata)
 
 	if (new_func_def == NULL || symtables == NULL)
 	{
+		free(symtables);
+		free(new_func_def);
+
 		print_err("Failed to allocate memory in generate_nodes()", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
