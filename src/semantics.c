@@ -952,9 +952,101 @@ err_t check_for(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)cdata;
-	(void)node;
+	if (node->for_loop.iterator_unique_id == NULL)
+	{
+		print_err("Unique id of a for loop iterator is NULL. This should not happen!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// Check the "from" node
+	err_t result = check_unknown_node(node->for_loop.from, cdata);
+	if (result)
+		return result;
+
+	// Check other nodes based on the type of the for loop
+	switch (node->for_loop.for_type)
+	{
+	case FOR_TO:
+		// to
+		result = check_unknown_node(node->for_loop.to, cdata);
+		if (result)
+			return result;
+
+		if (node->for_loop.to->eval_type != TYPE_INT)
+		{
+			print_err("The \"to\" generator of a for loop must be type Int.", ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
+		break;
+	case FOR_UNTIL:
+		// until
+		result = check_unknown_node(node->for_loop.until, cdata);
+		if (result)
+			return result;
+
+		if (node->for_loop.until->eval_type != TYPE_INT)
+		{
+			print_err("The \"to\" generator of a for loop must be type Int.", ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
+		break;
+	case FOR_TO_BY:
+		// to
+		result = check_unknown_node(node->for_loop.to, cdata);
+		if (result)
+			return result;
+
+		if (node->for_loop.to->eval_type != TYPE_INT)
+		{
+			print_err("The \"to\" generator of a for loop must be type Int.", ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
+		// until
+		result = check_unknown_node(node->for_loop.by, cdata);
+		if (result)
+			return result;
+
+		if (node->for_loop.by->eval_type != TYPE_INT)
+		{
+			print_err("The \"to\" generator of a for loop must be type Int.", ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
+		break;
+	default:
+		print_err("Invalid for loop type. This should not happen!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// Check all the guards
+	for (size_t i = 0; i < node->for_loop.guard_count; i++)
+	{
+		ast_node_t *guard = node->for_loop.guards[i];
+		if (guard == NULL)
+		{
+			print_err("A for loop guard is NULL. This should not happen!", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
+		result = check_unknown_node(guard, cdata);
+		if (result)
+			return result;
+
+		if (guard->eval_type != TYPE_BOOLEAN)
+		{
+			print_err("The guard of a for loop must evaluate to a Boolean.", ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+	}
+
+	// Check the block
+	result = check_block(node->for_loop.block, cdata);
+	if (result)
+		return;
+
 	return ERR_OK;
 }
 
