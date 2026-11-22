@@ -776,9 +776,16 @@ err_t check_var_def(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)cdata;
-	(void)node;
+	if (node->variable_definition.unique_id == NULL)
+	{
+		print_err("A variable definitions unique_id is NULL. This should not happen!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	err_t result = check_unknown_node(node->variable_definition.assigned_value, cdata);
+	if (result)
+		return result;
+
 	return ERR_OK;
 }
 
