@@ -9,11 +9,11 @@
 
 #include "semantics.h"
 
-err_t check_literal_int(ast_node_t *node, parser_data_t *pdata);
-err_t check_literal_double(ast_node_t *node, parser_data_t *pdata);
-err_t check_literal_string(ast_node_t *node, parser_data_t *pdata);
-err_t check_literal_boolean(ast_node_t *node, parser_data_t *pdata);
-err_t check_literal_unit(ast_node_t *node, parser_data_t *pdata);
+err_t check_literal_int(const ast_node_t *node, const parser_data_t *pdata);
+err_t check_literal_double(const ast_node_t *node, const parser_data_t *pdata);
+err_t check_literal_string(const ast_node_t *node, const parser_data_t *pdata);
+err_t check_literal_boolean(const ast_node_t *node, const parser_data_t *pdata);
+err_t check_literal_unit(const ast_node_t *node, const parser_data_t *pdata);
 err_t check_program(ast_node_t *node, parser_data_t *pdata);
 err_t check_func_def(ast_node_t *node, parser_data_t *pdata);
 err_t check_func_call(ast_node_t *node, parser_data_t *pdata);
@@ -32,73 +32,99 @@ err_t check_for(ast_node_t *node, parser_data_t *pdata);
 err_t check_int_to_double(ast_node_t *node, parser_data_t *pdata);
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the literal_int node
  *
- * @param node AST program node
+ * @param node AST int literal node
  * @param pdata Parser data
  * @return err_t Error code
  */
-err_t check_literal_int(ast_node_t *node, parser_data_t *pdata)
+err_t check_literal_int(const ast_node_t *node, const parser_data_t *pdata)
 {
-	// TODO: Implement
-	(void)node;
-	(void)pdata;
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_literal_int()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the literal_double node
  *
- * @param node AST program node
+ * @param node AST double literal node
  * @param pdata Parser data
  * @return err_t Error code
  */
-err_t check_literal_double(ast_node_t *node, parser_data_t *pdata)
+err_t check_literal_double(const ast_node_t *node, const parser_data_t *pdata)
 {
-	(void)pdata;
-	(void)node;
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_literal_double()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the literal_string node
  *
- * @param node AST program node
+ * @param node AST string literal node
  * @param pdata Parser data
  * @return err_t Error code
  */
-err_t check_literal_string(ast_node_t *node, parser_data_t *pdata)
+err_t check_literal_string(const ast_node_t *node, const parser_data_t *pdata)
 {
-	(void)pdata;
-	(void)node;
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_literal_string()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// The pointer to the string must not be null
+	if (node->literal_string == NULL)
+	{
+		print_err("A string literal must not be NULL. This should not happen!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the literal_boolean node
  *
- * @param node AST program node
+ * @param node AST boolean literal node
  * @param pdata Parser data
  * @return err_t Error code
  */
-err_t check_literal_boolean(ast_node_t *node, parser_data_t *pdata)
+err_t check_literal_boolean(const ast_node_t *node, const parser_data_t *pdata)
 {
-	(void)pdata;
-	(void)node;
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_literal_boolean()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	return ERR_OK;
 }
 
 /**
- * @brief Recursive checks for the program node
+ * @brief Recursive checks for the literal_unit node
  *
- * @param node AST program node
+ * @param node AST unit literal node
  * @param pdata Parser data
  * @return err_t Error code
  */
-err_t check_literal_unit(ast_node_t *node, parser_data_t *pdata)
+err_t check_literal_unit(const ast_node_t *node, const parser_data_t *pdata)
 {
-	(void)pdata;
-	(void)node;
+	if (!node || !pdata)
+	{
+		print_err("Null-pointer reference in check_literal_unit()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	return ERR_OK;
 }
 
