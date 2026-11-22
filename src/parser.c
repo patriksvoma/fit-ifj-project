@@ -866,8 +866,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		}
 
 		// Check if the variable has already been defined
-		// FIXME: only the local symbol table has to be checked
-		if (symtable_item_defined(cdata->local_var_table, cdata->token.attribute.string))
+		if (symtable_item_defined_local(cdata->local_var_table, cdata->token.attribute.string))
 		{
 			print_err_l("Variable name has already been defined!", ERR_SEMANTIC_REDEFINITION, cdata->token.line);
 			return ERR_SEMANTIC_REDEFINITION;
