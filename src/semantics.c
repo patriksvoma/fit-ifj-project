@@ -24,7 +24,7 @@ err_t check_un_operator(ast_node_t *node, compiler_data_t *cdata);
 err_t check_bin_operator(ast_node_t *node, compiler_data_t *cdata);
 err_t check_var_def(ast_node_t *node, compiler_data_t *cdata);
 err_t check_var_assign(ast_node_t *node, compiler_data_t *cdata);
-err_t check_var_use(ast_node_t *node, compiler_data_t *cdata);
+err_t check_var_use(const ast_node_t *node, const compiler_data_t *cdata);
 err_t check_return_call(ast_node_t *node, compiler_data_t *cdata);
 err_t check_if(ast_node_t *node, compiler_data_t *cdata);
 err_t check_while(ast_node_t *node, compiler_data_t *cdata);
@@ -824,7 +824,7 @@ err_t check_var_assign(ast_node_t *node, compiler_data_t *cdata)
  * @param cdata Compiler data
  * @return err_t Error code
  */
-err_t check_var_use(ast_node_t *node, compiler_data_t *cdata)
+err_t check_var_use(const ast_node_t *node, const compiler_data_t *cdata)
 {
 	if (!node || !cdata)
 	{
@@ -856,11 +856,7 @@ err_t check_return_call(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	err_t result = check_unknown_node(node->return_call, cdata);
-	if (result)
-		result;
-
-	return ERR_OK;
+	return check_unknown_node(node->return_call, cdata);
 }
 
 /**
@@ -1045,7 +1041,7 @@ err_t check_for(ast_node_t *node, compiler_data_t *cdata)
 	// Check the block
 	result = check_block(node->for_loop.block, cdata);
 	if (result)
-		return;
+		return result;
 
 	return ERR_OK;
 }
