@@ -678,6 +678,38 @@ err_t check_int_to_double(ast_node_t *node, compiler_data_t *cdata)
 }
 
 /**
+ * @brief Wraps an Integer type AST node in a int-to-double node
+ *
+ * @param node Pointer to where the adress of the new node should be written
+ * @return err_t Error code
+ */
+err_t insert_int_to_double_node(ast_node_t **node)
+{
+	if (!node || !*node)
+	{
+		print_err("Null-pointer reference in insert_in_to_double_node().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	if ((*node)->eval_type != TYPE_INT)
+	{
+		print_err(
+			"Tried to create an int-to-double node on a node with a different type than Int. This should not happen!",
+			ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	*node = ast_int2double_make(*node);
+	if (*node == NULL)
+	{
+		print_err("Failed to create an int-to-double AST node.", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	return ERR_OK;
+}
+
+/**
  * @brief Calls the correct check function based on the node type.
  *        Used for checks where a child can by any node
  *
