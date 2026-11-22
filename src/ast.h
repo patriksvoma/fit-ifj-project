@@ -97,14 +97,20 @@ typedef struct
 	} value;
 } literal_t;
 
-// Struct for parameters
+/**
+ * @brief Struct for parameters in a parameters of a function or extension
+ *
+ */
 typedef struct param_node_list_t
 {
 	ast_node_t **param_node;
 	size_t param_count;
 } param_node_list_t;
 
-// Types of for loops
+/**
+ * @brief Types of for loops
+ *
+ */
 typedef enum
 {
 	FOR_TO,
