@@ -459,22 +459,21 @@ err_t check_un_operator(ast_node_t *node, compiler_data_t *cdata)
 	case OP_UPLUS:
 		if (node->un_operator.operand->eval_type != TYPE_INT && node->un_operator.operand->eval_type != TYPE_DOUBLE)
 		{
-			print_err("The unary plus operator must have an operand of type Int or Double.", ERR_SEMANTIC_INVALID_TYPE);
+			print_err("Unary operator + must have an operand of type Int or Double.", ERR_SEMANTIC_INVALID_TYPE);
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 		break;
 	case OP_UMINUS:
 		if (node->un_operator.operand->eval_type != TYPE_INT && node->un_operator.operand->eval_type != TYPE_DOUBLE)
 		{
-			print_err("The unary minus operator must have an operand of type Int or Double.",
-					  ERR_SEMANTIC_INVALID_TYPE);
+			print_err("Unary operator - must have an operand of type Int or Double.", ERR_SEMANTIC_INVALID_TYPE);
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 		break;
 	case OP_NEG:
 		if (node->un_operator.operand->eval_type != TYPE_BOOLEAN)
 		{
-			print_err("The unary negation operator must have an operand of type Boolean.", ERR_SEMANTIC_INVALID_TYPE);
+			print_err("Operator ! must have an operand of type Boolean.", ERR_SEMANTIC_INVALID_TYPE);
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 		break;
@@ -503,9 +502,113 @@ err_t check_bin_operator(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)cdata;
-	(void)node;
+	// Check the operands (this will resolve their eval types)
+	err_t result = check_unknown_node(node->bin_operator.operand_left, cdata);
+	if (result)
+		return result;
+
+	result = check_unknown_node(node->bin_operator.operand_right, cdata);
+	if (result)
+		return result;
+
+	data_type_t op_left_type = node->bin_operator.operand_left->eval_type;
+	data_type_t op_right_type = node->bin_operator.operand_right->eval_type;
+
+	// Do checks based on the operator
+	switch (node->un_operator.operator)
+	{
+	case OP_MUL:
+		if (op_left_type == op_right_type && (op_left_type == TYPE_INT || op_left_type == TYPE_DOUBLE))
+			break;
+		else if (op_left_type == TYPE_INT && op_right_type == TYPE_DOUBLE)
+		{
+			result = insert_int_to_double_node(&node->bin_operator.operand_left);
+			if (result)
+				return result;
+		}
+		else if (OP_LESS_EQUAL == TYPE_DOUBLE && op_right_type == TYPE_INT)
+		{
+			result = insert_int_to_double_node(&node->bin_operator.operand_right);
+			if (result)
+				return result;
+		}
+		print_err("Operator * must have operands of type Int or Double.", ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
+	case OP_DIV:
+		if (op_left_type == op_right_type && (op_left_type == TYPE_INT || op_left_type == TYPE_DOUBLE))
+			break;
+		else if (op_left_type == TYPE_INT && op_right_type == TYPE_DOUBLE)
+		{
+			result = insert_int_to_double_node(&node->bin_operator.operand_left);
+			if (result)
+				return result;
+		}
+		else if (OP_LESS_EQUAL == TYPE_DOUBLE && op_right_type == TYPE_INT)
+		{
+			result = insert_int_to_double_node(&node->bin_operator.operand_right);
+			if (result)
+				return result;
+		}
+		print_err("Operator / must have operands of type Int or Double.", ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
+	case OP_PLUS:
+		if (op_left_type == op_right_type &&
+			(op_left_type == TYPE_INT || op_left_type == TYPE_DOUBLE || op_left_type == TYPE_STRING))
+			break;
+		else if (op_left_type == TYPE_INT && op_right_type == TYPE_DOUBLE)
+		{
+			result = insert_int_to_double_node(&node->bin_operator.operand_left);
+			if (result)
+				return result;
+		}
+		else if (OP_LESS_EQUAL == TYPE_DOUBLE && op_right_type == TYPE_INT)
+		{
+			result = insert_int_to_double_node(&node->bin_operator.operand_right);
+			if (result)
+				return result;
+		}
+		print_err("Operator + must have operands of type Int or Double.", ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
+	case OP_MINUS:
+		if (op_left_type == op_right_type && (op_left_type == TYPE_INT || op_left_type == TYPE_DOUBLE))
+			break;
+		else if (op_left_type == TYPE_INT && op_right_type == TYPE_DOUBLE)
+		{
+			result = insert_int_to_double_node(&node->bin_operator.operand_left);
+			if (result)
+				return result;
+		}
+		else if (OP_LESS_EQUAL == TYPE_DOUBLE && op_right_type == TYPE_INT)
+		{
+			result = insert_int_to_double_node(&node->bin_operator.operand_right);
+			if (result)
+				return result;
+		}
+		print_err("Operator - must have operands of type Int or Double.", ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
+	case OP_LESS:
+		break;
+	case OP_LESS_EQUAL:
+		break;
+	case OP_GREATER:
+		break;
+	case OP_GREATER_EQUAL:
+		break;
+	case OP_EQUAL:
+		break;
+	case OP_NOT_EQUAL:
+		break;
+	case OP_LOGIC_AND:
+		break;
+	case OP_LOGIC_OR:
+		break;
+	default:
+		print_err("Invalid operator inside a binary operator node. This should not happen!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	node->eval_type = node->bin_operator.operand_left->eval_type;
+
 	return ERR_OK;
 }
 
