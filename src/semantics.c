@@ -536,10 +536,54 @@ err_t check_unknown_node(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)cdata;
-	(void)node;
-	return ERR_OK;
+	switch (node->node_type)
+	{
+	case AST_LITERAL_INT:
+		return check_literal_int(node, cdata);
+	case AST_LITERAL_DOUBLE:
+		return check_literal_double(node, cdata);
+	case AST_LITERAL_STRING:
+		return check_literal_string(node, cdata);
+	case AST_LITERAL_BOOLEAN:
+		return check_literal_boolean(node, cdata);
+	case AST_LITERAL_UNIT:
+		return check_literal_unit(node, cdata);
+	case AST_PROGRAM:
+		return check_program(node, cdata);
+	case AST_FUNC_DEF:
+		return check_func_def(node, cdata);
+	case AST_FUNC_CALL:
+		return check_func_call(node, cdata);
+	case AST_EXT_DEF:
+		return check_ext_def(node, cdata);
+	case AST_EXT_CALL:
+		return check_ext_call(node, cdata);
+	case AST_BLOCK:
+		return check_block(node, cdata);
+	case AST_UN_OPERATOR:
+		return check_un_operator(node, cdata);
+	case AST_BIN_OPERATOR:
+		return check_bin_operator(node, cdata);
+	case AST_VAR_DEF:
+		return check_var_def(node, cdata);
+	case AST_VAR_ASSIGN:
+		return check_var_assign(node, cdata);
+	case AST_VAR_USE:
+		return check_var_use(node, cdata);
+	case AST_RETURN_CALL:
+		return check_return_call(node, cdata);
+	case AST_IF:
+		return check_if(node, cdata);
+	case AST_WHILE:
+		return check_while(node, cdata);
+	case AST_FOR:
+		return check_for(node, cdata);
+	case AST_INT_TO_DOUBLE:
+		return check_int_to_double(node, cdata);
+	default:
+		print_err("Error in check_unknown_node()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
 }
 
 err_t do_semantic_checks(ast_node_t *program_node, compiler_data_t *cdata)
