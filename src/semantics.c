@@ -143,15 +143,21 @@ err_t check_program(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
+	err_t result;
+
 	// Check all function and extension definitions
 	for (size_t i = 0; i < node->program.func_def_count; i++)
 	{
-		return check_func_def(node->program.func_defs[i], cdata);
+		result = check_func_def(node->program.func_defs[i], cdata);
+		if (result)
+			return result;
 	}
 
 	for (size_t i = 0; i < node->program.ext_def_count; i++)
 	{
-		return check_ext_def(node->program.ext_defs[i], cdata);
+		result = check_ext_def(node->program.ext_defs[i], cdata);
+		if (result)
+			return result;
 	}
 
 	return ERR_OK;
