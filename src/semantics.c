@@ -959,6 +959,12 @@ err_t check_for(ast_node_t *node, compiler_data_t *cdata)
 	if (result)
 		return result;
 
+	if (node->for_loop.from->eval_type != TYPE_INT)
+	{
+		print_err("The \"from\" generator of a for loop must be type Int.", ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
+	}
+
 	// Check other nodes based on the type of the for loop
 	switch (node->for_loop.for_type)
 	{
@@ -1086,9 +1092,9 @@ err_t insert_int_to_double_node(ast_node_t **node)
 
 	if ((*node)->eval_type != TYPE_INT)
 	{
-		print_err(
-			"Tried to create an int-to-double node on a node with a different type than Int. This should not happen!",
-			ERR_INTERNAL);
+		print_err("Tried to create an int-to-double node on a node with a different type than Int. This should not "
+				  "happen!",
+				  ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
 
