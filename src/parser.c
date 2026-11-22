@@ -1155,6 +1155,12 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			if (result)
 				return result;
 
+			if (!symtable_item_defined(cdata->local_var_table, id_token.attribute.string))
+			{
+				print_err_l("Variable must be defined before assignment.", ERR_SEMANTIC_UNDEFINED, cdata->token.line);
+				return ERR_SEMANTIC_UNDEFINED;
+			}
+
 			statement_node = ast_var_assign_make(id_token.attribute.string, assigned_expression_node);
 			if (!statement_node)
 			{
