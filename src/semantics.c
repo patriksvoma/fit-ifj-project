@@ -404,15 +404,28 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
  */
 err_t check_block(ast_node_t *node, compiler_data_t *cdata)
 {
+	// TODO: Maybe pass the expected return type/last statement type for checking correct return placement
+
 	if (!node || !cdata)
 	{
 		print_err("Null-pointer reference in check_block()!", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)cdata;
-	(void)node;
+	// Check all the statements
+	for (size_t i = 0; i < node->block.statement_count; i++)
+	{
+		if (node->block.statements[i] == NULL)
+		{
+			print_err("Null statement in a block. This should not happen!", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
+		err_t result = check_unknown_node(node->block.statements[i], cdata);
+		if (result)
+			return result;
+	}
+
 	return ERR_OK;
 }
 
