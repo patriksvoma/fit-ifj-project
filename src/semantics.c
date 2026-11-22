@@ -989,7 +989,7 @@ err_t check_for(ast_node_t *node, compiler_data_t *cdata)
 
 		if (node->for_loop.until->eval_type != TYPE_INT)
 		{
-			print_err("The \"to\" generator of a for loop must be type Int.", ERR_SEMANTIC_INVALID_TYPE);
+			print_err("The \"until\" generator of a for loop must be type Int.", ERR_SEMANTIC_INVALID_TYPE);
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
@@ -1006,15 +1006,23 @@ err_t check_for(ast_node_t *node, compiler_data_t *cdata)
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
 
-		// until
+		// by
 		result = check_unknown_node(node->for_loop.by, cdata);
 		if (result)
 			return result;
 
 		if (node->for_loop.by->eval_type != TYPE_INT)
 		{
-			print_err("The \"to\" generator of a for loop must be type Int.", ERR_SEMANTIC_INVALID_TYPE);
+			print_err("The \"by\" generator of a for loop must be type Int.", ERR_SEMANTIC_INVALID_TYPE);
 			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+
+		// TODO: Should be checked for all literals, so probably also for unary operators and simple expressions
+		// Could be done by having a "evaluates_to_zero" flag for a node
+		if (node->for_loop.by->node_type == AST_LITERAL_INT && node->for_loop.by->literal_int == 0)
+		{
+			print_err("The step of a for loop generator must not be 0.", ERR_SEMANTIC_OTHER);
+			return ERR_SEMANTIC_OTHER;
 		}
 
 		break;
