@@ -21,9 +21,9 @@ int main()
 		return ERR_INTERNAL;
 	}
 
-	parser_data_t pdata = {};
+	compiler_data_t cdata = {};
 
-	err_t err_code = parse(ast_root, &pdata);
+	err_t err_code = parse(ast_root, &cdata);
 	if (err_code)
 	{
 		destruct(ast_root);
@@ -31,11 +31,11 @@ int main()
 	}
 
 	// Run additional semantic checks
-	err_code = do_semantic_checks(ast_root, &pdata);
+	err_code = do_semantic_checks(ast_root, &cdata);
 	if (err_code)
 		return err_code;
 
-	err_code = generate_code(ast_root, &pdata);
+	err_code = generate_code(ast_root, &cdata);
 
 	destruct(ast_root);
 	return err_code;
