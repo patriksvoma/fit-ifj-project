@@ -1029,7 +1029,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 
 		// <expression>
-		ast_node_t *condition_node; // FIXME:
+		ast_node_t *condition_node;
 		result = expression(cdata, &condition_node);
 		if (result)
 			return result;
@@ -1045,8 +1045,19 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 
 		// <block-start>
-		ast_node_t *inner_block_node = NULL; // FIXME:
-		return block_start(cdata, inner_block_node, statement_indent_level);
+		ast_node_t *inner_block_node = NULL;
+		result = block_start(cdata, inner_block_node, statement_indent_level);
+		if (result)
+			return result;
+
+		statement_node = ast_while_make(condition_node);
+		if (!statement_node)
+		{
+			print_err_l("Failed to create an AST node for a while loop!", ERR_INTERNAL, cdata->token.line);
+			return ERR_INTERNAL;
+		}
+
+		return ast_while_set_block(statement_node, inner_block_node);
 	}
 	// for
 	else if (cdata->token.type == TOKEN_KEYWORD && cdata->token.attribute.keyword == KW_FOR)
