@@ -15,7 +15,7 @@
 #include "symtable.h"
 
 /**
- * @brief Struct for holding the parser data
+ * @brief Struct for holding the compiler data
  *
  */
 typedef struct
@@ -28,7 +28,7 @@ typedef struct
 	symtable_t extension_table;
 	symtable_t *local_var_table;
 	bool main_defined;
-} parser_data_t;
+} compiler_data_t;
 
 /**
  * @brief Main parsing function
@@ -36,4 +36,4 @@ typedef struct
  * @param program_node AST root node
  * @return err_t Error code
  */
-err_t parse(ast_node_t *program_node, parser_data_t *pdata);
+err_t parse(ast_node_t *program_node, compiler_data_t *cdata);

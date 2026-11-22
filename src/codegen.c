@@ -622,7 +622,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 	return ERR_OK;
 }
 
-err_t generate_code(const ast_node_t *root, const parser_data_t *parser_data)
+err_t generate_code(const ast_node_t *root, const compiler_data_t *cdata)
 {
 	// Make structures to help with unique names for if, while and for
 	names_counter *new_func_def = calloc(1, sizeof(names_counter));
@@ -634,8 +634,8 @@ err_t generate_code(const ast_node_t *root, const parser_data_t *parser_data)
 		return ERR_INTERNAL;
 	}
 
-	symtables[0] = parser_data->function_table;
-	symtables[1] = parser_data->extension_table;
+	symtables[0] = cdata->function_table;
+	symtables[1] = cdata->extension_table;
 
 	printf(".IFJcode26\n");
 

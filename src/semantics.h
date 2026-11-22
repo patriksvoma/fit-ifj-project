@@ -16,7 +16,7 @@
  * @brief Goes through the AST recursively and performs additional semantic checks
  *
  * @param program_node AST program node
- * @param pdata Parser data
+ * @param cdata Compiler data
  * @return err_t Error code
  */
-err_t do_semantic_checks(ast_node_t *program_node, parser_data_t *pdata);
+err_t do_semantic_checks(ast_node_t *program_node, compiler_data_t *cdata);
