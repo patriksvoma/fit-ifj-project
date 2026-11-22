@@ -450,9 +450,41 @@ err_t check_un_operator(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)cdata;
-	(void)node;
+	err_t result = check_unknown_node(node->un_operator.operand, cdata);
+	if (result)
+		return result;
+
+	switch (node->un_operator.operator)
+	{
+	case OP_UPLUS:
+		if (node->un_operator.operand->eval_type != TYPE_INT && node->un_operator.operand->eval_type != TYPE_DOUBLE)
+		{
+			print_err("The unary plus operator must have an operand of type Int or Double.", ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+		break;
+	case OP_UMINUS:
+		if (node->un_operator.operand->eval_type != TYPE_INT && node->un_operator.operand->eval_type != TYPE_DOUBLE)
+		{
+			print_err("The unary minus operator must have an operand of type Int or Double.",
+					  ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+		break;
+	case OP_NEG:
+		if (node->un_operator.operand->eval_type != TYPE_BOOLEAN)
+		{
+			print_err("The unary negation operator must have an operand of type Boolean.", ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+		break;
+	default:
+		print_err("Invalid operator inside a unary operator node. This should not happen!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	node->eval_type = node->un_operator.operand->eval_type;
+
 	return ERR_OK;
 }
 
