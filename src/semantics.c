@@ -1065,10 +1065,13 @@ err_t check_int_to_double(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)cdata;
-	(void)node;
-	return ERR_OK;
+	if (node->int2double == NULL)
+	{
+		print_err("The inside node of a int-to-double node is NULL. This should not happen!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	return check_unknown_node(node->int2double, cdata);
 }
 
 /**
