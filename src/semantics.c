@@ -878,9 +878,29 @@ err_t check_if(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)cdata;
-	(void)node;
+	err_t result = check_unknown_node(node->if_statement.condition, cdata);
+	if (result)
+		return result;
+
+	// Check the condition evaluation type
+	if (node->if_statement.condition->eval_type != TYPE_BOOLEAN)
+	{
+		print_err("The condition of an if statement must evaluate to a Boolean.", ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
+	}
+
+	result = check_unknown_node(node->if_statement.if_block, cdata);
+	if (result)
+		return result;
+
+	// The else block can be null
+	if (node->if_statement.else_block)
+	{
+		result = check_unknown_node(node->if_statement.else_block, cdata);
+		if (result)
+			return result;
+	}
+
 	return ERR_OK;
 }
 
@@ -899,9 +919,21 @@ err_t check_while(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
-	(void)cdata;
-	(void)node;
+	err_t result = check_unknown_node(node->if_statement.condition, cdata);
+	if (result)
+		return result;
+
+	// Check the condition evaluation type
+	if (node->while_loop.condition->eval_type != TYPE_BOOLEAN)
+	{
+		print_err("The condition of a while loop must evaluate to a Boolean.", ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
+	}
+
+	result = check_unknown_node(node->while_loop.block, cdata);
+	if (result)
+		return result;
+
 	return ERR_OK;
 }
 
