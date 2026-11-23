@@ -157,12 +157,12 @@ run_case "func-param-redefinition-1" 4 "functions/invalid/func-param-redefinitio
 run_case "func-param-redefinition-2" 4 "functions/invalid/func-param-redefinition-2.ifj"
 run_case "func-param-redefinition-3" 4 "functions/invalid/func-param-redefinition-3.ifj"
 
-echo "$BLUE-----Built-in functions-----$RESET"
-run_case "func-builtin-print-1" 0 "functions/valid/func-builtin-print-1.ifj"
-run_case "func-builtin-print-2" 0 "functions/valid/func-builtin-print-2.ifj"
-run_case "func-builtin-print-3" 0 "functions/valid/func-builtin-print-3.ifj"
-run_case "func-builtin-print-4" 0 "functions/valid/func-builtin-print-4.ifj"
-run_case "func-builtin-print-5" 0 "functions/valid/func-builtin-print-5.ifj"
+echo "$YELLOW-----Built-in functions-----$RESET"
+run_case "builtin-print-1" 0 "builtins/valid/builtin-print-1.ifj"
+run_case "builtin-print-2" 0 "builtins/valid/builtin-print-2.ifj"
+run_case "builtin-print-3" 0 "builtins/valid/builtin-print-3.ifj"
+run_case "builtin-print-4" 0 "builtins/valid/builtin-print-4.ifj"
+run_case "builtin-print-5" 0 "builtins/valid/builtin-print-5.ifj"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
