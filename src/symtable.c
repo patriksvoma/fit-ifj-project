@@ -810,6 +810,7 @@ err_t symbol_add_param_named(symbol_data_t *symbol, const char *param_name, data
 	return ERR_OK;
 }
 
+err_t symtable_insert_builtins(symtable_t *func_table, const symtable_t *ext_table)
 {
 	if (!func_table || !ext_table)
 	{
@@ -817,7 +818,118 @@ err_t symbol_add_param_named(symbol_data_t *symbol, const char *param_name, data
 		return ERR_INTERNAL;
 	}
 
-	// TODO: Implement
+	symbol_data_t *entry;
+	err_t result;
+
+	// BASE
+
+	// print(value: Any): Unit
+	entry = symtable_item_create(func_table, "print");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for print().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_UNIT;
+	result = symbol_generate_unique_id("print", entry, func_table);
+	if (result)
+		return result;
+	result = symbol_add_param_list(entry);
+	if (result)
+		return result;
+	// FIXME: print() has to accept any type
+	result = symbol_add_param_named(entry, "value", TYPE_STRING);
+	if (result)
+		return result;
+
+	// readLine(): String
+	entry = symtable_item_create(func_table, "readLine");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for readLine().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// readInt(): Int
+	entry = symtable_item_create(func_table, "readInt");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for readInt().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// readDouble(): Double
+	entry = symtable_item_create(func_table, "readDouble");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for readDouble().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// toStr(value: Any): String
+	entry = symtable_item_create(func_table, "toStr");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for toStr().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// toInt(value: Double): Int
+	entry = symtable_item_create(func_table, "toInt");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for toInt().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// strLength(value: String): Int
+	entry = symtable_item_create(func_table, "strLength");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for strLength().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// subStr(value: String, start: Int, end: Int): String
+	entry = symtable_item_create(func_table, "subStr");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for subStr().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// ord(value: String, index: Int): Int
+	entry = symtable_item_create(func_table, "ord");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for ord().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// chr(code: Int): String
+	entry = symtable_item_create(func_table, "chr");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for chr().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// VALMEM
+
+	// Any.toString: String
+	// TODO:
+
+	// Double.toInt: Int
+	// TODO:
+
+	// Double.floor: Double
+	// TODO:
+
+	// String.length: Int
+	// TODO:
 
 	return ERR_OK;
 }

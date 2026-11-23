@@ -221,4 +221,4 @@ err_t symbol_add_parameters_into_table(symbol_data_t *func_symbol, symtable_t *t
  * @param ext_table Extension table
  * @return err_t Error code
  */
-err_t symtable_insert_builtins(const symtable_t *func_table, const symtable_t *ext_table);
+err_t symtable_insert_builtins(symtable_t *func_table, const symtable_t *ext_table);
