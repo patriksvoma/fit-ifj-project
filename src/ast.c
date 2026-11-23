@@ -503,7 +503,7 @@ err_t ast_block_add_statement(ast_node_t *block_node, ast_node_t *statement_node
 	return ERR_OK;
 }
 
-ast_node_t *ast_unary_op_make(operator_type_t operator, ast_node_t * operand)
+ast_node_t *ast_unary_op_make(operator_type_t operator, ast_node_t *operand)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -513,11 +513,11 @@ ast_node_t *ast_unary_op_make(operator_type_t operator, ast_node_t * operand)
 		return NULL;
 	}
 
-	if (operator== OP_NEG || operator== OP_UMINUS || operator== OP_UPLUS)
+	if (operator == OP_NEG || operator == OP_UMINUS || operator == OP_UPLUS)
 	{
 		node->eval_type = operand->eval_type;
 		node->node_type = AST_UN_OPERATOR;
-		node->un_operator.operator= operator;
+		node->un_operator.operator = operator;
 		node->un_operator.operand = operand;
 		return node;
 	}
@@ -528,7 +528,7 @@ ast_node_t *ast_unary_op_make(operator_type_t operator, ast_node_t * operand)
 	}
 }
 
-ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t * operand_left, ast_node_t *operand_right)
+ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t *operand_left, ast_node_t *operand_right)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -538,9 +538,9 @@ ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t * operand_le
 		return NULL;
 	}
 
-	if (operator!= OP_NEG && operator!= OP_UMINUS && operator!= OP_UPLUS)
+	if (operator != OP_NEG && operator != OP_UMINUS && operator != OP_UPLUS)
 	{
-		if (operator== OP_MUL || operator== OP_DIV || operator== OP_MINUS || operator== OP_PLUS)
+		if (operator == OP_MUL || operator == OP_DIV || operator == OP_MINUS || operator == OP_PLUS)
 		{
 			node->eval_type = operand_left->eval_type;
 		}
@@ -551,7 +551,7 @@ ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t * operand_le
 		node->node_type = AST_BIN_OPERATOR;
 		node->bin_operator.operand_left = operand_left;
 		node->bin_operator.operand_right = operand_right;
-		node->bin_operator.operator= operator;
+		node->bin_operator.operator = operator;
 		return node;
 	}
 	else // Unary operations
