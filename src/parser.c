@@ -1044,6 +1044,14 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		if (result)
 			return result;
 
+		// First create the local variable table and add the iterator as a variable
+		cdata->local_var_table = local_table_create(cdata->local_var_table);
+		if (!cdata->local_var_table)
+		{
+			print_err("Failed to create a local variable table!", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
 		// <block-start>
 		ast_node_t *inner_block_node = ast_block_make();
 		if (!inner_block_node)
@@ -1054,6 +1062,14 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		result = block_start(cdata, inner_block_node, statement_indent_level);
 		if (result)
 			return result;
+
+		// Destroy the local table
+		cdata->local_var_table = local_table_destroy(cdata->local_var_table);
+		if (!cdata->local_var_table)
+		{
+			print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
 
 		statement_node = ast_while_make(condition_node);
 		if (!statement_node)
