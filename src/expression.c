@@ -9,6 +9,7 @@
 
 #include "expression.h"
 #include "symstack.h"
+#include <string.h>
 
 #define PREC_TABLE_SIZE 20
 
@@ -95,8 +96,18 @@ err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item, boo
 	switch (token->type)
 	{
 	case TOKEN_IDENTIFIER:
-		item.type = STACKITEM_TYPE_TERMINAL;
-		item.data.terminal = TERMINAL_I;
+		// If the identifier is to, until, or by, end the expression
+		if (!strcmp(token->attribute.string, "to") || !strcmp(token->attribute.string, "until") ||
+			!strcmp(token->attribute.string, "by"))
+		{
+			item.type = STACKITEM_TYPE_TERMINAL;
+			item.data.terminal = TERMINAL_DOLLAR;
+		}
+		else
+		{
+			item.type = STACKITEM_TYPE_TERMINAL;
+			item.data.terminal = TERMINAL_I;
+		}
 		*expect_unary = false;
 		break;
 	case TOKEN_KEYWORD:
