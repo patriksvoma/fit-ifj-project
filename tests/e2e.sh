@@ -164,6 +164,22 @@ run_case "builtin-print-3" 0 "builtins/valid/builtin-print-3.ifj"
 run_case "builtin-print-4" 0 "builtins/valid/builtin-print-4.ifj"
 run_case "builtin-print-5" 0 "builtins/valid/builtin-print-5.ifj"
 
+run_case "builtin-readline" 0 "builtins/valid/builtin-readline.ifj"
+run_case "builtin-readint" 0 "builtins/valid/builtin-readint.ifj"
+run_case "builtin-readdouble" 0 "builtins/valid/builtin-readdouble.ifj"
+
+run_case "builtin-tostr-1" 0 "builtins/valid/builtin-tostr-1.ifj"
+run_case "builtin-tostr-2" 0 "builtins/valid/builtin-tostr-2.ifj"
+run_case "builtin-tostr-3" 0 "builtins/valid/builtin-tostr-3.ifj"
+run_case "builtin-tostr-4" 0 "builtins/valid/builtin-tostr-4.ifj"
+run_case "builtin-tostr-5" 0 "builtins/valid/builtin-tostr-5.ifj"
+
+run_case "builtin-toint-valid-1" 0 "builtins/valid/builtin-toint-valid-1.ifj"
+run_case "builtin-toint-valid-2" 0 "builtins/valid/builtin-toint-valid-2.ifj"
+run_case "builtin-toint-type-1" 5 "builtins/invalid/builtin-toint-type-1.ifj"
+run_case "builtin-toint-type-2" 5 "builtins/invalid/builtin-toint-type-2.ifj"
+run_case "builtin-toint-type-3" 5 "builtins/invalid/builtin-toint-type-3.ifj"
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
