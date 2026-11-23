@@ -311,12 +311,17 @@ void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 
 	// Definition and assigment of parameters from the last one, because parameters will be pushed to stack in order
 	// when calling the function
-	for (int i = func_params->data.function.param_list_count - 1; i >= 0; i--)
+	for (size_t i = func_params->data.function.param_list_count; i > 0; i--)
 	{
-		for (int j = func_params->data.function.param_lists[i]->param_count - 1; j >= 0; j--) // TODO: Osetrit 0
+		if (func_params->data.function.param_lists[i - 1]->param_count != 0)
 		{
-			printf("DEFVAR LF@%s$%s\n", unique_id, func_params->data.function.param_lists[i]->params[j]->identifier);
-			printf("POPS LF@%s$%s\n", unique_id, func_params->data.function.param_lists[i]->params[j]->identifier);
+			for (size_t j = func_params->data.function.param_lists[i - 1]->param_count; j > 0; j--)
+			{
+				printf("DEFVAR LF@%s$%s\n", unique_id,
+					   func_params->data.function.param_lists[i - 1]->params[j - 1]->identifier);
+				printf("POPS LF@%s$%s\n", unique_id,
+					   func_params->data.function.param_lists[i - 1]->params[j - 1]->identifier);
+			}
 		}
 	}
 	return;
@@ -645,10 +650,19 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		generate_nodes(node->un_operator.operand, symtables, new_func_def);
 
 		// Multiply by -1
-		if (node->un_operator.operator == OP_UMINUS) // TODO: Osetrit double
+		if (node->un_operator.operator == OP_UMINUS)
 		{
-			printf("PUSHS int@-1\n");
-			printf("MULS\n");
+			if (node->eval_type == TYPE_DOUBLE)
+			{
+				double min_one = -1;
+				printf("PUSHS float@%a\n", min_one);
+				printf("MULS\n");
+			}
+			else
+			{
+				printf("PUSHS int@-1\n");
+				printf("MULS\n");
+			}
 		}
 		else if (node->un_operator.operator == OP_NEG)
 		{
