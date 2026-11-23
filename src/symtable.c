@@ -1012,6 +1012,19 @@ err_t symtable_insert_builtins(symtable_t *func_table, const symtable_t *ext_tab
 		print_err("Faild to create a symbol table entry for chr().", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_STRING;
+	result = symbol_generate_unique_id("chr", entry, func_table);
+	if (result)
+		return result;
+	result = symbol_add_param_list(entry);
+	if (result)
+		return result;
+	result = symbol_add_param_named(entry, "code", TYPE_INT);
+	if (result)
+		return result;
 
 	// VALMEM
 
