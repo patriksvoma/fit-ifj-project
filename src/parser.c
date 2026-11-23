@@ -915,7 +915,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		}
 
 		// Check if the variable has already been defined
-		if (symtable_item_defined(cdata->local_var_table, cdata->token.attribute.string))
+		if (symtable_item_defined_local(cdata->local_var_table, cdata->token.attribute.string))
 		{
 			print_err_l("Variable name has already been defined!", ERR_SEMANTIC_REDEFINITION, cdata->token.line);
 			return ERR_SEMANTIC_REDEFINITION;
@@ -1283,6 +1283,8 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 				print_err_l("Variable must be defined before assignment.", ERR_SEMANTIC_UNDEFINED, cdata->token.line);
 				return ERR_SEMANTIC_UNDEFINED;
 			}
+
+			// FIXME:
 
 			statement_node = ast_var_assign_make(id_token.attribute.string, assigned_expression_node);
 			if (!statement_node)
