@@ -1097,13 +1097,56 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 	}
 
 	// Double.toInt: Int
-	// TODO:
+	char *id = generate_unique_ext_id("toInt", TYPE_DOUBLE);
+	if (!id)
+	{
+		print_err("Failed to generate unique_name in symbtable_insert_builtins().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	entry = symtable_item_create(ext_table, id);
+
+	entry->symbol_type = SYM_EXTENSION;
+	entry->data.extension.base_param.identifier = "value";
+	entry->data.extension.base_param.type = TYPE_DOUBLE;
+	entry->data.extension.is_defined = true;
+	entry->data.extension.return_type = TYPE_INT;
+
+	free(id);
 
 	// Double.floor: Double
-	// TODO:
+	id = generate_unique_ext_id("floor", TYPE_DOUBLE);
+	if (!id)
+	{
+		print_err("Failed to generate unique_name in symbtable_insert_builtins().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	entry = symtable_item_create(ext_table, id);
+
+	entry->symbol_type = SYM_EXTENSION;
+	entry->data.extension.base_param.identifier = "value";
+	entry->data.extension.base_param.type = TYPE_DOUBLE;
+	entry->data.extension.is_defined = true;
+	entry->data.extension.return_type = TYPE_DOUBLE;
+
+	free(id);
 
 	// String.length: Int
-	// TODO:
+	id = generate_unique_ext_id("length", TYPE_STRING);
+	if (!id)
+	{
+		print_err("Failed to generate unique_name in symbtable_insert_builtins().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	entry = symtable_item_create(ext_table, id);
+
+	entry->symbol_type = SYM_EXTENSION;
+	entry->data.extension.base_param.identifier = "value";
+	entry->data.extension.base_param.type = TYPE_STRING;
+	entry->data.extension.is_defined = true;
+	entry->data.extension.return_type = TYPE_INT;
 
 	return ERR_OK;
 }
