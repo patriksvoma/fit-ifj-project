@@ -463,6 +463,14 @@ void print_user_func_call(const char *unique_id, param_node_list_t **param_lists
 	return;
 }
 
+/**
+ * @brief Function to generate code for all variable definition at the start at function definition
+ *
+ * @param block Block of the function definition
+ * @param symtables Passed only so generate_nodes() can be called and not to be lost
+ * @param new_func_def Passed only so generate_nodes() can be called and not to be lost
+ * @return err_t Error code
+ */
 err_t var_def(const ast_node_t *block, symtable_t *symtables, names_counter *new_func_def)
 {
 	if (block == NULL)
@@ -501,6 +509,72 @@ err_t var_def(const ast_node_t *block, symtable_t *symtables, names_counter *new
 		break;
 	}
 	return ERR_OK;
+}
+
+void print_for(const ast_node_t *node, symtable_t *symtables, names_counter *new_func_def)
+{
+	unsigned curr_for = new_func_def->for_counter;
+	new_func_def->for_counter++;
+
+	// Variables to help with conditions
+	printf("DEFVAR LF@%s$for$%u$by\n", new_func_def->func_name, curr_for); // TODO: Opravit nastava kolize s while
+	printf("DEFVAR LF@%s$for$%u$to\n", new_func_def->func_name, curr_for);
+	printf("DEFVAR LF@%s$for$%u$cond\n", new_func_def->func_name, curr_for);
+
+	printf("DEFVAR LF@%s\n", node->for_loop.iterator_unique_id);
+
+	// If theres by, check if its zero
+	if (node->for_loop.for_type == FOR_TO_BY)
+	{
+		generate_nodes(node->for_loop.by, symtables, new_func_def);
+		printf("POPS LF@%s$for$%u$by\n", new_func_def->func_name, curr_for);
+		printf("PUSHS LF@%s$for$%u$by\n", new_func_def->func_name, curr_for);
+		printf("PUSHS int@0\n");
+		printf("JUMPIFEQS %s$by$zero%u\n", new_func_def->func_name, curr_for);
+	}
+	else
+	{
+		printf("MOVE LF@%s$for$%u$by int@1\n", new_func_def->func_name, curr_for);
+	}
+
+	// Saving value for iterator
+	generate_nodes(node->for_loop.from, symtables, new_func_def);
+	printf("POPS LF@%s\n", node->for_loop.iterator_unique_id);
+
+	// Saving value for end, if its until it the last value isnt included
+	if (node->for_loop.for_type == FOR_UNTIL)
+	{
+		generate_nodes(node->for_loop.until, symtables, new_func_def);
+	}
+	else
+	{
+		generate_nodes(node->for_loop.until, symtables, new_func_def);
+		printf("PUSHS int@1\n");
+		printf("ADDS\n");
+	}
+
+	printf("POPS LF@%s$for$%u$to\n", new_func_def->func_name, curr_for);
+
+	// Condition check
+	printf("LABEL %s$for$%u$start\n", new_func_def->func_name, curr_for);
+	printf("LT LF@%s$for$%u$cond LF@%s LF@%s$for$%u$to\n", new_func_def->func_name, curr_for,
+		   node->for_loop.iterator_unique_id, new_func_def->func_name, curr_for);
+
+	printf("PUSHS LF@%s$for$%u$cond\n", new_func_def->func_name, curr_for);
+	printf("PUSHS bool@true\n");
+	printf("JUMPIFNEQS %s$for$%u$end\n", new_func_def->func_name, curr_for);
+
+	generate_nodes(node->for_loop.block, symtables, new_func_def);
+
+	// Incrementation
+	printf("ADD LF@%s LF@%s LF@%s$for$%u$by\n", node->for_loop.iterator_unique_id, node->for_loop.iterator_unique_id,
+		   new_func_def->func_name, curr_for);
+	printf("JUMP %s$for$%u$start\n", new_func_def->func_name, curr_for);
+
+	printf("LABEL %s$by$zero%u\n", new_func_def->func_name, curr_for);
+	printf("EXIT int@40\n");
+
+	printf("LABEL %s$for$%u$end\n", new_func_def->func_name, curr_for);
 }
 
 err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counter *new_func_def)
@@ -666,6 +740,10 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		printf("JUMP %s$while$%u$start\n", new_func_def->func_name, curr_while);
 		printf("LABEL %s$while$%u$end\n", new_func_def->func_name, curr_while);
 
+		break;
+
+	case AST_FOR:
+		print_for(node, symtables, new_func_def);
 		break;
 
 	default:
