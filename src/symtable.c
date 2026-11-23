@@ -493,7 +493,6 @@ void destroy_tree(tree_node_t *node)
 	}
 	else if (node->data.symbol_type == SYM_EXTENSION)
 	{
-		free(node->data.data.extension.unique_name);
 		for (size_t i = 0; i < node->data.data.extension.param_list_count; i++)
 		{
 			param_list_t *list = node->data.data.extension.param_lists[i];
@@ -594,6 +593,12 @@ err_t symbol_generate_unique_id(const char *identifier, symbol_data_t *symbol, c
 		return ERR_INTERNAL;
 	}
 
+	if (symbol->symbol_type == SYM_EXTENSION)
+	{
+		print_err("Do not use symbol_generate_unique_id() for extensions. Use generate_unique_ext_id()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	size_t buf_len = 1;
 	char *buf = malloc(buf_len);
 	if (!buf)
@@ -613,7 +618,7 @@ err_t symbol_generate_unique_id(const char *identifier, symbol_data_t *symbol, c
 	if (!new_buf)
 	{
 		free(buf);
-		print_err("Failed to reallocat a buffer in symbol_generate_unique_id()!", ERR_INTERNAL);
+		print_err("Failed to reallocate a buffer in symbol_generate_unique_id()!", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
 	buf = new_buf;
@@ -631,8 +636,7 @@ err_t symbol_generate_unique_id(const char *identifier, symbol_data_t *symbol, c
 		symbol->data.function.unique_name = buf;
 		break;
 	case SYM_EXTENSION:
-		symbol->data.extension.unique_name = buf;
-		break;
+		return ERR_INTERNAL;
 	}
 	return ERR_OK;
 }
@@ -776,14 +780,6 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 	return ERR_OK;
 }
 
-/**
- * @brief Adds a new parameter into a symbols last paramlist (must be created beforehand) with a name and type
- *
- * @param symbol Symbol to change
- * @param param_name Parameter name, will be copied
- * @param param_type Parameter type
- * @return err_t Error code
- */
 err_t symbol_add_param_named(symbol_data_t *symbol, const char *param_name, data_type_t param_type)
 {
 	err_t result;
@@ -810,7 +806,56 @@ err_t symbol_add_param_named(symbol_data_t *symbol, const char *param_name, data
 	return ERR_OK;
 }
 
-err_t symtable_insert_builtins(symtable_t *func_table, const symtable_t *ext_table)
+/**
+ * @brief Creates an allocated identifier prefixed by "type$"
+ *
+ * @param identifer Original identifier
+ * @param type Extension base data type
+ * @return char* Address to the allocated string
+ */
+char *generate_unique_ext_id(const char *identifer, const data_type_t type)
+{
+	char *result;
+	char *prefix;
+
+	switch (type)
+	{
+	case TYPE_INT:
+		prefix = "Int$";
+		break;
+	case TYPE_DOUBLE:
+		prefix = "Double$";
+		break;
+	case TYPE_STRING:
+		prefix = "String$";
+		break;
+	case TYPE_UNIT:
+		prefix = "Unit$";
+		break;
+	case TYPE_BOOLEAN:
+		prefix = "Boolean$";
+		break;
+	case TYPE_ANY:
+		prefix = "Any$";
+		break;
+	default:
+		return NULL;
+	}
+
+	result = malloc(strlen(identifer) + strlen(prefix) + 1);
+	if (!result)
+	{
+		print_err("Failed to allocate memory in generate_unique_ext_id().", ERR_INTERNAL);
+		return NULL;
+	}
+
+	strcpy(result, prefix);
+	strcpy(result + strlen(prefix), identifer);
+
+	return result;
+}
+
+err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 {
 	if (!func_table || !ext_table)
 	{
@@ -840,8 +885,7 @@ err_t symtable_insert_builtins(symtable_t *func_table, const symtable_t *ext_tab
 	result = symbol_add_param_list(entry);
 	if (result)
 		return result;
-	// FIXME: print() has to accept any type
-	result = symbol_add_param_named(entry, "value", TYPE_STRING);
+	result = symbol_add_param_named(entry, "value", TYPE_ANY);
 	if (result)
 		return result;
 
@@ -907,8 +951,7 @@ err_t symtable_insert_builtins(symtable_t *func_table, const symtable_t *ext_tab
 	result = symbol_add_param_list(entry);
 	if (result)
 		return result;
-	// FIXME: toStr() has to accept any type
-	result = symbol_add_param_named(entry, "value", TYPE_STRING);
+	result = symbol_add_param_named(entry, "value", TYPE_ANY);
 	if (result)
 		return result;
 
@@ -1029,7 +1072,29 @@ err_t symtable_insert_builtins(symtable_t *func_table, const symtable_t *ext_tab
 	// VALMEM
 
 	// Any.toString: String
-	// TODO:
+	// This extension has to be added for all data types
+	data_type_t types[] = {
+		TYPE_INT, TYPE_DOUBLE, TYPE_STRING, TYPE_UNIT, TYPE_BOOLEAN,
+	};
+	for (size_t i = 0; i < sizeof(types) / sizeof(data_type_t); i++)
+	{
+		char *id = generate_unique_ext_id("toString", types[i]);
+		if (!id)
+		{
+			print_err("Failed to generate unique_name in symbtable_insert_builtins().", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
+		entry = symtable_item_create(ext_table, id);
+
+		entry->symbol_type = SYM_EXTENSION;
+		entry->data.extension.base_param.identifier = "value";
+		entry->data.extension.base_param.type = types[i];
+		entry->data.extension.is_defined = true;
+		entry->data.extension.return_type = TYPE_STRING;
+
+		free(id);
+	}
 
 	// Double.toInt: Int
 	// TODO:
