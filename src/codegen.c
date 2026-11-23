@@ -451,11 +451,9 @@ bool print_build_in_func_call(const char *identifier, param_node_list_t **param_
  * @param symtables Passed only so generate_nodes() can be called and not to be lost
  * @param new_func_def Passed only so generate_nodes() can be called and not to be lost
  */
-void print_user_func_call(const char *unique_id, param_node_list_t **param_lists, size_t param_list_count,
-						  symtable_t *symtables, names_counter *new_func_def)
+err_t print_user_func_call(const char *unique_id, param_node_list_t **param_lists, size_t param_list_count,
+						   symtable_t *symtables, names_counter *new_func_def)
 {
-	const char *id = unique_id;
-
 	for (size_t i = 0; i < param_list_count; i++)
 	{
 		for (size_t j = 0; j < param_lists[i]->param_count; j++)
@@ -464,8 +462,86 @@ void print_user_func_call(const char *unique_id, param_node_list_t **param_lists
 		}
 	}
 
-	printf("CALL %s\n", id);
-	return;
+	printf("CALL %s\n", unique_id);
+	return ERR_OK;
+}
+
+/**
+ * @brief Function to generate code extension definition
+ *
+ * @param unique_id Identifier of the extension
+ * @param symtables Array including symtable for extensions
+ * @param new_func_def Passed for setting zeros and extension name
+ * @return err_t Error code
+ */
+err_t print_ext_def(char *unique_id, symtable_t *symtables, names_counter *new_func_def)
+{
+	new_func_def->for_counter = 0;
+	new_func_def->if_counter = 0;
+	new_func_def->while_counter = 0;
+
+	new_func_def->func_name = unique_id;
+
+	// Get data for the extension to find parameters
+	const symbol_data_t *ext_params = symtable_item_find(&symtables[1], unique_id);
+	if (ext_params == NULL)
+	{
+		return ERR_OK;
+	}
+
+	printf("LABEL %s\n", unique_id);
+
+	printf("CREATEFRAME\n");
+	printf("PUSHFRAME\n");
+
+	// Base
+	printf("DEFVAR LF@%s$%s\n", unique_id, ext_params->data.extension.base_param.identifier);
+	printf("POPS LF@%s$%s\n", unique_id, ext_params->data.extension.base_param.identifier);
+
+	// Definition and assigment of parameters from the last one, because parameters will be pushed to stack in order
+	// when calling the function
+	for (size_t i = ext_params->data.extension.param_list_count; i > 0; i--)
+	{
+		if (ext_params->data.extension.param_lists[i - 1]->param_count != 0)
+		{
+			for (size_t j = ext_params->data.extension.param_lists[i - 1]->param_count; j > 0; j--)
+			{
+				printf("DEFVAR LF@%s$%s\n", unique_id,
+					   ext_params->data.extension.param_lists[i - 1]->params[j - 1]->identifier);
+				printf("POPS LF@%s$%s\n", unique_id,
+					   ext_params->data.extension.param_lists[i - 1]->params[j - 1]->identifier);
+			}
+		}
+	}
+	return ERR_OK;
+}
+
+/**
+ * @brief Function to generate code extension calling
+ *
+ * @param unique_id Identifier of the extension
+ * @param param_lists Array of lists with parameters
+ * @param param_list_count Count of the lists
+ * @param base_node Node containing the base of the extension
+ * @param symtables Passed so generate_nodes can be called
+ * @param new_func_def Passed so generate_nodes can be called
+ * @return err_t Error code
+ */
+err_t print_ext_call(const char *unique_id, param_node_list_t **param_lists, size_t param_list_count,
+					 const ast_node_t *base_node, symtable_t *symtables, names_counter *new_func_def)
+{
+	for (size_t i = 0; i < param_list_count; i++)
+	{
+		for (size_t j = 0; j < param_lists[i]->param_count; j++)
+		{
+			generate_nodes(param_lists[i]->param_node[j], symtables, new_func_def);
+		}
+	}
+
+	generate_nodes(base_node, symtables, new_func_def);
+
+	printf("CALL %s\n", unique_id);
+	return ERR_OK;
 }
 
 /**
@@ -604,6 +680,11 @@ err_t print_for(const ast_node_t *node, symtable_t *symtables, names_counter *ne
 
 err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counter *new_func_def)
 {
+	if (node == NULL)
+	{
+		return ERR_OK;
+	}
+
 	node_type_t type = node->node_type;
 
 	// Recursively calling the function to search the tree, leaf nodes leave a value on stack
@@ -741,6 +822,30 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 			print_user_func_call(node->func_call.unique_id, node->func_call.param_lists,
 								 node->func_call.param_list_count, symtables, new_func_def);
 		}
+		break;
+
+	case AST_EXT_DEF:
+		print_ext_def(node->ext_def.unique_id, symtables, new_func_def);
+		var_def(node->ext_def.block, symtables, new_func_def);
+
+		// Definition of variables to help in for cycle before loops
+		for (unsigned i = 0; i < new_func_def->for_counter; i++)
+		{
+			printf("DEFVAR LF@%s$for$%u$by\n", new_func_def->func_name, i);
+			printf("DEFVAR LF@%s$for$%u$to\n", new_func_def->func_name, i);
+			printf("DEFVAR LF@%s$for$%u$cond\n", new_func_def->func_name, i);
+		}
+
+		new_func_def->for_counter = 0;
+
+		generate_nodes(node->ext_def.block, symtables, new_func_def);
+		printf("POPFRAME\n");
+		printf("RETURN\n");
+		break;
+
+	case AST_EXT_CALL:
+		print_ext_call(node->ext_call.unique_id, node->ext_call.param_lists, node->ext_call.param_list_count,
+					   node->ext_call.base_node, symtables, new_func_def);
 		break;
 
 	case AST_IF:
