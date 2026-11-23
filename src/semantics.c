@@ -933,7 +933,7 @@ err_t check_while(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	err_t result = check_unknown_node(node->if_statement.condition, cdata);
+	err_t result = check_unknown_node(node->while_loop.condition, cdata);
 	if (result)
 		return result;
 
