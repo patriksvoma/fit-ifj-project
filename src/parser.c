@@ -31,9 +31,9 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node);
 err_t expression_opt(compiler_data_t *cdata, ast_node_t **return_value);
 err_t else_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header_indent_level);
 err_t else_if_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header_indent_level);
-err_t for_generator(compiler_data_t *cdata);
-err_t for_by(compiler_data_t *cdata);
-err_t for_guard(compiler_data_t *cdata);
+err_t for_generator(compiler_data_t *cdata, ast_node_t *for_node);
+err_t for_by(compiler_data_t *cdata, ast_node_t *for_node);
+err_t for_guard(compiler_data_t *cdata, ast_node_t *for_node);
 err_t val_var_def(compiler_data_t *cdata, ast_node_t *var_def_node, symbol_data_t *table_entry);
 err_t expression(compiler_data_t *cdata, ast_node_t **return_node);
 
@@ -1096,33 +1096,84 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			print_err_l("Expected an iterator identifier after \"for\".", ERR_SYNTAX, cdata->token.line);
 			return ERR_SYNTAX;
 		}
+
+		// Copy the identifier for making the AST node later
+		char *iterator_id = malloc(strlen(cdata->token.attribute.string) + 1);
+		if (!iterator_id)
+		{
+			print_err_l("Failed to allocaty memory for the iterator identifier.", ERR_INTERNAL, cdata->token.line);
+			return ERR_INTERNAL;
+		}
+		strcpy(iterator_id, cdata->token.attribute.string);
+
 		result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 		if (result)
+		{
+			free(iterator_id);
 			return result;
+		}
 
 		// <-
 		if (cdata->token.type != TOKEN_FOR_GEN_ASSIGN)
 		{
 			print_err_l("Expected a generator variable assignment operator (<-).", ERR_SYNTAX, cdata->token.line);
+			free(iterator_id);
 			return ERR_SYNTAX;
 		}
 		result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 		if (result)
+		{
+			free(iterator_id);
 			return result;
+		}
 
 		// <expression>
-		ast_node_t *iterator_node; // FIXME:
-		result = expression(cdata, &iterator_node);
+		ast_node_t *from_node;
+		result = expression(cdata, &from_node);
 		if (result)
+		{
+			free(iterator_id);
 			return result;
+		}
+
+		// First create the local variable table and add the iterator as a variable
+		cdata->local_var_table = local_table_create(cdata->local_var_table);
+		if (!cdata->local_var_table)
+		{
+			print_err("Failed to create a local variable table!", ERR_INTERNAL);
+			free(iterator_id);
+			return ERR_INTERNAL;
+		}
+
+		symbol_data_t *entry = symtable_item_create(cdata->local_var_table, iterator_id);
+		if (!entry)
+		{
+			print_err("Failed to create a symbol table entry.", ERR_INTERNAL);
+			free(iterator_id);
+			return ERR_INTERNAL;
+		}
+		entry->symbol_type = SYM_VARIABLE;
+		entry->data.variable.is_defined = true;
+		entry->data.variable.mutable = true;
+		entry->data.variable.type = TYPE_INT;
+		symbol_generate_unique_id(iterator_id, entry, cdata->local_var_table);
+		free(iterator_id);
+
+		// Create the AST node for the for statement
+		statement_node = ast_for_make(entry->data.variable.unique_name, from_node);
+		if (!statement_node)
+		{
+			print_err_l("Failed to create an AST node for a for statement!", ERR_INTERNAL, cdata->token.line);
+			return ERR_INTERNAL;
+		}
 
 		// <for-generator>
-		result = for_generator(cdata);
+		result = for_generator(cdata, statement_node);
 		if (result)
 			return result;
 
 		// <for-guard>
-		result = for_guard(cdata);
+		result = for_guard(cdata, statement_node);
 		if (result)
 			return result;
 
@@ -1137,8 +1188,29 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 
 		// <block-start>
-		ast_node_t *inner_block_node = NULL; // FIXME:
-		return block_start(cdata, inner_block_node, statement_indent_level);
+		ast_node_t *inner_block_node = ast_block_make();
+		if (!inner_block_node)
+		{
+			print_err_l("Failed to create a block node for a for statement!", ERR_INTERNAL, cdata->token.line);
+			return ERR_INTERNAL;
+		}
+		result = block_start(cdata, inner_block_node, statement_indent_level);
+		if (result)
+			return result;
+
+		result = ast_for_set_block(statement_node, inner_block_node);
+		if (result)
+			return result;
+
+		// Destroy the local table
+		cdata->local_var_table = local_table_destroy(cdata->local_var_table);
+		if (!cdata->local_var_table)
+		{
+			print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
+		return ast_block_add_statement(block_node, statement_node);
 	}
 	// return
 	else if (cdata->token.type == TOKEN_KEYWORD && cdata->token.attribute.keyword == KW_RETURN)
@@ -1373,9 +1445,10 @@ err_t else_if_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header
  * @brief For statement generator | <for-generator>
  *
  * @param cdata Compiler data
+ * @param for_node AST for statement node
  * @return err_t Error code
  */
-err_t for_generator(compiler_data_t *cdata)
+err_t for_generator(compiler_data_t *cdata, ast_node_t *for_node)
 {
 	// identifier
 	if (cdata->token.type == TOKEN_IDENTIFIER)
@@ -1390,13 +1463,18 @@ err_t for_generator(compiler_data_t *cdata)
 				return result;
 
 			// <expression>
-			ast_node_t *to_node; // FIXME:
+			ast_node_t *to_node;
 			result = expression(cdata, &to_node);
 			if (result)
 				return result;
 
+			// Add the node to the for statement
+			result = ast_for_set_to(for_node, to_node);
+			if (result)
+				return result;
+
 			// <for-by>
-			return for_by(cdata);
+			return for_by(cdata, for_node);
 		}
 		// until
 		else if (!strcmp(cdata->token.attribute.string, "until"))
@@ -1406,8 +1484,16 @@ err_t for_generator(compiler_data_t *cdata)
 				return result;
 
 			// <expression>
-			ast_node_t *until_node; // FIXME:
-			return expression(cdata, &until_node);
+			ast_node_t *until_node;
+			result = expression(cdata, &until_node);
+			if (result)
+				return result;
+
+			result = ast_for_set_until(for_node, until_node);
+			if (result)
+				return result;
+
+			return ast_for_set_type(for_node, FOR_UNTIL);
 		}
 	}
 
@@ -1419,23 +1505,38 @@ err_t for_generator(compiler_data_t *cdata)
  * @brief For statement generator "by" | <for-by>
  *
  * @param cdata Compiler data
+ * @param for_node AST for statement node
  * @return err_t Error code
  */
-err_t for_by(compiler_data_t *cdata)
+err_t for_by(compiler_data_t *cdata, ast_node_t *for_node)
 {
+	err_t result;
+
 	// by
 	if (cdata->token.type == TOKEN_IDENTIFIER && !strcmp(cdata->token.attribute.string, "by"))
 	{
-		err_t result = get_next_token(&cdata->token, EOL_FORBIDDEN);
+		result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 		if (result)
 			return result;
 
 		// <expression>
-		ast_node_t *by_node; // FIXME:
-		return expression(cdata, &by_node);
+		ast_node_t *by_node;
+		result = expression(cdata, &by_node);
+		if (result)
+			return result;
+
+		result = ast_for_set_by(for_node, by_node);
+		if (result)
+			return result;
+
+		return ast_for_set_type(for_node, FOR_TO_BY);
 	}
 
 	// Epsilon rule
+	result = ast_for_set_type(for_node, FOR_TO);
+	if (result)
+		return result;
+
 	return ERR_OK;
 }
 
@@ -1443,9 +1544,10 @@ err_t for_by(compiler_data_t *cdata)
  * @brief For statement guard | <for-guard>
  *
  * @param cdata Compiler data
+ * @param for_node AST for statement node
  * @return err_t Error code
  */
-err_t for_guard(compiler_data_t *cdata)
+err_t for_guard(compiler_data_t *cdata, ast_node_t *for_node)
 {
 	// if
 	if (cdata->token.type == TOKEN_KEYWORD && cdata->token.attribute.keyword == KW_IF)
@@ -1455,13 +1557,17 @@ err_t for_guard(compiler_data_t *cdata)
 			return result;
 
 		// <expression>
-		ast_node_t *condition_node; // FIXME:
+		ast_node_t *condition_node;
 		result = expression(cdata, &condition_node);
 		if (result)
 			return result;
 
+		result = ast_for_add_guard(for_node, condition_node);
+		if (result)
+			return result;
+
 		// <for-guard>
-		return for_guard(cdata);
+		return for_guard(cdata, for_node);
 	}
 
 	// Epsilon rule
