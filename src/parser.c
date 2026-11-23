@@ -1078,7 +1078,11 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return ERR_INTERNAL;
 		}
 
-		return ast_while_set_block(statement_node, inner_block_node);
+		result = ast_while_set_block(statement_node, inner_block_node);
+		if (result)
+			return result;
+
+		return ast_block_add_statement(block_node, statement_node);
 	}
 	// for
 	else if (cdata->token.type == TOKEN_KEYWORD && cdata->token.attribute.keyword == KW_FOR)
