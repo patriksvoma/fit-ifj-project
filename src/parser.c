@@ -996,9 +996,25 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return ERR_INTERNAL;
 		}
 
+		// Create the local table for the then branch
+		cdata->local_var_table = local_table_create(cdata->local_var_table);
+		if (!cdata->local_var_table)
+		{
+			print_err("Failed to create a local variable table!", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
 		result = block_start(cdata, then_block_node, statement_indent_level);
 		if (result)
 			return result;
+
+		// Destroy the local table for the then branch
+		cdata->local_var_table = local_table_destroy(cdata->local_var_table);
+		if (!cdata->local_var_table)
+		{
+			print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
 
 		// Set the then branch
 		result = ast_if_set_then_block(statement_node, then_block_node);
@@ -1340,7 +1356,11 @@ err_t else_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header_in
 			return result;
 
 		// <else-if-opt>
-		return else_if_opt(cdata, out_node, header_indent_level);
+		result = else_if_opt(cdata, out_node, header_indent_level);
+		if (result)
+			return result;
+
+		return ERR_OK;
 	}
 
 	// Epsilon rule
@@ -1358,10 +1378,12 @@ err_t else_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header_in
  */
 err_t else_if_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header_indent_level)
 {
+	err_t result;
+
 	// if (makes for an else if with the previous rule)
 	if (cdata->token.type == TOKEN_KEYWORD && cdata->token.attribute.keyword == KW_IF)
 	{
-		err_t result = get_next_token(&cdata->token, EOL_OPTIONAL);
+		result = get_next_token(&cdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
 
@@ -1405,9 +1427,25 @@ err_t else_if_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header
 			return ERR_INTERNAL;
 		}
 
+		// Create the local table for the then branch
+		cdata->local_var_table = local_table_create(cdata->local_var_table);
+		if (!cdata->local_var_table)
+		{
+			print_err("Failed to create a local variable table!", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
 		result = block_start(cdata, then_block_node, header_indent_level);
 		if (result)
 			return result;
+
+		// Destroy the local table for the then branch
+		cdata->local_var_table = local_table_destroy(cdata->local_var_table);
+		if (!cdata->local_var_table)
+		{
+			print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
 
 		// Set the then branch
 		result = ast_if_set_then_block(*out_node, then_block_node);
@@ -1438,7 +1476,28 @@ err_t else_if_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header
 					cdata->token.line);
 		return ERR_INTERNAL;
 	}
-	return block_start(cdata, *out_node, header_indent_level);
+
+	// Create the local table for the else branch
+	cdata->local_var_table = local_table_create(cdata->local_var_table);
+	if (!cdata->local_var_table)
+	{
+		print_err("Failed to create a local variable table!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	result = block_start(cdata, *out_node, header_indent_level);
+	if (result)
+		return result;
+
+	// Destroy the local table for the else branch
+	cdata->local_var_table = local_table_destroy(cdata->local_var_table);
+	if (!cdata->local_var_table)
+	{
+		print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	return ERR_OK;
 }
 
 /**
