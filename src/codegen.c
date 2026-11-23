@@ -498,6 +498,10 @@ err_t var_def(const ast_node_t *block, symtable_t *symtables, names_counter *new
 		break;
 
 	case AST_FOR:
+		// Definition of iterator to be out of loops, updating for_counter for helping variables
+		printf("DEFVAR LF@%s\n", block->for_loop.iterator_unique_id);
+		new_func_def->for_counter++;
+
 		var_def(block->for_loop.block, symtables, new_func_def);
 		break;
 
@@ -511,17 +515,15 @@ err_t var_def(const ast_node_t *block, symtable_t *symtables, names_counter *new
 	return ERR_OK;
 }
 
-void print_for(const ast_node_t *node, symtable_t *symtables, names_counter *new_func_def)
+err_t print_for(const ast_node_t *node, symtable_t *symtables, names_counter *new_func_def)
 {
+	if (node == NULL)
+	{
+		return ERR_OK;
+	}
+
 	unsigned curr_for = new_func_def->for_counter;
 	new_func_def->for_counter++;
-
-	// Variables to help with conditions
-	printf("DEFVAR LF@%s$for$%u$by\n", new_func_def->func_name, curr_for); // TODO: Opravit nastava kolize s while
-	printf("DEFVAR LF@%s$for$%u$to\n", new_func_def->func_name, curr_for);
-	printf("DEFVAR LF@%s$for$%u$cond\n", new_func_def->func_name, curr_for);
-
-	printf("DEFVAR LF@%s\n", node->for_loop.iterator_unique_id);
 
 	// If theres by, check if its zero
 	if (node->for_loop.for_type == FOR_TO_BY)
@@ -548,7 +550,7 @@ void print_for(const ast_node_t *node, symtable_t *symtables, names_counter *new
 	}
 	else
 	{
-		generate_nodes(node->for_loop.until, symtables, new_func_def);
+		generate_nodes(node->for_loop.to, symtables, new_func_def);
 		printf("PUSHS int@1\n");
 		printf("ADDS\n");
 	}
@@ -575,6 +577,7 @@ void print_for(const ast_node_t *node, symtable_t *symtables, names_counter *new
 	printf("EXIT int@40\n");
 
 	printf("LABEL %s$for$%u$end\n", new_func_def->func_name, curr_for);
+	return ERR_OK;
 }
 
 err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counter *new_func_def)
@@ -680,6 +683,17 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 	case AST_FUNC_DEF:
 		print_func_def(node->func_def.unique_id, symtables, new_func_def);
 		var_def(node->func_def.block, symtables, new_func_def);
+
+		// Definition of variables to help in for cycle before loops
+		for (unsigned i = 0; i < new_func_def->for_counter; i++)
+		{
+			printf("DEFVAR LF@%s$for$%u$by\n", new_func_def->func_name, i);
+			printf("DEFVAR LF@%s$for$%u$to\n", new_func_def->func_name, i);
+			printf("DEFVAR LF@%s$for$%u$cond\n", new_func_def->func_name, i);
+		}
+
+		new_func_def->for_counter = 0;
+
 		generate_nodes(node->func_def.block, symtables, new_func_def);
 
 		// If there isnt a return, the frame must be cleaned
