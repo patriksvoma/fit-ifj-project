@@ -816,7 +816,7 @@ err_t symbol_add_param_named(symbol_data_t *symbol, const char *param_name, data
 char *generate_unique_ext_id(const char *identifer, const data_type_t type)
 {
 	char *result;
-	char *prefix;
+	const char *prefix;
 
 	switch (type)
 	{
