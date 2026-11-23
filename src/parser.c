@@ -1045,7 +1045,12 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 
 		// <block-start>
-		ast_node_t *inner_block_node = NULL;
+		ast_node_t *inner_block_node = ast_block_make();
+		if (!inner_block_node)
+		{
+			print_err_l("Failed to create a block node for a for statement!", ERR_INTERNAL, cdata->token.line);
+			return ERR_INTERNAL;
+		}
 		result = block_start(cdata, inner_block_node, statement_indent_level);
 		if (result)
 			return result;
