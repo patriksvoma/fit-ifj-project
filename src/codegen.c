@@ -468,7 +468,7 @@ void print_user_func_call(const char *unique_id, param_node_list_t **param_lists
  *
  * @param block Block of the function definition
  * @param symtables Passed only so generate_nodes() can be called and not to be lost
- * @param new_func_def Passed only so generate_nodes() can be called and not to be lost
+ * @param new_func_def Used for counting for loops
  * @return err_t Error code
  */
 err_t var_def(const ast_node_t *block, symtable_t *symtables, names_counter *new_func_def)
@@ -515,6 +515,14 @@ err_t var_def(const ast_node_t *block, symtable_t *symtables, names_counter *new
 	return ERR_OK;
 }
 
+/**
+ * @brief Function to generate code for for loop
+ *
+ * @param node Node of the for loop
+ * @param symtables Passed only so generate_nodes() can be called and not to be lost
+ * @param new_func_def Used for counting for loops
+ * @return err_t Error code
+ */
 err_t print_for(const ast_node_t *node, symtable_t *symtables, names_counter *new_func_def)
 {
 	if (node == NULL)
