@@ -1028,7 +1028,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 
 		// <expression>
-		ast_node_t *condition_node; // FIXME:
+		ast_node_t *condition_node;
 		result = expression(cdata, &condition_node);
 		if (result)
 			return result;
@@ -1043,9 +1043,45 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		if (result)
 			return result;
 
+		// Create the local table
+		cdata->local_var_table = local_table_create(cdata->local_var_table);
+		if (!cdata->local_var_table)
+		{
+			print_err("Failed to create a local variable table!", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
 		// <block-start>
-		ast_node_t *inner_block_node = NULL; // FIXME:
-		return block_start(cdata, inner_block_node, statement_indent_level);
+		ast_node_t *inner_block_node = ast_block_make();
+		if (!inner_block_node)
+		{
+			print_err_l("Failed to create a block node for a while loop!", ERR_INTERNAL, cdata->token.line);
+			return ERR_INTERNAL;
+		}
+		result = block_start(cdata, inner_block_node, statement_indent_level);
+		if (result)
+			return result;
+
+		// Destroy the local table
+		cdata->local_var_table = local_table_destroy(cdata->local_var_table);
+		if (!cdata->local_var_table)
+		{
+			print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
+		statement_node = ast_while_make(condition_node);
+		if (!statement_node)
+		{
+			print_err_l("Failed to create an AST node for a while loop!", ERR_INTERNAL, cdata->token.line);
+			return ERR_INTERNAL;
+		}
+
+		result = ast_while_set_block(statement_node, inner_block_node);
+		if (result)
+			return result;
+
+		return ast_block_add_statement(block_node, statement_node);
 	}
 	// for
 	else if (cdata->token.type == TOKEN_KEYWORD && cdata->token.attribute.keyword == KW_FOR)
