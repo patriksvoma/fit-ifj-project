@@ -574,9 +574,18 @@ err_t print_for(const ast_node_t *node, symtable_t *symtables, names_counter *ne
 	printf("PUSHS bool@true\n");
 	printf("JUMPIFNEQS %s$for$%u$end\n", new_func_def->func_name, curr_for);
 
+	// Guard check
+	for (size_t i = 0; i < node->for_loop.guard_count; i++)
+	{
+		generate_nodes(node->for_loop.guards[i], symtables, new_func_def);
+		printf("PUSHS bool@true\n");
+		printf("JUMPIFNEQS %s$for$%u$inc\n", new_func_def->func_name, curr_for);
+	}
+
 	generate_nodes(node->for_loop.block, symtables, new_func_def);
 
 	// Incrementation
+	printf("LABEL %s$for$%u$inc\n", new_func_def->func_name, curr_for);
 	printf("ADD LF@%s LF@%s LF@%s$for$%u$by\n", node->for_loop.iterator_unique_id, node->for_loop.iterator_unique_id,
 		   new_func_def->func_name, curr_for);
 	printf("JUMP %s$for$%u$start\n", new_func_def->func_name, curr_for);
