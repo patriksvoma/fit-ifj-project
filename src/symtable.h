@@ -213,3 +213,12 @@ err_t symbol_generate_unique_id(const char *identifier, symbol_data_t *symbol, c
  * @return err_t Error code
  */
 err_t symbol_add_parameters_into_table(symbol_data_t *func_symbol, symtable_t *table);
+
+/**
+ * @brief Inserts signatures of all builtin functions and extensions to the corresponding symbol tables
+ *
+ * @param func_table Function table
+ * @param ext_table Extension table
+ * @return err_t Error code
+ */
+err_t symtable_insert_builtins(const symtable_t *func_table, const symtable_t *ext_table);

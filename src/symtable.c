@@ -775,3 +775,16 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 
 	return ERR_OK;
 }
+
+err_t symtable_insert_builtins(const symtable_t *func_table, const symtable_t *ext_table)
+{
+	if (!func_table || !ext_table)
+	{
+		print_err("Null-pointer reference in symtable_insert_builtins().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// TODO: Implement
+
+	return ERR_OK;
+}
