@@ -867,6 +867,13 @@ err_t symtable_insert_builtins(symtable_t *func_table, const symtable_t *ext_tab
 		print_err("Faild to create a symbol table entry for readInt().", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_INT;
+	result = symbol_generate_unique_id("readInt", entry, func_table);
+	if (result)
+		return result;
 
 	// readDouble(): Double
 	entry = symtable_item_create(func_table, "readDouble");
@@ -875,6 +882,13 @@ err_t symtable_insert_builtins(symtable_t *func_table, const symtable_t *ext_tab
 		print_err("Faild to create a symbol table entry for readDouble().", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_DOUBLE;
+	result = symbol_generate_unique_id("readDouble", entry, func_table);
+	if (result)
+		return result;
 
 	// toStr(value: Any): String
 	entry = symtable_item_create(func_table, "toStr");
