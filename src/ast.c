@@ -239,7 +239,6 @@ err_t ast_func_call_add_empty_param_list(ast_node_t *func_call_node)
 	return ERR_OK;
 }
 
-// TODO: Předělat (upravit)
 err_t ast_func_call_add_param(ast_node_t *func_call_node, ast_node_t *param_node, size_t param_list_index)
 {
 	if (func_call_node == NULL || param_node == NULL)
@@ -306,6 +305,7 @@ err_t ast_func_call_add_param(ast_node_t *func_call_node, ast_node_t *param_node
 		}
 
 		func_call_node->func_call.param_lists[param_list_index]->param_node = new_node;
+		// Save node at the end
 		func_call_node->func_call.param_lists[param_list_index]
 			->param_node[func_call_node->func_call.param_lists[param_list_index]->param_count] = param_node;
 		func_call_node->func_call.param_lists[param_list_index]->param_count++;
@@ -378,13 +378,78 @@ ast_node_t *ast_ext_call_make(const char *unique_id)
 	return node;
 }
 
-// TODO: Dodelat
-/*
-err_t ast_ext_call_add_param(ast_node_t *ext_call_node, ast_node_t *param_node, unsigned param_list_index,
-							 unsigned param_index)
+err_t ast_ext_call_add_param(ast_node_t *ext_call_node, ast_node_t *param_node, unsigned param_list_index)
 {
+	if (ext_call_node == NULL || param_node == NULL)
+	{
+		print_err("Tried to pass NULL ptr to ast_ext_call_add_param()", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// List wasn't initlized yet
+	if (ext_call_node->ext_call.param_list_count <= param_list_index)
+	{
+		param_node_list_t **new_list =
+			realloc(ext_call_node->ext_call.param_lists, (param_list_index + 1) * sizeof(param_node_list_t *));
+
+		if (new_list == NULL)
+		{
+			print_err("Failed to allocate memory in ast_ext_call_add_param()", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
+		ext_call_node->ext_call.param_lists = new_list;
+
+		// Setting skiped lists to NULL
+		for (unsigned i = ext_call_node->ext_call.param_list_count; i <= param_list_index; i++)
+		{
+			param_node_list_t *list = calloc(1, sizeof(param_node_list_t));
+
+			if (list == NULL)
+			{
+				print_err("Failed to allocate memory in ast_ext_call_add_param()", ERR_INTERNAL);
+				return ERR_INTERNAL;
+			}
+
+			ext_call_node->ext_call.param_lists[i] = list;
+		}
+
+		// Allocating memory for new node
+		ext_call_node->ext_call.param_lists[param_list_index]->param_node = malloc(sizeof(ast_node_t *));
+
+		if (ext_call_node->ext_call.param_lists[param_list_index]->param_node == NULL)
+		{
+			print_err("Failed to allocate memory in ast_ext_call_add_param()", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
+		ext_call_node->ext_call.param_lists[param_list_index]->param_node[0] = param_node;
+		ext_call_node->ext_call.param_lists[param_list_index]->param_count = 1;
+		ext_call_node->ext_call.param_list_count = param_list_index + 1;
+		return ERR_OK;
+	}
+	// List already exists
+	else
+	{
+		// Realocating memory for new node
+		ast_node_t **new_node =
+			realloc(ext_call_node->ext_call.param_lists[param_list_index]->param_node,
+					(ext_call_node->ext_call.param_lists[param_list_index]->param_count + 1) * sizeof(ast_node_t *));
+
+		if (new_node == NULL)
+		{
+			print_err("Failed to allocate memory in ast_ext_call_add_param()", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
+		ext_call_node->ext_call.param_lists[param_list_index]->param_node = new_node;
+		// Save node at the end
+		ext_call_node->ext_call.param_lists[param_list_index]
+			->param_node[ext_call_node->ext_call.param_lists[param_list_index]->param_count] = param_node;
+		ext_call_node->ext_call.param_lists[param_list_index]->param_count++;
+		return ERR_OK;
+	}
 }
-*/
 
 err_t ast_ext_call_add_base(ast_node_t *ext_call_node, ast_node_t *base_node)
 {
@@ -438,7 +503,7 @@ err_t ast_block_add_statement(ast_node_t *block_node, ast_node_t *statement_node
 	return ERR_OK;
 }
 
-ast_node_t *ast_unary_op_make(operator_type_t operator, ast_node_t *operand)
+ast_node_t *ast_unary_op_make(operator_type_t operator, ast_node_t * operand)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -448,11 +513,11 @@ ast_node_t *ast_unary_op_make(operator_type_t operator, ast_node_t *operand)
 		return NULL;
 	}
 
-	if (operator == OP_NEG || operator == OP_UMINUS || operator == OP_UPLUS)
+	if (operator== OP_NEG || operator== OP_UMINUS || operator== OP_UPLUS)
 	{
 		node->eval_type = operand->eval_type;
 		node->node_type = AST_UN_OPERATOR;
-		node->un_operator.operator = operator;
+		node->un_operator.operator= operator;
 		node->un_operator.operand = operand;
 		return node;
 	}
@@ -463,7 +528,7 @@ ast_node_t *ast_unary_op_make(operator_type_t operator, ast_node_t *operand)
 	}
 }
 
-ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t *operand_left, ast_node_t *operand_right)
+ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t * operand_left, ast_node_t *operand_right)
 {
 	ast_node_t *node;
 	node = malloc(sizeof(ast_node_t));
@@ -473,9 +538,9 @@ ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t *operand_lef
 		return NULL;
 	}
 
-	if (operator != OP_NEG && operator != OP_UMINUS && operator != OP_UPLUS)
+	if (operator!= OP_NEG && operator!= OP_UMINUS && operator!= OP_UPLUS)
 	{
-		if (operator == OP_MUL || operator == OP_DIV || operator == OP_MINUS || operator == OP_PLUS)
+		if (operator== OP_MUL || operator== OP_DIV || operator== OP_MINUS || operator== OP_PLUS)
 		{
 			node->eval_type = operand_left->eval_type;
 		}
@@ -486,7 +551,7 @@ ast_node_t *ast_binary_op_make(operator_type_t operator, ast_node_t *operand_lef
 		node->node_type = AST_BIN_OPERATOR;
 		node->bin_operator.operand_left = operand_left;
 		node->bin_operator.operand_right = operand_right;
-		node->bin_operator.operator = operator;
+		node->bin_operator.operator= operator;
 		return node;
 	}
 	else // Unary operations

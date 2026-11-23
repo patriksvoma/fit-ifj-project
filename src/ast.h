@@ -377,8 +377,7 @@ ast_node_t *ast_ext_call_make(const char *unique_id);
  * @param param_index Index for the parameter inside of the list
  * @return err_t Error code
  */
-err_t ast_ext_call_add_param(ast_node_t *ext_call_node, ast_node_t *param_node, unsigned param_list_index,
-							 unsigned param_index);
+err_t ast_ext_call_add_param(ast_node_t *ext_call_node, ast_node_t *param_node, unsigned param_list_index);
 
 /**
  * @brief Adds a base on wich the extension will be called
