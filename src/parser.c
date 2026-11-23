@@ -1044,7 +1044,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		if (result)
 			return result;
 
-		// First create the local variable table and add the iterator as a variable
+		// Create the local table
 		cdata->local_var_table = local_table_create(cdata->local_var_table);
 		if (!cdata->local_var_table)
 		{
@@ -1056,7 +1056,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		ast_node_t *inner_block_node = ast_block_make();
 		if (!inner_block_node)
 		{
-			print_err_l("Failed to create a block node for a for statement!", ERR_INTERNAL, cdata->token.line);
+			print_err_l("Failed to create a block node for a while loop!", ERR_INTERNAL, cdata->token.line);
 			return ERR_INTERNAL;
 		}
 		result = block_start(cdata, inner_block_node, statement_indent_level);
