@@ -940,6 +940,19 @@ err_t symtable_insert_builtins(symtable_t *func_table, const symtable_t *ext_tab
 		print_err("Faild to create a symbol table entry for strLength().", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_INT;
+	result = symbol_generate_unique_id("strLength", entry, func_table);
+	if (result)
+		return result;
+	result = symbol_add_param_list(entry);
+	if (result)
+		return result;
+	result = symbol_add_param_named(entry, "value", TYPE_STRING);
+	if (result)
+		return result;
 
 	// subStr(value: String, start: Int, end: Int): String
 	entry = symtable_item_create(func_table, "subStr");
