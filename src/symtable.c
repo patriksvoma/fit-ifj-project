@@ -493,7 +493,6 @@ void destroy_tree(tree_node_t *node)
 	}
 	else if (node->data.symbol_type == SYM_EXTENSION)
 	{
-		free(node->data.data.extension.unique_name);
 		for (size_t i = 0; i < node->data.data.extension.param_list_count; i++)
 		{
 			param_list_t *list = node->data.data.extension.param_lists[i];
@@ -594,6 +593,12 @@ err_t symbol_generate_unique_id(const char *identifier, symbol_data_t *symbol, c
 		return ERR_INTERNAL;
 	}
 
+	if (symbol->symbol_type == SYM_EXTENSION)
+	{
+		print_err("Do not use symbol_generate_unique_id() for extensions. Use generate_unique_ext_id()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
 	size_t buf_len = 1;
 	char *buf = malloc(buf_len);
 	if (!buf)
@@ -613,7 +618,7 @@ err_t symbol_generate_unique_id(const char *identifier, symbol_data_t *symbol, c
 	if (!new_buf)
 	{
 		free(buf);
-		print_err("Failed to reallocat a buffer in symbol_generate_unique_id()!", ERR_INTERNAL);
+		print_err("Failed to reallocate a buffer in symbol_generate_unique_id()!", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
 	buf = new_buf;
@@ -631,8 +636,7 @@ err_t symbol_generate_unique_id(const char *identifier, symbol_data_t *symbol, c
 		symbol->data.function.unique_name = buf;
 		break;
 	case SYM_EXTENSION:
-		symbol->data.extension.unique_name = buf;
-		break;
+		return ERR_INTERNAL;
 	}
 	return ERR_OK;
 }
@@ -772,6 +776,377 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 	{
 		return ERR_INTERNAL;
 	}
+
+	return ERR_OK;
+}
+
+err_t symbol_add_param_named(symbol_data_t *symbol, const char *param_name, data_type_t param_type)
+{
+	err_t result;
+
+	result = symbol_add_param(symbol);
+	if (result)
+		return result;
+
+	param_t *param = symbol_top_param(symbol);
+	if (!param)
+	{
+		print_err("Null-pointer reference in symbol_add_param_named().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	param->type = param_type;
+	param->identifier = malloc(strlen(param_name) + 1);
+	if (!param->identifier)
+	{
+		print_err("Failed to allocate memory in symbol_add_param_named().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	return ERR_OK;
+}
+
+/**
+ * @brief Creates an allocated identifier prefixed by "type$"
+ *
+ * @param identifer Original identifier
+ * @param type Extension base data type
+ * @return char* Address to the allocated string
+ */
+char *generate_unique_ext_id(const char *identifer, const data_type_t type)
+{
+	char *result;
+	const char *prefix;
+
+	switch (type)
+	{
+	case TYPE_INT:
+		prefix = "Int$";
+		break;
+	case TYPE_DOUBLE:
+		prefix = "Double$";
+		break;
+	case TYPE_STRING:
+		prefix = "String$";
+		break;
+	case TYPE_UNIT:
+		prefix = "Unit$";
+		break;
+	case TYPE_BOOLEAN:
+		prefix = "Boolean$";
+		break;
+	case TYPE_ANY:
+		prefix = "Any$";
+		break;
+	default:
+		return NULL;
+	}
+
+	result = malloc(strlen(identifer) + strlen(prefix) + 1);
+	if (!result)
+	{
+		print_err("Failed to allocate memory in generate_unique_ext_id().", ERR_INTERNAL);
+		return NULL;
+	}
+
+	strcpy(result, prefix);
+	strcpy(result + strlen(prefix), identifer);
+
+	return result;
+}
+
+err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
+{
+	if (!func_table || !ext_table)
+	{
+		print_err("Null-pointer reference in symtable_insert_builtins().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	symbol_data_t *entry;
+	err_t result;
+
+	// BASE
+
+	// print(value: Any): Unit
+	entry = symtable_item_create(func_table, "print");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for print().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_UNIT;
+	result = symbol_generate_unique_id("print", entry, func_table);
+	if (result)
+		return result;
+	result = symbol_add_param_list(entry);
+	if (result)
+		return result;
+	result = symbol_add_param_named(entry, "value", TYPE_ANY);
+	if (result)
+		return result;
+
+	// readLine(): String
+	entry = symtable_item_create(func_table, "readLine");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for readLine().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_STRING;
+	result = symbol_generate_unique_id("readLine", entry, func_table);
+	if (result)
+		return result;
+
+	// readInt(): Int
+	entry = symtable_item_create(func_table, "readInt");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for readInt().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_INT;
+	result = symbol_generate_unique_id("readInt", entry, func_table);
+	if (result)
+		return result;
+
+	// readDouble(): Double
+	entry = symtable_item_create(func_table, "readDouble");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for readDouble().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_DOUBLE;
+	result = symbol_generate_unique_id("readDouble", entry, func_table);
+	if (result)
+		return result;
+
+	// toStr(value: Any): String
+	entry = symtable_item_create(func_table, "toStr");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for toStr().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_STRING;
+	result = symbol_generate_unique_id("toStr", entry, func_table);
+	if (result)
+		return result;
+	result = symbol_add_param_list(entry);
+	if (result)
+		return result;
+	result = symbol_add_param_named(entry, "value", TYPE_ANY);
+	if (result)
+		return result;
+
+	// toInt(value: Double): Int
+	entry = symtable_item_create(func_table, "toInt");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for toInt().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_INT;
+	result = symbol_generate_unique_id("toInt", entry, func_table);
+	if (result)
+		return result;
+	result = symbol_add_param_list(entry);
+	if (result)
+		return result;
+	result = symbol_add_param_named(entry, "value", TYPE_DOUBLE);
+	if (result)
+		return result;
+
+	// strLength(value: String): Int
+	entry = symtable_item_create(func_table, "strLength");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for strLength().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_INT;
+	result = symbol_generate_unique_id("strLength", entry, func_table);
+	if (result)
+		return result;
+	result = symbol_add_param_list(entry);
+	if (result)
+		return result;
+	result = symbol_add_param_named(entry, "value", TYPE_STRING);
+	if (result)
+		return result;
+
+	// subStr(value: String, start: Int, end: Int): String
+	entry = symtable_item_create(func_table, "subStr");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for subStr().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_STRING;
+	result = symbol_generate_unique_id("subStr", entry, func_table);
+	if (result)
+		return result;
+	result = symbol_add_param_list(entry);
+	if (result)
+		return result;
+	result = symbol_add_param_named(entry, "value", TYPE_STRING);
+	if (result)
+		return result;
+	result = symbol_add_param_named(entry, "start", TYPE_INT);
+	if (result)
+		return result;
+	result = symbol_add_param_named(entry, "end", TYPE_INT);
+	if (result)
+		return result;
+
+	// ord(value: String, index: Int): Int
+	entry = symtable_item_create(func_table, "ord");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for ord().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_INT;
+	result = symbol_generate_unique_id("ord", entry, func_table);
+	if (result)
+		return result;
+	result = symbol_add_param_list(entry);
+	if (result)
+		return result;
+	result = symbol_add_param_named(entry, "value", TYPE_STRING);
+	if (result)
+		return result;
+	result = symbol_add_param_named(entry, "index", TYPE_INT);
+	if (result)
+		return result;
+
+	// chr(code: Int): String
+	entry = symtable_item_create(func_table, "chr");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for chr().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_STRING;
+	result = symbol_generate_unique_id("chr", entry, func_table);
+	if (result)
+		return result;
+	result = symbol_add_param_list(entry);
+	if (result)
+		return result;
+	result = symbol_add_param_named(entry, "code", TYPE_INT);
+	if (result)
+		return result;
+
+	// VALMEM
+
+	// Any.toString: String
+	// This extension has to be added for all data types
+	data_type_t types[] = {
+		TYPE_INT, TYPE_DOUBLE, TYPE_STRING, TYPE_UNIT, TYPE_BOOLEAN,
+	};
+	for (size_t i = 0; i < sizeof(types) / sizeof(data_type_t); i++)
+	{
+		char *id = generate_unique_ext_id("toString", types[i]);
+		if (!id)
+		{
+			print_err("Failed to generate unique_name in symbtable_insert_builtins().", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+
+		entry = symtable_item_create(ext_table, id);
+
+		entry->symbol_type = SYM_EXTENSION;
+		entry->data.extension.base_param.identifier = "value";
+		entry->data.extension.base_param.type = types[i];
+		entry->data.extension.is_defined = true;
+		entry->data.extension.return_type = TYPE_STRING;
+
+		free(id);
+	}
+
+	// Double.toInt: Int
+	char *id = generate_unique_ext_id("toInt", TYPE_DOUBLE);
+	if (!id)
+	{
+		print_err("Failed to generate unique_name in symbtable_insert_builtins().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	entry = symtable_item_create(ext_table, id);
+
+	entry->symbol_type = SYM_EXTENSION;
+	entry->data.extension.base_param.identifier = "value";
+	entry->data.extension.base_param.type = TYPE_DOUBLE;
+	entry->data.extension.is_defined = true;
+	entry->data.extension.return_type = TYPE_INT;
+
+	free(id);
+
+	// Double.floor: Double
+	id = generate_unique_ext_id("floor", TYPE_DOUBLE);
+	if (!id)
+	{
+		print_err("Failed to generate unique_name in symbtable_insert_builtins().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	entry = symtable_item_create(ext_table, id);
+
+	entry->symbol_type = SYM_EXTENSION;
+	entry->data.extension.base_param.identifier = "value";
+	entry->data.extension.base_param.type = TYPE_DOUBLE;
+	entry->data.extension.is_defined = true;
+	entry->data.extension.return_type = TYPE_DOUBLE;
+
+	free(id);
+
+	// String.length: Int
+	id = generate_unique_ext_id("length", TYPE_STRING);
+	if (!id)
+	{
+		print_err("Failed to generate unique_name in symbtable_insert_builtins().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	entry = symtable_item_create(ext_table, id);
+
+	entry->symbol_type = SYM_EXTENSION;
+	entry->data.extension.base_param.identifier = "value";
+	entry->data.extension.base_param.type = TYPE_STRING;
+	entry->data.extension.is_defined = true;
+	entry->data.extension.return_type = TYPE_INT;
 
 	return ERR_OK;
 }

@@ -27,7 +27,8 @@ typedef enum
 	TYPE_DOUBLE,
 	TYPE_STRING,
 	TYPE_UNIT,
-	TYPE_BOOLEAN
+	TYPE_BOOLEAN,
+	TYPE_ANY
 } data_type_t;
 
 /**

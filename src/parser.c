@@ -1723,7 +1723,12 @@ err_t expression(compiler_data_t *cdata, ast_node_t **return_node)
 
 err_t parse(ast_node_t *program_node, compiler_data_t *cdata)
 {
-	err_t result = prologue(cdata, program_node);
+	// Add built-in functions and methods to the symbol tables
+	err_t result = symtable_insert_builtins(&cdata->function_table, &cdata->extension_table);
+	if (result)
+		return result;
+
+	result = prologue(cdata, program_node);
 
 	return result;
 }

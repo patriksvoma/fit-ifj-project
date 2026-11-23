@@ -268,6 +268,12 @@ err_t check_func_call(ast_node_t *node, compiler_data_t *cdata)
 				param = node->func_call.param_lists[i]->param_node[j];
 			}
 
+			// Check if the function is defined with TYPE_ANY
+			if (entry->data.function.param_lists[i]->params[j]->type == TYPE_ANY)
+			{
+				continue;
+			}
+
 			if (param->eval_type != entry->data.function.param_lists[i]->params[j]->type)
 			{
 				print_err("A function was called with a parameter of a different type then its defintion.",
@@ -403,6 +409,12 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 				if (result)
 					return result;
 				param = node->ext_call.param_lists[i]->param_node[j];
+			}
+
+			// Check if the function is defined with TYPE_ANY
+			if (entry->data.function.param_lists[i]->params[j]->type == TYPE_ANY)
+			{
+				continue;
 			}
 
 			if (param->eval_type != entry->data.extension.param_lists[i]->params[j]->type)

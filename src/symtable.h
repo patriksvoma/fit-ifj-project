@@ -51,8 +51,8 @@ typedef struct symbol_data
 			data_type_t return_type;
 			param_list_t **param_lists;
 			size_t param_list_count;
-			char *unique_name;
 			bool is_defined;
+			char *unique_name;
 			bool is_main;
 		} function;
 		struct
@@ -60,7 +60,6 @@ typedef struct symbol_data
 			data_type_t return_type;
 			param_list_t **param_lists;
 			size_t param_list_count;
-			char *unique_name;
 			bool is_defined;
 			param_t base_param;
 		} extension;
@@ -213,3 +212,21 @@ err_t symbol_generate_unique_id(const char *identifier, symbol_data_t *symbol, c
  * @return err_t Error code
  */
 err_t symbol_add_parameters_into_table(symbol_data_t *func_symbol, symtable_t *table);
+
+/**
+ * @brief Creates an allocated identifier prefixed by "type$"
+ *
+ * @param identifer Original identifier
+ * @param type Extension base data type
+ * @return char* Address to the allocated string
+ */
+char *generate_unique_ext_id(const char *identifer, const data_type_t type);
+
+/**
+ * @brief Inserts signatures of all builtin functions and extensions to the corresponding symbol tables
+ *
+ * @param func_table Function table
+ * @param ext_table Extension table
+ * @return err_t Error code
+ */
+err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table);
