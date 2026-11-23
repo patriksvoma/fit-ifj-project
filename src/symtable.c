@@ -776,7 +776,40 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 	return ERR_OK;
 }
 
-err_t symtable_insert_builtins(const symtable_t *func_table, const symtable_t *ext_table)
+/**
+ * @brief Adds a new parameter into a symbols last paramlist (must be created beforehand) with a name and type
+ *
+ * @param symbol Symbol to change
+ * @param param_name Parameter name, will be copied
+ * @param param_type Parameter type
+ * @return err_t Error code
+ */
+err_t symbol_add_param_named(symbol_data_t *symbol, const char *param_name, data_type_t param_type)
+{
+	err_t result;
+
+	result = symbol_add_param(symbol);
+	if (result)
+		return result;
+
+	param_t *param = symbol_top_param(symbol);
+	if (!param)
+	{
+		print_err("Null-pointer reference in symbol_add_param_named().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	param->type = param_type;
+	param->identifier = malloc(strlen(param_name) + 1);
+	if (!param->identifier)
+	{
+		print_err("Failed to allocate memory in symbol_add_param_named().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	return ERR_OK;
+}
+
 {
 	if (!func_table || !ext_table)
 	{
