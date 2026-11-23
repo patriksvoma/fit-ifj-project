@@ -1,0 +1,5 @@
+import ifj26.*
+
+@main def main(): Unit =
+  var a: Int = ord("abcdef", 3)
+  return ()

@@ -180,6 +180,11 @@ run_case "builtin-toint-type-1" 5 "builtins/invalid/builtin-toint-type-1.ifj"
 run_case "builtin-toint-type-2" 5 "builtins/invalid/builtin-toint-type-2.ifj"
 run_case "builtin-toint-type-3" 5 "builtins/invalid/builtin-toint-type-3.ifj"
 
+run_case "builtin-strlength" 0 "builtins/valid/builtin-strlength.ifj"
+run_case "builtin-substr" 0 "builtins/valid/builtin-substr.ifj"
+run_case "builtin-ord" 0 "builtins/valid/builtin-ord.ifj"
+run_case "builtin-chr" 0 "builtins/valid/builtin-chr.ifj"
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2

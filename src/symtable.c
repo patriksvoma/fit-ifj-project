@@ -903,6 +903,9 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 	result = symbol_generate_unique_id("readLine", entry, func_table);
 	if (result)
 		return result;
+	result = symbol_add_param_list(entry);
+	if (result)
+		return result;
 
 	// readInt(): Int
 	entry = symtable_item_create(func_table, "readInt");
@@ -918,6 +921,9 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 	result = symbol_generate_unique_id("readInt", entry, func_table);
 	if (result)
 		return result;
+	result = symbol_add_param_list(entry);
+	if (result)
+		return result;
 
 	// readDouble(): Double
 	entry = symtable_item_create(func_table, "readDouble");
@@ -931,6 +937,9 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 	entry->data.function.is_main = false;
 	entry->data.function.return_type = TYPE_DOUBLE;
 	result = symbol_generate_unique_id("readDouble", entry, func_table);
+	if (result)
+		return result;
+	result = symbol_add_param_list(entry);
 	if (result)
 		return result;
 
