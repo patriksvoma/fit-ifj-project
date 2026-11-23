@@ -915,7 +915,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		}
 
 		// Check if the variable has already been defined
-		if (symtable_item_defined(cdata->local_var_table, cdata->token.attribute.string))
+		if (symtable_item_defined_local(cdata->local_var_table, cdata->token.attribute.string))
 		{
 			print_err_l("Variable name has already been defined!", ERR_SEMANTIC_REDEFINITION, cdata->token.line);
 			return ERR_SEMANTIC_REDEFINITION;
@@ -1278,13 +1278,14 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			if (result)
 				return result;
 
-			if (!symtable_item_defined(cdata->local_var_table, id_token.attribute.string))
+			const symbol_data_t *entry = symtable_item_find(cdata->local_var_table, id_token.attribute.string);
+			if (!entry)
 			{
 				print_err_l("Variable must be defined before assignment.", ERR_SEMANTIC_UNDEFINED, cdata->token.line);
 				return ERR_SEMANTIC_UNDEFINED;
 			}
 
-			statement_node = ast_var_assign_make(id_token.attribute.string, assigned_expression_node);
+			statement_node = ast_var_assign_make(entry->data.variable.unique_name, assigned_expression_node);
 			if (!statement_node)
 			{
 				print_err_l("Failed to create an AST node in statement().", ERR_INTERNAL, cdata->token.line);
