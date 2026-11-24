@@ -205,6 +205,7 @@ run_case "boolthen-bool-not-true.ifj" 0 "boolthen/valid/boolthen-bool-not-true.i
 run_case "boolthen-bool-not-false.ifj" 0 "boolthen/valid/boolthen-bool-not-false.ifj"
 run_case "boolthen-and.ifj" 0 "boolthen/valid/boolthen-and.ifj"
 run_case "boolthen-or.ifj" 0 "boolthen/valid/boolthen-or.ifj"
+run_case "boolthen-operators.ifj" 0 "boolthen/valid/boolthen-operators.ifj"
 
 
 printf '\n'
