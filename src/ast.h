@@ -14,13 +14,15 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+struct symbol_data;
+
 typedef struct ast_node ast_node_t;
 
 /**
  * @brief Data types
  *
  */
-typedef enum
+typedef enum data_type
 {
 	TYPE_NONE,
 	TYPE_INT,
@@ -200,6 +202,7 @@ struct ast_node
 		struct
 		{
 			char *unique_id;
+			struct symbol_data *sym_table_entry;
 			ast_node_t *assigned_value;
 		} variable_definition;
 
@@ -207,11 +210,16 @@ struct ast_node
 		struct
 		{
 			char *unique_id;
+			struct symbol_data *sym_table_entry;
 			ast_node_t *assigned_value;
 		} variable_assignment;
 
 		// Variable usage
-		char *variable_use_unique_id;
+		struct
+		{
+			char *unique_id;
+			struct symbol_data *sym_table_entry;
+		} variable_use;
 
 		// Return expression
 		ast_node_t *return_call;

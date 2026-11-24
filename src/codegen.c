@@ -736,7 +736,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		break;
 
 	case AST_VAR_USE:
-		printf("PUSHS LF@%s\n", node->variable_use_unique_id);
+		printf("PUSHS LF@%s\n", node->variable_use.unique_id);
 		break;
 
 	case AST_VAR_DEF:
