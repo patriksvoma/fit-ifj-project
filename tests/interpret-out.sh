@@ -159,6 +159,11 @@ run_case "strLength" "functions/build-in/subStr-invalid-start.ifj" "ahoj svete" 
 run_case "strLength" "functions/build-in/subStr-invalid-end.ifj" "ahoj svete" "" "40"
 run_case "strLength" "functions/build-in/subStr-invalid-both.ifj" "ahoj svete" "" "40"
 
+#Build-in ord
+run_case "ord" "functions/build-in/ord.ifj" "ahoj svete" "106"
+run_case "ord" "functions/build-in/ord-invalid.ifj" "-1" "-1"
+run_case "ord" "functions/build-in/ord-invalid.ifj" "10" "-1"
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 	printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
