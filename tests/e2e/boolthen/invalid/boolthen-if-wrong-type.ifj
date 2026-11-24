@@ -1,0 +1,7 @@
+import ifj26.*
+
+@main def main(): Unit =
+    if 54 then
+        print("ac")
+
+    print("bc")

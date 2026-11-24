@@ -185,6 +185,15 @@ run_case "builtin-substr" 0 "builtins/valid/builtin-substr.ifj"
 run_case "builtin-ord" 0 "builtins/valid/builtin-ord.ifj"
 run_case "builtin-chr" 0 "builtins/valid/builtin-chr.ifj"
 
+echo "$YELLOW-----BOOLTHEN-----$RESET"
+echo "$BLUE-----If without else-----$RESET"
+run_case "boolthen-if-no-else-true" 0 "boolthen/valid/boolthen-if-no-else-true.ifj"
+run_case "boolthen-if-no-else-false" 0 "boolthen/valid/boolthen-if-no-else-false.ifj"
+
+echo "$BLUE-----Invalid if conditions-----$RESET"
+run_case "boolthen-if-wrong-type" 6 "boolthen/valid/boolthen-if-wrong-type.ifj"
+
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
