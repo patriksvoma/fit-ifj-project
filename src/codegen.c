@@ -295,17 +295,7 @@ void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 		return;
 	}
 
-	if (func_params->data.function.is_main)
-	{
-		printf("LABEL main\n");
-		printf("LABEL %s\n", unique_id);
-		// new_func_def->func_name = "main";
-	}
-	else
-	{
-		printf("LABEL %s\n", unique_id);
-	}
-
+	printf("LABEL %s\n", unique_id);
 	printf("CREATEFRAME\n");
 	printf("PUSHFRAME\n");
 
