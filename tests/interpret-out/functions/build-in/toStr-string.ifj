@@ -1,0 +1,4 @@
+import ifj26.*
+
+@main def toStr_string(): Unit =
+  print(toStr("ahoj"))

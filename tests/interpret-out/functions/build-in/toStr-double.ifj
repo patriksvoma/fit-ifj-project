@@ -1,0 +1,4 @@
+import ifj26.*
+
+@main def toStr_double(): Unit =
+  print(toStr(615.156))

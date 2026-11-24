@@ -137,6 +137,13 @@ run_case "readBool" "functions/build-in/readBool.ifj" "asdtruefs" "false"
 run_case "readBool" "functions/build-in/readBool.ifj" "_true" "false"
 run_case "readBool" "functions/build-in/readBool.ifj" "true" "true"
 
+#Build-in toStr
+run_case "toStr_int" "functions/build-in/toStr-int.ifj" "" "654"
+run_case "toStr_double" "functions/build-in/toStr-double.ifj" "" "615.16"
+run_case "toStr_string" "functions/build-in/toStr-string.ifj" "" "ahoj"
+run_case "toStr_bool" "functions/build-in/toStr-bool.ifj" "" "true"
+run_case "toStr_unit" "functions/build-in/toStr-unit.ifj" "" "()"
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 	printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
