@@ -187,12 +187,16 @@ run_case "builtin-chr" 0 "builtins/valid/builtin-chr.ifj"
 
 echo "$YELLOW-----BOOLTHEN-----$RESET"
 echo "$BLUE-----If without else-----$RESET"
-run_case "boolthen-if-no-else-true" 0 "boolthen/valid/boolthen-if-no-else-true.ifj"
-run_case "boolthen-if-no-else-false" 0 "boolthen/valid/boolthen-if-no-else-false.ifj"
+run_case "boolthen-if-true-no-else" 0 "boolthen/valid/boolthen-if-true-no-else.ifj"
+run_case "boolthen-if-false-no-else" 0 "boolthen/valid/boolthen-if-false-no-else.ifj"
 
 echo "$BLUE-----Invalid if conditions-----$RESET"
-run_case "boolthen-if-wrong-type" 6 "boolthen/valid/boolthen-if-wrong-type.ifj"
+run_case "boolthen-if-wrong-type" 6 "boolthen/invalid/boolthen-if-wrong-type.ifj"
 
+echo "$BLUE-----Bool values-----$RESET"
+run_case "boolthen-bool-variable.ifj" 0 "boolthen/valid/boolthen-bool-variable.ifj"
+run_case "boolthen-bool-assignment.ifj" 0 "boolthen/valid/boolthen-bool-assignment.ifj"
+run_case "boolthen-bool-function-param.ifj" 0 "boolthen/valid/boolthen-bool-function-param.ifj"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
