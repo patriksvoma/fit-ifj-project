@@ -73,6 +73,7 @@ run_case "valid-func-call-mul-list-empty" 0 "functions/valid/valid-func-call-mul
 run_case "valid-func-call-mul-list-one-param" 0 "functions/valid/valid-func-call-mul-list-one-param.ifj"
 run_case "valid-func-call-mul-list-mul-param" 0 "functions/valid/valid-func-call-mul-list-mul-param.ifj"
 run_case "valid-func-call-mul-list-mix-param" 0 "functions/valid/valid-func-call-mul-list-mix-param.ifj"
+run_case "valid-func-call-before-unit-literal" 0 "functions/valid/valid-func-call-before-unit-literal.ifj"
 
 run_case "func-call-missing-list-1" 5 "functions/invalid/func-call-missing-list-1.ifj"
 run_case "func-call-missing-list-2" 5 "functions/invalid/func-call-missing-list-2.ifj"
