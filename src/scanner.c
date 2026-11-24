@@ -276,6 +276,23 @@ err_t scan_accept(buffer_t *buf, token_t *token, bool comment_eol)
 }
 
 /**
+ * @brief Convert the number in the buffer and finish the token
+ *
+ * @param buf Token buffer with the digits of the number
+ * @param token Token with its type set to TOKEN_INT or TOKEN_DOUBLE
+ * @param comment_eol A multiline block comment was read on the current line
+ * @return err_t Error
+ */
+err_t scan_number(buffer_t *buf, token_t *token, bool comment_eol)
+{
+	err_t err = convert_number(buf->data, token);
+	if (err != ERR_OK)
+		return scan_fail(buf, err);
+
+	return scan_accept(buf, token, comment_eol);
+}
+
+/**
  * @brief Get the next token object
  *
  * @param token
@@ -288,7 +305,6 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 	state_t state = S_START;
 	bool newline_seen = false;
 	token->indent = 0;
-	err_t err;
 	unsigned depth = 0;
 	bool block_newline = false;
 	bool comment_eol = false;
@@ -506,7 +522,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 			unread_char(c);
 			token->type = TOKEN_INT;
-			goto number;
+			return scan_number(&buf, token, comment_eol);
 
 		case S_NUMBER_INT:
 			if (isdigit(c))
@@ -546,7 +562,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 			unread_char(c);
 			token->type = TOKEN_INT;
-			goto number;
+			return scan_number(&buf, token, comment_eol);
 
 		case S_NUM_INT_UNDERSCORE:
 			if (c == '_')
@@ -598,7 +614,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (c == 'd' || c == 'D')
 			{
 				token->type = TOKEN_DOUBLE;
-				goto number;
+				return scan_number(&buf, token, comment_eol);
 			}
 
 			if (isalpha(c) || c == '.')
@@ -606,7 +622,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 			unread_char(c);
 			token->type = TOKEN_DOUBLE;
-			goto number;
+			return scan_number(&buf, token, comment_eol);
 
 		case S_NUM_DOUBLE_UNDERSCORE:
 			if (c == '_')
@@ -660,7 +676,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (c == 'd' || c == 'D')
 			{
 				token->type = TOKEN_DOUBLE;
-				goto number;
+				return scan_number(&buf, token, comment_eol);
 			}
 
 			if (isalpha(c) || c == '.')
@@ -668,7 +684,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 			unread_char(c);
 			token->type = TOKEN_DOUBLE;
-			goto number;
+			return scan_number(&buf, token, comment_eol);
 
 		case S_EXP_END_UNDERSCORE:
 			if (c == '_')
@@ -895,13 +911,6 @@ string:
 	token->type = TOKEN_STRING;
 	token->attribute.string = buf.data;
 	buf.data = NULL;
-	return scan_accept(&buf, token, comment_eol);
-
-number:
-	err = convert_number(buf.data, token);
-	if (err != ERR_OK)
-		return scan_fail(&buf, err);
-
 	return scan_accept(&buf, token, comment_eol);
 }
 
