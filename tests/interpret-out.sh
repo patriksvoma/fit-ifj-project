@@ -147,6 +147,10 @@ run_case "toStr_unit" "functions/build-in/toStr-unit.ifj" "" "()"
 #Build-in toInt
 run_case "toInt" "functions/build-in/toInt.ifj" "" "120"
 
+#Build-in strLength
+run_case "strLength" "functions/build-in/strLength.ifj" "ahoj svete" "10"
+run_case "strLength" "functions/build-in/strLength.ifj" "" "0"
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 	printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
