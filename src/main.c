@@ -27,11 +27,21 @@ int main()
 	if (err_code)
 	{
 		destruct(ast_root);
+		local_tables_destroy(&cdata);
 		return err_code;
 	}
 
 	// Run additional semantic checks
 	err_code = do_semantic_checks(ast_root, &cdata);
+	if (err_code)
+	{
+		destruct(ast_root);
+		local_tables_destroy(&cdata);
+		return err_code;
+	}
+
+	// Destroy the local symbol tables
+	err_code = local_tables_destroy(&cdata);
 	if (err_code)
 		return err_code;
 

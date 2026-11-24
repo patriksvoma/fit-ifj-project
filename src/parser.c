@@ -38,6 +38,90 @@ err_t val_var_def(compiler_data_t *cdata, ast_node_t *var_def_node, symbol_data_
 err_t expression(compiler_data_t *cdata, ast_node_t **return_node);
 
 /**
+ * @brief Creates a new local variable table, adds it to the list and sets it as the currect table
+ *
+ * @param cdata Compiler data
+ * @return err_t Error code
+ */
+err_t local_table_create(compiler_data_t *cdata)
+{
+	if (!cdata)
+	{
+		print_err("Null-pointer reference in local_table_create().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	symtable_t *table = malloc(sizeof(symtable_t));
+	if (!table)
+	{
+		print_err("Failed to allocate memory in local_table_create().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	table->parent = cdata->local_var_table;
+	if (!table->parent)
+		table->parent = &cdata->function_table;
+
+	table->root_node = NULL;
+	table->child_table_counter = 0;
+
+	// Add the table to the table array, which holds all references to all the tables that will later be destroyed
+	symtable_t **new_tables = realloc(cdata->var_tables, sizeof(symtable_t *) * (cdata->var_table_count + 1));
+	if (!new_tables)
+	{
+		free(table);
+		print_err("Failed to allocate memory in local_table_create().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	cdata->var_tables = new_tables;
+	cdata->var_table_count++;
+
+	cdata->var_tables[cdata->var_table_count - 1] = table;
+
+	// Increase the parent nodes child counter
+	// Used for generating unique identifiers
+	if (table->parent)
+		table->parent->child_table_counter++;
+
+	cdata->local_var_table = table;
+
+	return ERR_OK;
+}
+
+/**
+ * @brief Switches the local variable table to the parent of the current one. The previous table is not destroyed
+ *
+ * @param cdata Compiler data
+ * @return err_t Error code
+ */
+err_t local_table_leave(compiler_data_t *cdata)
+{
+	if (!cdata)
+	{
+		print_err("Null-pointer reference in local_table_leave().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	cdata->local_var_table = cdata->local_var_table->parent;
+
+	return ERR_OK;
+}
+
+err_t local_tables_destroy(compiler_data_t *cdata)
+{
+	for (size_t i = 0; i < cdata->var_table_count; i++)
+	{
+		symtable_destroy(&cdata->var_tables[i]);
+	}
+
+	free(cdata->var_tables);
+	cdata->var_tables = NULL;
+	cdata->var_table_count = 0;
+
+	return ERR_OK;
+}
+
+/**
  * @brief The entry rule of syntax analysis | <prologue>
  *
  * @param cdata Compiler data
@@ -440,12 +524,9 @@ err_t func_def(compiler_data_t *cdata, ast_node_t *program_node)
 		return result;
 
 	// Create a symbol table for the function
-	cdata->local_var_table = local_table_create(&cdata->function_table);
-	if (!cdata->local_var_table)
-	{
-		print_err_l("Failed to create a local symbol table.", ERR_INTERNAL, cdata->token.line);
-		return ERR_INTERNAL;
-	}
+	result = local_table_create(cdata);
+	if (result)
+		return result;
 
 	// <func-params>
 	result = func_params(cdata, table_entry);
@@ -459,9 +540,14 @@ err_t func_def(compiler_data_t *cdata, ast_node_t *program_node)
 
 	// <return-type>
 	result = return_type(cdata, def_node);
+	if (result)
+		return result;
 
-	// Destroy the local var table;
-	cdata->local_var_table = local_table_destroy(cdata->local_var_table);
+	// Leave the local var table
+	result = local_table_leave(cdata);
+	if (result)
+		return result;
+
 	if (cdata->local_var_table->parent)
 	{
 		print_err_l("A symbol table destroyed in func_def() does not have the function table as a parent, this should "
@@ -470,7 +556,7 @@ err_t func_def(compiler_data_t *cdata, ast_node_t *program_node)
 		return ERR_INTERNAL;
 	}
 
-	return result;
+	return ERR_OK;
 }
 
 /**
@@ -1009,24 +1095,18 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		}
 
 		// Create the local table for the then branch
-		cdata->local_var_table = local_table_create(cdata->local_var_table);
-		if (!cdata->local_var_table)
-		{
-			print_err("Failed to create a local variable table!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		result = local_table_create(cdata);
+		if (result)
+			return result;
 
 		result = block_start(cdata, then_block_node, statement_indent_level);
 		if (result)
 			return result;
 
 		// Destroy the local table for the then branch
-		cdata->local_var_table = local_table_destroy(cdata->local_var_table);
-		if (!cdata->local_var_table)
-		{
-			print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		result = local_table_leave(cdata);
+		if (result)
+			return result;
 
 		// Set the then branch
 		result = ast_if_set_then_block(statement_node, then_block_node);
@@ -1072,12 +1152,9 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 
 		// Create the local table
-		cdata->local_var_table = local_table_create(cdata->local_var_table);
-		if (!cdata->local_var_table)
-		{
-			print_err("Failed to create a local variable table!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		result = local_table_create(cdata);
+		if (result)
+			return result;
 
 		// <block-start>
 		ast_node_t *inner_block_node = ast_block_make();
@@ -1091,12 +1168,9 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 
 		// Destroy the local table
-		cdata->local_var_table = local_table_destroy(cdata->local_var_table);
-		if (!cdata->local_var_table)
-		{
-			print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		result = local_table_leave(cdata);
+		if (result)
+			return result;
 
 		statement_node = ast_while_make(condition_node);
 		if (!statement_node)
@@ -1165,12 +1239,11 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		}
 
 		// First create the local variable table and add the iterator as a variable
-		cdata->local_var_table = local_table_create(cdata->local_var_table);
-		if (!cdata->local_var_table)
+		result = local_table_create(cdata);
+		if (result)
 		{
-			print_err("Failed to create a local variable table!", ERR_INTERNAL);
 			free(iterator_id);
-			return ERR_INTERNAL;
+			return result;
 		}
 
 		symbol_data_t *entry = symtable_item_create(cdata->local_var_table, iterator_id);
@@ -1231,12 +1304,9 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 
 		// Destroy the local table
-		cdata->local_var_table = local_table_destroy(cdata->local_var_table);
-		if (!cdata->local_var_table)
-		{
-			print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		result = local_table_leave(cdata);
+		if (result)
+			return result;
 
 		return ast_block_add_statement(block_node, statement_node);
 	}
@@ -1441,24 +1511,18 @@ err_t else_if_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header
 		}
 
 		// Create the local table for the then branch
-		cdata->local_var_table = local_table_create(cdata->local_var_table);
-		if (!cdata->local_var_table)
-		{
-			print_err("Failed to create a local variable table!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		result = local_table_create(cdata);
+		if (result)
+			return result;
 
 		result = block_start(cdata, then_block_node, header_indent_level);
 		if (result)
 			return result;
 
 		// Destroy the local table for the then branch
-		cdata->local_var_table = local_table_destroy(cdata->local_var_table);
-		if (!cdata->local_var_table)
-		{
-			print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		result = local_table_leave(cdata);
+		if (result)
+			return result;
 
 		// Set the then branch
 		result = ast_if_set_then_block(*out_node, then_block_node);
@@ -1491,24 +1555,18 @@ err_t else_if_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header
 	}
 
 	// Create the local table for the else branch
-	cdata->local_var_table = local_table_create(cdata->local_var_table);
-	if (!cdata->local_var_table)
-	{
-		print_err("Failed to create a local variable table!", ERR_INTERNAL);
-		return ERR_INTERNAL;
-	}
+	result = local_table_create(cdata);
+	if (result)
+		return result;
 
 	result = block_start(cdata, *out_node, header_indent_level);
 	if (result)
 		return result;
 
 	// Destroy the local table for the else branch
-	cdata->local_var_table = local_table_destroy(cdata->local_var_table);
-	if (!cdata->local_var_table)
-	{
-		print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
-		return ERR_INTERNAL;
-	}
+	result = local_table_leave(cdata);
+	if (result)
+		return result;
 
 	return ERR_OK;
 }
