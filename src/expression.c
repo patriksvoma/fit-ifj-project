@@ -113,6 +113,7 @@ err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item, boo
 	case TOKEN_KEYWORD:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_DOLLAR;
+		// TODO: Support if statements
 		break;
 	case TOKEN_OPENING_BRACKET:
 		item.type = STACKITEM_TYPE_TERMINAL;
@@ -391,8 +392,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 {
 	err_t result;
 
-	data_type_t op1_type = TYPE_NONE;
-	data_type_t op2_type = TYPE_NONE;
 	ast_node_t *node = NULL;
 
 	switch (rule)
@@ -535,20 +534,25 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E.E
 	case RULE_DOT:
+		if (stack->top->node->node_type != AST_FUNC_CALL)
+		{
+			print_err_l("The \".\" operator must be followed by an extension signature.", ERR_SYNTAX, line);
+			return ERR_SYNTAX;
+		}
 
-		// TODO: Implement
+		// Reuse the function call node, change its type to ext_call, and add the base node
+		// The unique id and existence of the extension will be resolved during the semantic pass
+		node = stack->top->node;
+		node->node_type = AST_EXT_CALL;
+		node->eval_type = TYPE_NONE;
+		node->ext_call.base_node = stack->top->next->next->node;
+
+		result = symstack_pop_multiple(stack, 4);
+		if (result)
+			return result;
 		break;
 	// !E
 	case RULE_NEG:
-		// TODO: Remove redundant check
-		// Type check
-		op2_type = stack->top->node->eval_type;
-		if (op2_type != TYPE_BOOLEAN)
-		{
-			print_err_l("Invalid operand type for unary operator \"!\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_unary_op_make(OP_NEG, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 3);
@@ -557,15 +561,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// +E
 	case RULE_UPLUS:
-		// TODO: Remove redundant check
-		// Type check
-		op2_type = stack->top->node->eval_type;
-		if (op2_type != TYPE_INT && op2_type != TYPE_DOUBLE)
-		{
-			print_err_l("Invalid operand type for unary operator \"+\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_unary_op_make(OP_UPLUS, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 3);
@@ -574,15 +569,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// -E
 	case RULE_UMINUS:
-		// TODO: Remove redundant check
-		// Type check
-		op2_type = stack->top->node->eval_type;
-		if (op2_type != TYPE_INT && op2_type != TYPE_DOUBLE)
-		{
-			print_err_l("Invalid operand type for unary operator \"-\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_unary_op_make(OP_UMINUS, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 3);
@@ -591,36 +577,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E*E
 	case RULE_MUL:
-		// TODO: Remove redundant check
-		// Type check
-		op1_type = stack->top->next->next->node->eval_type;
-		op2_type = stack->top->node->eval_type;
-
-		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
-		{
-			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
-			if (stack->top->next->next->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
-		{
-			stack->top->node = ast_int2double_make(stack->top->node);
-			if (stack->top->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
-				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE))
-		{
-			print_err_l("Invalid operand type for binary operator \"*\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_binary_op_make(OP_MUL, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
@@ -629,36 +585,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E/E
 	case RULE_DIV:
-		// TODO: Remove redundant check
-		// Type check
-		op1_type = stack->top->next->next->node->eval_type;
-		op2_type = stack->top->node->eval_type;
-
-		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
-		{
-			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
-			if (stack->top->next->next->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
-		{
-			stack->top->node = ast_int2double_make(stack->top->node);
-			if (stack->top->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
-				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE))
-		{
-			print_err_l("Invalid operand type for binary operator \"/\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_binary_op_make(OP_DIV, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
@@ -667,37 +593,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E+E
 	case RULE_ADD:
-		// TODO: Remove redundant check
-		// Type check
-		op1_type = stack->top->next->next->node->eval_type;
-		op2_type = stack->top->node->eval_type;
-
-		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
-		{
-			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
-			if (stack->top->next->next->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
-		{
-			stack->top->node = ast_int2double_make(stack->top->node);
-			if (stack->top->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
-				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
-				 !(op1_type == TYPE_STRING && op2_type == TYPE_STRING))
-		{
-			print_err_l("Invalid operand type for binary operator \"+\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_binary_op_make(OP_PLUS, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
@@ -706,36 +601,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E-E
 	case RULE_SUB:
-		// TODO: Remove redundant check
-		// Type check
-		op1_type = stack->top->next->next->node->eval_type;
-		op2_type = stack->top->node->eval_type;
-
-		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
-		{
-			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
-			if (stack->top->next->next->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
-		{
-			stack->top->node = ast_int2double_make(stack->top->node);
-			if (stack->top->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
-				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE))
-		{
-			print_err_l("Invalid operand type for binary operator \"-\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_binary_op_make(OP_MINUS, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
@@ -744,37 +609,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E<E
 	case RULE_LT:
-		// TODO: Remove redundant check
-		// Type check
-		op1_type = stack->top->next->next->node->eval_type;
-		op2_type = stack->top->node->eval_type;
-
-		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
-		{
-			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
-			if (stack->top->next->next->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
-		{
-			stack->top->node = ast_int2double_make(stack->top->node);
-			if (stack->top->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
-				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
-				 !(op1_type == TYPE_STRING && op2_type == TYPE_STRING))
-		{
-			print_err_l("Invalid operand type for binary operator \"<\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_binary_op_make(OP_LESS, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
@@ -783,37 +617,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E<=E
 	case RULE_LE:
-		// TODO: Remove redundant check
-		// Type check
-		op1_type = stack->top->next->next->node->eval_type;
-		op2_type = stack->top->node->eval_type;
-
-		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
-		{
-			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
-			if (stack->top->next->next->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
-		{
-			stack->top->node = ast_int2double_make(stack->top->node);
-			if (stack->top->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
-				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
-				 !(op1_type == TYPE_STRING && op2_type == TYPE_STRING))
-		{
-			print_err_l("Invalid operand type for binary operator \"<=\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_binary_op_make(OP_LESS_EQUAL, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
@@ -822,37 +625,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E>E
 	case RULE_GT:
-		// TODO: Remove redundant check
-		// Type check
-		op1_type = stack->top->next->next->node->eval_type;
-		op2_type = stack->top->node->eval_type;
-
-		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
-		{
-			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
-			if (stack->top->next->next->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
-		{
-			stack->top->node = ast_int2double_make(stack->top->node);
-			if (stack->top->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
-				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
-				 !(op1_type == TYPE_STRING && op2_type == TYPE_STRING))
-		{
-			print_err_l("Invalid operand type for binary operator \">\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_binary_op_make(OP_GREATER, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
@@ -861,37 +633,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E>=E
 	case RULE_GE:
-		// TODO: Remove redundant check
-		// Type check
-		op1_type = stack->top->next->next->node->eval_type;
-		op2_type = stack->top->node->eval_type;
-
-		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
-		{
-			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
-			if (stack->top->next->next->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
-		{
-			stack->top->node = ast_int2double_make(stack->top->node);
-			if (stack->top->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
-				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
-				 !(op1_type == TYPE_STRING && op2_type == TYPE_STRING))
-		{
-			print_err_l("Invalid operand type for binary operator \">=\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_binary_op_make(OP_GREATER_EQUAL, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
@@ -900,39 +641,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E==E
 	case RULE_EQ:
-		// TODO: Remove redundant check
-		// Type check
-		op1_type = stack->top->next->next->node->eval_type;
-		op2_type = stack->top->node->eval_type;
-
-		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
-		{
-			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
-			if (stack->top->next->next->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
-		{
-			stack->top->node = ast_int2double_make(stack->top->node);
-			if (stack->top->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
-				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
-				 !(op1_type == TYPE_STRING && op2_type == TYPE_STRING) &&
-				 !(op1_type == TYPE_BOOLEAN && op2_type == TYPE_BOOLEAN) &&
-				 !(op1_type == TYPE_UNIT && op2_type == TYPE_UNIT))
-		{
-			print_err_l("Invalid operand type for binary operator \"==\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_binary_op_make(OP_EQUAL, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
@@ -941,39 +649,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E!=E
 	case RULE_NE:
-		// TODO: Remove redundant check
-		// Type check
-		op1_type = stack->top->next->next->node->eval_type;
-		op2_type = stack->top->node->eval_type;
-
-		if (op1_type == TYPE_INT && op2_type == TYPE_DOUBLE)
-		{
-			stack->top->next->next->node = ast_int2double_make(stack->top->next->next->node);
-			if (stack->top->next->next->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (op1_type == TYPE_DOUBLE && op2_type == TYPE_INT)
-		{
-			stack->top->node = ast_int2double_make(stack->top->node);
-			if (stack->top->node == NULL)
-			{
-				print_err_l("Failed to create an int2double node.", ERR_INTERNAL, line);
-				return ERR_INTERNAL;
-			}
-		}
-		else if (!(op1_type == TYPE_INT && op2_type == TYPE_INT) &&
-				 !(op1_type == TYPE_DOUBLE && op2_type == TYPE_DOUBLE) &&
-				 !(op1_type == TYPE_STRING && op2_type == TYPE_STRING) &&
-				 !(op1_type == TYPE_BOOLEAN && op2_type == TYPE_BOOLEAN) &&
-				 !(op1_type == TYPE_UNIT && op2_type == TYPE_UNIT))
-		{
-			print_err_l("Invalid operand type for binary operator \"!=\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_binary_op_make(OP_NOT_EQUAL, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
@@ -982,17 +657,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E&&E
 	case RULE_AND:
-		// TODO: Remove redundant check
-		// Type check
-		op1_type = stack->top->next->next->node->eval_type;
-		op2_type = stack->top->node->eval_type;
-
-		if (!(op1_type == TYPE_BOOLEAN && op2_type == TYPE_BOOLEAN))
-		{
-			print_err_l("Invalid operand type for binary operator \"&&\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_binary_op_make(OP_LOGIC_AND, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);
@@ -1001,17 +665,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E||E
 	case RULE_OR:
-		// TODO: Remove redundant check
-		// Type check
-		op1_type = stack->top->next->next->node->eval_type;
-		op2_type = stack->top->node->eval_type;
-
-		if (!(op1_type == TYPE_BOOLEAN && op2_type == TYPE_BOOLEAN))
-		{
-			print_err_l("Invalid operand type for binary operator \"||\".", ERR_SEMANTIC_INVALID_TYPE, line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		node = ast_binary_op_make(OP_LOGIC_OR, stack->top->next->next->node, stack->top->node);
 
 		result = symstack_pop_multiple(stack, 4);

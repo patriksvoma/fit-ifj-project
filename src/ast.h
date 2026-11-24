@@ -148,7 +148,8 @@ struct ast_node
 			ast_node_t *block;
 		} func_def;
 
-		// Function calling
+		// Function calls
+		// The order has to be the same as ext_call!
 		struct
 		{
 			char *unique_id;
@@ -163,7 +164,8 @@ struct ast_node
 			ast_node_t *block;
 		} ext_def;
 
-		// Extension calling
+		// Extension calls
+		// The order has to be the same as ext_call!
 		struct
 		{
 			char *unique_id;
