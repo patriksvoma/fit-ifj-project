@@ -200,6 +200,11 @@ run_case "boolthen-bool-comparison.ifj" 0 "boolthen/valid/boolthen-bool-comparis
 run_case "boolthen-bool-function-param.ifj" 0 "boolthen/valid/boolthen-bool-function-param.ifj"
 run_case "boolthen-bool-function-return.ifj" 0 "boolthen/valid/boolthen-bool-function-return.ifj"
 
+echo "$BLUE-----Bool operators-----$RESET"
+run_case "boolthen-bool-not-true.ifj" 0 "boolthen/valid/boolthen-bool-not-true.ifj"
+run_case "boolthen-bool-not-false.ifj" 0 "boolthen/valid/boolthen-bool-not-false.ifj"
+
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
