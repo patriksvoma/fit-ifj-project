@@ -254,6 +254,28 @@ err_t scan_fail(buffer_t *buf, err_t err)
 }
 
 /**
+ * @brief Finish an accepted token
+ *
+ * @param buf Token buffer
+ * @param token Accepted token
+ * @param comment_eol A multiline block comment was read on the current line
+ * @return err_t ERR_OK, or ERR_SYNTAX if a token follows a multiline block comment on the same line
+ */
+err_t scan_accept(buffer_t *buf, token_t *token, bool comment_eol)
+{
+	buf_free(buf);
+
+	if (comment_eol && token->type != TOKEN_EOF)
+	{
+		free(token->attribute.string);
+		token->attribute.string = NULL;
+		return ERR_SYNTAX;
+	}
+
+	return ERR_OK;
+}
+
+/**
  * @brief Get the next token object
  *
  * @param token
@@ -273,6 +295,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 	int c;
 
 	memset(token, 0, sizeof(*token));
+	(void)eol; // TODO: check EOL
 
 	while (true)
 	{
@@ -331,7 +354,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 				if (!isdigit(next))
 				{
 					token->type = TOKEN_DOT;
-					goto accept;
+					return scan_accept(&buf, token, comment_eol);
 				}
 
 				if (!buf_append(&buf, '.'))
@@ -357,37 +380,37 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			{
 			case EOF:
 				token->type = TOKEN_EOF;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '(':
 				token->type = TOKEN_OPENING_BRACKET;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case ')':
 				token->type = TOKEN_CLOSING_BRACKET;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case ',':
 				token->type = TOKEN_COMMA;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case ':':
 				token->type = TOKEN_COLON;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '+':
 				token->type = TOKEN_PLUS;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '-':
 				token->type = TOKEN_MINUS;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '*':
 				token->type = TOKEN_ASTERISK;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case ';':
 				token->type = TOKEN_SEMICOLON;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '=':
 				token->type = next_is('=') ? TOKEN_EQUAL : TOKEN_ASSIGN;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '!':
 				token->type = next_is('=') ? TOKEN_NOT_EQUAL : TOKEN_NEG;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '<':
 				if (next_is('='))
 					token->type = TOKEN_LESS_EQUAL;
@@ -395,20 +418,20 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 					token->type = TOKEN_FOR_GEN_ASSIGN;
 				else
 					token->type = TOKEN_LESS;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '>':
 				token->type = next_is('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '&':
 				if (!next_is('&'))
 					return scan_fail(&buf, ERR_SCANNER);
 				token->type = TOKEN_AND;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '|':
 				if (!next_is('|'))
 					return scan_fail(&buf, ERR_SCANNER);
 				token->type = TOKEN_OR;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			default:
 				return scan_fail(&buf, ERR_SCANNER);
 			}
@@ -427,7 +450,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (find_keyword(buf.data, &token->attribute.keyword))
 			{
 				token->type = TOKEN_KEYWORD;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			}
 
 			if (buf.data[0] == '@')
@@ -437,13 +460,13 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			{
 				token->type = TOKEN_BOOLEAN;
 				token->attribute.boolean = (buf.data[0] == 't');
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			}
 
 			token->type = TOKEN_IDENTIFIER;
 			token->attribute.string = buf.data;
 			buf.data = NULL;
-			goto accept;
+			return scan_accept(&buf, token, comment_eol);
 
 		case S_UNDERSCORE:
 			if (isalnum(c) || c == '_')
@@ -457,7 +480,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 			unread_char(c);
 			token->type = TOKEN_UNDERSCORE;
-			goto accept;
+			return scan_accept(&buf, token, comment_eol);
 
 		case S_ZERO:
 			if (c == '.')
@@ -789,7 +812,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 			unread_char(c);
 			token->type = TOKEN_DIV;
-			goto accept;
+			return scan_accept(&buf, token, comment_eol);
 
 		case S_COMMENT:
 			if (c == '\n' || c == EOF)
@@ -872,25 +895,14 @@ string:
 	token->type = TOKEN_STRING;
 	token->attribute.string = buf.data;
 	buf.data = NULL;
-	goto accept;
+	return scan_accept(&buf, token, comment_eol);
 
 number:
 	err = convert_number(buf.data, token);
 	if (err != ERR_OK)
 		return scan_fail(&buf, err);
 
-accept:
-	buf_free(&buf);
-
-	if (comment_eol && token->type != TOKEN_EOF)
-	{
-		free(token->attribute.string);
-		token->attribute.string = NULL;
-		return ERR_SYNTAX;
-	}
-
-	(void)eol; // TODO: check EOL
-	return ERR_OK;
+	return scan_accept(&buf, token, comment_eol);
 }
 
 static bool token_cached;
