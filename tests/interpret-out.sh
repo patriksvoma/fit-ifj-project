@@ -154,15 +154,20 @@ run_case "strLength" "functions/build-in/strLength.ifj" "" "0"
 #Build-in subStr
 run_case "subStr" "functions/build-in/subStr.ifj" "ahoj svete" "svete"
 run_case "subStr" "functions/build-in/subStr.ifj" "ah" "" "40"
-run_case "strLength" "functions/build-in/subStr.ifj" "ahoj svet" "" "40"
-run_case "strLength" "functions/build-in/subStr-invalid-start.ifj" "ahoj svete" "" "40"
-run_case "strLength" "functions/build-in/subStr-invalid-end.ifj" "ahoj svete" "" "40"
-run_case "strLength" "functions/build-in/subStr-invalid-both.ifj" "ahoj svete" "" "40"
+run_case "subStr" "functions/build-in/subStr.ifj" "ahoj svet" "" "40"
+run_case "subStr" "functions/build-in/subStr-invalid-start.ifj" "ahoj svete" "" "40"
+run_case "subStr" "functions/build-in/subStr-invalid-end.ifj" "ahoj svete" "" "40"
+run_case "subStr" "functions/build-in/subStr-invalid-both.ifj" "ahoj svete" "" "40"
 
 #Build-in ord
 run_case "ord" "functions/build-in/ord.ifj" "ahoj svete" "106"
 run_case "ord" "functions/build-in/ord-invalid.ifj" "-1" "-1"
 run_case "ord" "functions/build-in/ord-invalid.ifj" "10" "-1"
+
+#Build-in chr
+run_case "chr" "functions/build-in/chr.ifj" "97" "a"
+run_case "chr" "functions/build-in/chr.ifj" "-1" "" "58"
+run_case "chr" "functions/build-in/chr.ifj" "200" "" "58"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
