@@ -293,6 +293,29 @@ err_t scan_number(buffer_t *buf, token_t *token, bool comment_eol)
 }
 
 /**
+ * @brief Move the string from the buffer to the token and finish it
+ *
+ * @param buf Token buffer with the value of the string
+ * @param token Output token
+ * @param comment_eol A multiline block comment was read on the current line
+ * @return err_t Error
+ */
+err_t scan_string(buffer_t *buf, token_t *token, bool comment_eol)
+{
+	if (buf->data == NULL)
+	{
+		buf->data = calloc(1, 1);
+		if (buf->data == NULL)
+			return scan_fail(buf, ERR_INTERNAL);
+	}
+
+	token->type = TOKEN_STRING;
+	token->attribute.string = buf->data;
+	buf->data = NULL;
+	return scan_accept(buf, token, comment_eol);
+}
+
+/**
  * @brief Get the next token object
  *
  * @param token
@@ -709,7 +732,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 		case S_STRING:
 			if (c == '"')
-				goto string;
+				return scan_string(&buf, token, comment_eol);
 
 			if (c == '\n' || c == EOF)
 				return scan_fail(&buf, ERR_SCANNER);
@@ -759,7 +782,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			}
 
 			unread_char(c);
-			goto string;
+			return scan_string(&buf, token, comment_eol);
 
 		case S_MULTILINE_STRING:
 			if (c == EOF)
@@ -800,7 +823,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 						return scan_fail(&buf, ERR_INTERNAL);
 				}
 
-				goto string;
+				return scan_string(&buf, token, comment_eol);
 			}
 
 			unread_char(c);
@@ -899,19 +922,6 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			break;
 		}
 	}
-
-string:
-	if (buf.data == NULL)
-	{
-		buf.data = calloc(1, 1);
-		if (buf.data == NULL)
-			return scan_fail(&buf, ERR_INTERNAL);
-	}
-
-	token->type = TOKEN_STRING;
-	token->attribute.string = buf.data;
-	buf.data = NULL;
-	return scan_accept(&buf, token, comment_eol);
 }
 
 static bool token_cached;
