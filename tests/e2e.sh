@@ -213,6 +213,12 @@ run_case "boolthen-and.ifj" 0 "boolthen/valid/boolthen-and.ifj"
 run_case "boolthen-or.ifj" 0 "boolthen/valid/boolthen-or.ifj"
 run_case "boolthen-operators.ifj" 0 "boolthen/valid/boolthen-operators.ifj"
 
+echo "$BLUE-----While-----$RESET"
+run_case "boolthen-while.ifj" 0 "boolthen/valid/boolthen-while.ifj"
+
+echo "BLUE-----Built-in functions-----$RESET"
+run_case "boolthen-readboolean.ifj" 0 "boolthen/valid/boolthen-readboolean.ifj"
+run_case "boolthen-tostr.ifj" 0 "boolthen/valid/boolthen-tostr.ifj"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
