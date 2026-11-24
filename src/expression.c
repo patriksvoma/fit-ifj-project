@@ -812,7 +812,7 @@ err_t parse_function_call(compiler_data_t *cdata, const token_t *identifier_toke
 				// Check for a comma separating the parameters
 				if (cdata->token.type == TOKEN_COMMA)
 				{
-					result = get_next_token(&cdata->token, EOL_FORBIDDEN);
+					result = get_next_token(&cdata->token, EOL_OPTIONAL);
 					if (result)
 						return result;
 
