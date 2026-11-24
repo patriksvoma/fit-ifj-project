@@ -1,0 +1,4 @@
+import ifj26.*
+
+@main def sub_str(): Unit =
+  print(subStr(readLine(), -1, 10))

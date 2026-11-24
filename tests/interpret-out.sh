@@ -151,6 +151,14 @@ run_case "toInt" "functions/build-in/toInt.ifj" "" "120"
 run_case "strLength" "functions/build-in/strLength.ifj" "ahoj svete" "10"
 run_case "strLength" "functions/build-in/strLength.ifj" "" "0"
 
+#Build-in subStr
+run_case "subStr" "functions/build-in/subStr.ifj" "ahoj svete" "svete"
+run_case "subStr" "functions/build-in/subStr.ifj" "ah" "" "40"
+run_case "strLength" "functions/build-in/subStr.ifj" "ahoj svet" "" "40"
+run_case "strLength" "functions/build-in/subStr-invalid-start.ifj" "ahoj svete" "" "40"
+run_case "strLength" "functions/build-in/subStr-invalid-end.ifj" "ahoj svete" "" "40"
+run_case "strLength" "functions/build-in/subStr-invalid-both.ifj" "ahoj svete" "" "40"
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 	printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
