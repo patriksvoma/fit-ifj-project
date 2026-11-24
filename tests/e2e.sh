@@ -190,6 +190,12 @@ echo "$BLUE-----If without else-----$RESET"
 run_case "boolthen-if-true-no-else" 0 "boolthen/valid/boolthen-if-true-no-else.ifj"
 run_case "boolthen-if-false-no-else" 0 "boolthen/valid/boolthen-if-false-no-else.ifj"
 
+echo "BLUE-----If with else-----$RESET"
+run_case "boolthen-if-else.ifj" 0 "boolthen/valid/boolthen-if-else.ifj"
+run_case "boolthen-else-if.ifj" 0 "boolthen/valid/boolthen-else-if.ifj"
+run_case "boolthen-else-if-else.ifj" 0 "boolthen/valid/boolthen-else-if-else.ifj"
+run_case "boolthen-else-if-multiple.ifj" 0 "boolthen/valid/boolthen-else-if-multiple.ifj"
+
 echo "$BLUE-----Invalid if conditions-----$RESET"
 run_case "boolthen-if-wrong-type" 6 "boolthen/invalid/boolthen-if-wrong-type.ifj"
 
