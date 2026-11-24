@@ -106,6 +106,7 @@ echo "$YELLOW-----Interpret output tests-----$RESET"
 
 run_case "main-def" "main/main.ifj" "" ""
 run_case "print-int" "functions/build-in/print-int.ifj" "" "6"
+run_case "print-int-var" "functions/build-in/print-int-var.ifj" "" "5"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
