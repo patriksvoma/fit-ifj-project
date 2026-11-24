@@ -3,5 +3,3 @@ import ifj26.*
 @main def main(): Unit =
     if false then
         print("ac")
-
-    print("bc")

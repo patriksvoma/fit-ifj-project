@@ -196,6 +196,7 @@ run_case "boolthen-if-wrong-type" 6 "boolthen/invalid/boolthen-if-wrong-type.ifj
 echo "$BLUE-----Bool values-----$RESET"
 run_case "boolthen-bool-variable.ifj" 0 "boolthen/valid/boolthen-bool-variable.ifj"
 run_case "boolthen-bool-assignment.ifj" 0 "boolthen/valid/boolthen-bool-assignment.ifj"
+run_case "boolthen-bool-comparison.ifj" 0 "boolthen/valid/boolthen-bool-comparison.ifj"
 run_case "boolthen-bool-function-param.ifj" 0 "boolthen/valid/boolthen-bool-function-param.ifj"
 run_case "boolthen-bool-function-return.ifj" 0 "boolthen/valid/boolthen-bool-function-return.ifj"
 

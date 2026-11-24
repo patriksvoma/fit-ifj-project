@@ -4,4 +4,3 @@ import ifj26.*
     if 54 then
         print("ac")
 
-    print("bc")
