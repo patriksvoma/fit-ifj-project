@@ -1,4 +1,4 @@
 import ifj26.*
 
-@main def print_int(): Unit =
+@main def print_string(): Unit =
   print("ahoj svete")

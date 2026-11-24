@@ -105,10 +105,13 @@ run_case()
 echo "$YELLOW-----Interpret output tests-----$RESET"
 
 run_case "main-def" "main/main.ifj" "" ""
+
+#Build-it print tests
 run_case "print-int" "functions/build-in/print-int.ifj" "" "6"
 run_case "print-int-var" "functions/build-in/print-int-var.ifj" "" "5"
 run_case "print-double" "functions/build-in/print-double.ifj" "" "0x1.a9db22d0e5604p+2"
 run_case "print-string" "functions/build-in/print-string.ifj" "" "ahoj svete"
+run_case "print-unit" "functions/build-in/print-unit.ifj" "" "()"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
