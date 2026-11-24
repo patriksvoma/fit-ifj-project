@@ -113,6 +113,12 @@ run_case "print-double" "functions/build-in/print-double.ifj" "" "0x1.a9db22d0e5
 run_case "print-string" "functions/build-in/print-string.ifj" "" "ahoj svete"
 run_case "print-unit" "functions/build-in/print-unit.ifj" "" "()"
 
+#Build-in readLine tests
+run_case "readLine" "functions/build-in/readLine.ifj" "ahoj" "ahoj"
+run_case "readLine" "functions/build-in/readLine.ifj" "" ""
+
+
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 	printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
