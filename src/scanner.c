@@ -95,6 +95,7 @@ bool find_keyword(const char *word, keyword_t *keyword)
 unsigned scanner_line = 1;		  // Line of the last read character
 unsigned scanner_column = 0;	  // Column of the last read character
 unsigned scanner_prev_column = 0; // Column before the last newline, used by unread_char
+bool scanner_first_token = true;   // The next token is the first one in the file
 
 /**
  * @brief Read the next character from the input and update the position
@@ -326,7 +327,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 {
 	buffer_t buf = {0};
 	state_t state = S_START;
-	bool newline_seen = false;
+	bool newline_seen = scanner_first_token;
 	token->indent = 0;
 	unsigned depth = 0;
 	bool block_newline = false;
@@ -356,6 +357,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 			token->line = scanner_line;
 			token->starts_logical_line = newline_seen;
+			scanner_first_token = false;
 
 			if (isalpha(c) || c == '@')
 			{
