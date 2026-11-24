@@ -1,0 +1,4 @@
+import ifj26.*
+
+@main def read_bool(): Unit =
+  print(readBoolean())

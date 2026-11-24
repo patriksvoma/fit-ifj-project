@@ -123,6 +123,20 @@ run_case "readInt" "functions/build-in/readInt.ifj" "" "0"
 run_case "readInt" "functions/build-in/readInt.ifj" "asd10da" "0"
 run_case "readInt" "functions/build-in/readInt.ifj" "10__0" "0"
 
+#Build-in readDouble
+run_case "readDouble" "functions/build-in/readDouble.ifj" "0x0p+0" "0x0p+0"
+run_case "readDouble" "functions/build-in/readDouble.ifj" "10" "0x1.4p+3"
+run_case "readDouble" "functions/build-in/readDouble.ifj" "10__" "0x0p+0"
+run_case "readDouble" "functions/build-in/readDouble.ifj" "fdh541n" "0x0p+0"
+run_case "readDouble" "functions/build-in/readDouble.ifj" "" "0x0p+0"
+
+#Build-in readBoolean
+run_case "readBool" "functions/build-in/readBool.ifj" "0" "false"
+run_case "readBool" "functions/build-in/readBool.ifj" "1" "false"
+run_case "readBool" "functions/build-in/readBool.ifj" "asdtruefs" "false"
+run_case "readBool" "functions/build-in/readBool.ifj" "_true" "false"
+run_case "readBool" "functions/build-in/readBool.ifj" "true" "true"
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 	printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
