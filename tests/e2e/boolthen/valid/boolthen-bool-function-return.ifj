@@ -1,0 +1,7 @@
+import ifj26.*
+
+def foo(): Boolean =
+    true
+
+@main def main(): Unit =
+    val x: Boolean = foo()

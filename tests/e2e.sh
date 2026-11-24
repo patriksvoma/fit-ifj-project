@@ -186,6 +186,64 @@ run_case "builtin-substr" 0 "builtins/valid/builtin-substr.ifj"
 run_case "builtin-ord" 0 "builtins/valid/builtin-ord.ifj"
 run_case "builtin-chr" 0 "builtins/valid/builtin-chr.ifj"
 
+echo "$YELLOW-----BOOLTHEN-----$RESET"
+echo "$BLUE-----If without else-----$RESET"
+run_case "boolthen-if-true-no-else" 0 "boolthen/valid/boolthen-if-true-no-else.ifj"
+run_case "boolthen-if-false-no-else" 0 "boolthen/valid/boolthen-if-false-no-else.ifj"
+
+echo "BLUE-----If with else-----$RESET"
+run_case "boolthen-if-else.ifj" 0 "boolthen/valid/boolthen-if-else.ifj"
+run_case "boolthen-else-if.ifj" 0 "boolthen/valid/boolthen-else-if.ifj"
+run_case "boolthen-else-if-else.ifj" 0 "boolthen/valid/boolthen-else-if-else.ifj"
+run_case "boolthen-else-if-multiple.ifj" 0 "boolthen/valid/boolthen-else-if-multiple.ifj"
+
+echo "$BLUE-----Invalid conditions-----$RESET"
+run_case "boolthen-if-wrong-type-1" 6 "boolthen/invalid/boolthen-if-wrong-type-1.ifj"
+run_case "boolthen-if-wrong-type-2" 6 "boolthen/invalid/boolthen-if-wrong-type-2.ifj"
+run_case "boolthen-if-wrong-type-3" 6 "boolthen/invalid/boolthen-if-wrong-type-3.ifj"
+
+run_case "boolthen-and-wrong-type-1.ifj" 6 "boolthen/invalid/boolthen-and-wrong-type-1.ifj"
+run_case "boolthen-and-wrong-type-2.ifj" 6 "boolthen/invalid/boolthen-and-wrong-type-2.ifj"
+run_case "boolthen-and-wrong-type-3.ifj" 6 "boolthen/invalid/boolthen-and-wrong-type-3.ifj"
+
+run_case "boolthen-or-wrong-type-1.ifj" 6 "boolthen/invalid/boolthen-or-wrong-type-1.ifj"
+run_case "boolthen-or-wrong-type-2.ifj" 6 "boolthen/invalid/boolthen-or-wrong-type-2.ifj"
+run_case "boolthen-or-wrong-type-3.ifj" 6 "boolthen/invalid/boolthen-or-wrong-type-3.ifj"
+
+run_case "boolthen-assignment-wrong-type-1.ifj" 6 "boolthen/invalid/boolthen-assignment-wrong-type-1.ifj"
+run_case "boolthen-assignment-wrong-type-2.ifj" 6 "boolthen/invalid/boolthen-assignment-wrong-type-2.ifj"
+run_case "boolthen-assignment-wrong-type-3.ifj" 6 "boolthen/invalid/boolthen-assignment-wrong-type-3.ifj"
+
+run_case "boolthen-not-wrong-type-1.ifj" 6 "boolthen/invalid/boolthen-not-wrong-type-1.ifj"
+run_case "boolthen-not-wrong-type-2.ifj" 6 "boolthen/invalid/boolthen-not-wrong-type-2.ifj"
+run_case "boolthen-not-wrong-type-3.ifj" 6 "boolthen/invalid/boolthen-not-wrong-type-3.ifj"
+
+run_case "boolthen-function-param-wrong-type-1.ifj" 5 "boolthen/invalid/boolthen-function-param-wrong-type-1.ifj"
+run_case "boolthen-function-param-wrong-type-2.ifj" 5 "boolthen/invalid/boolthen-function-param-wrong-type-2.ifj"
+run_case "boolthen-function-param-wrong-type-3.ifj" 5 "boolthen/invalid/boolthen-function-param-wrong-type-3.ifj"
+
+echo "$BLUE-----Bool values-----$RESET"
+run_case "boolthen-bool-variable.ifj" 0 "boolthen/valid/boolthen-bool-variable.ifj"
+run_case "boolthen-bool-assignment.ifj" 0 "boolthen/valid/boolthen-bool-assignment.ifj"
+run_case "boolthen-bool-comparison.ifj" 0 "boolthen/valid/boolthen-bool-comparison.ifj"
+
+run_case "boolthen-bool-function-param.ifj" 0 "boolthen/valid/boolthen-bool-function-param.ifj"
+run_case "boolthen-bool-function-return.ifj" 0 "boolthen/valid/boolthen-bool-function-return.ifj"
+
+echo "$BLUE-----Bool operators-----$RESET"
+run_case "boolthen-bool-not-true.ifj" 0 "boolthen/valid/boolthen-bool-not-true.ifj"
+run_case "boolthen-bool-not-false.ifj" 0 "boolthen/valid/boolthen-bool-not-false.ifj"
+run_case "boolthen-and.ifj" 0 "boolthen/valid/boolthen-and.ifj"
+run_case "boolthen-or.ifj" 0 "boolthen/valid/boolthen-or.ifj"
+run_case "boolthen-operators.ifj" 0 "boolthen/valid/boolthen-operators.ifj"
+
+echo "$BLUE-----While-----$RESET"
+run_case "boolthen-while.ifj" 0 "boolthen/valid/boolthen-while.ifj"
+
+echo "BLUE-----Built-in functions-----$RESET"
+run_case "boolthen-readboolean.ifj" 0 "boolthen/valid/boolthen-readboolean.ifj"
+run_case "boolthen-tostr.ifj" 0 "boolthen/valid/boolthen-tostr.ifj"
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
