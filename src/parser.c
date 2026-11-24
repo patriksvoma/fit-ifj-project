@@ -1214,7 +1214,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			print_err_l("Expected the \"do\" keyword after a for guard.", ERR_SYNTAX, cdata->token.line);
 			return ERR_SYNTAX;
 		}
-		result = get_next_token(&cdata->token, EOL_REQUIRED);
+		result = get_next_token(&cdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
 
