@@ -535,8 +535,22 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 		break;
 	// E.E
 	case RULE_DOT:
+		if (stack->top->node->node_type != AST_FUNC_CALL)
+		{
+			print_err_l("The \".\" operator must be followed by an extension signature.", ERR_SYNTAX, line);
+			return ERR_SYNTAX;
+		}
 
-		// TODO: Implement
+		// Reuse the function call node, change its type to ext_call, and add the base node
+		// The unique id and existence of the extension will be resolved during the semantic pass
+		node = stack->top->node;
+		node->node_type = AST_EXT_CALL;
+		node->eval_type = TYPE_NONE;
+		node->ext_call.base_node = stack->top->next->next->node;
+
+		result = symstack_pop_multiple(stack, 4);
+		if (result)
+			return result;
 		break;
 	// !E
 	case RULE_NEG:
