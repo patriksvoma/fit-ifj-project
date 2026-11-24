@@ -724,7 +724,7 @@ err_t try_parse_func_call(compiler_data_t *cdata, symstack_item_t *item, bool *c
 	err_t result = peek_next_token(&next_token, EOL_OPTIONAL);
 	if (result)
 		return result;
-	if (next_token.type != TOKEN_OPENING_BRACKET)
+	if (next_token.type != TOKEN_OPENING_BRACKET || next_token.starts_logical_line)
 		return ERR_OK;
 
 	// Parse the function call
@@ -777,7 +777,7 @@ err_t parse_function_call(compiler_data_t *cdata, const token_t *identifier_toke
 		return result;
 
 	// Cycle through parameter lists
-	while (cdata->token.type == TOKEN_OPENING_BRACKET)
+	while (cdata->token.type == TOKEN_OPENING_BRACKET && !cdata->token.starts_logical_line)
 	{
 		// Add an empty parameter list into the AST
 		result = ast_func_call_add_empty_param_list(call_node);
