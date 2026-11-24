@@ -331,14 +331,13 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 	unsigned depth = 0;
 	bool block_newline = false;
 	bool comment_eol = false;
-	int c;
 
 	memset(token, 0, sizeof(*token));
 	(void)eol; // TODO: check EOL
 
 	while (true)
 	{
-		c = next_char();
+		int c = next_char();
 
 		switch (state)
 		{
