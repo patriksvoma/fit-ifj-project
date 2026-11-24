@@ -334,15 +334,7 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	const symbol_data_t *entry = symtable_item_find(&cdata->extension_table, node->ext_call.unique_id);
-
-	if (entry == NULL)
-	{
-		// TODO: Formatted output with the extension name
-		print_err("An extension that was called is not defined.", ERR_SEMANTIC_UNDEFINED);
-		return ERR_SEMANTIC_UNDEFINED;
-	}
-
+	// Resolve the base node first, so its type can be used
 	if (node->ext_call.base_node == NULL)
 	{
 		print_err("An extension calls base node is NULL. This should not happen!", ERR_SEMANTIC_INVALID_TYPE);
@@ -353,13 +345,31 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 	if (result)
 		return result;
 
-	// Check extension base type
-	if (node->ext_call.base_node->eval_type != entry->data.extension.base_param.type)
+	if (node->ext_call.base_node->eval_type == TYPE_NONE)
 	{
-		print_err(
-			"An extension was called on a different type than it was defined for. This probably should not happen.",
-			ERR_SEMANTIC_INVALID_ARG);
-		return ERR_SEMANTIC_INVALID_ARG;
+		print_err("Extensions cannot be called on TYPE_NONE!", ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
+	}
+
+	// Generate the unique id of the extension based on the resolved type
+	char *new_id = generate_unique_ext_id(node->ext_call.unique_id, node->ext_call.base_node->eval_type);
+
+	if (new_id == NULL)
+	{
+		print_err("Failed to allocate memory for an extension call unique_id.", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	free(node->ext_call.unique_id);
+	node->ext_call.unique_id = new_id;
+
+	const symbol_data_t *entry = symtable_item_find(&cdata->extension_table, node->ext_call.unique_id);
+
+	if (entry == NULL)
+	{
+		// TODO: Formatted output with the extension name
+		print_err("An extension that was called is not defined.", ERR_SEMANTIC_UNDEFINED);
+		return ERR_SEMANTIC_UNDEFINED;
 	}
 
 	// Check parameter list count
@@ -411,8 +421,8 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 				param = node->ext_call.param_lists[i]->param_node[j];
 			}
 
-			// Check if the function is defined with TYPE_ANY
-			if (entry->data.function.param_lists[i]->params[j]->type == TYPE_ANY)
+			// Check if the extension is defined with TYPE_ANY
+			if (entry->data.extension.param_lists[i]->params[j]->type == TYPE_ANY)
 			{
 				continue;
 			}
