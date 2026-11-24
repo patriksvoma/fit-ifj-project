@@ -33,7 +33,7 @@ err_t else_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header_in
 err_t else_if_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header_indent_level);
 err_t for_generator(compiler_data_t *cdata, ast_node_t *for_node);
 err_t for_by(compiler_data_t *cdata, ast_node_t *for_node);
-err_t for_guard(compiler_data_t *cdata, ast_node_t *for_node);
+err_t for_guard(compiler_data_t *cdata, ast_node_t *for_node, bool multiline_header, unsigned generator_indent);
 err_t val_var_def(compiler_data_t *cdata, ast_node_t *var_def_node, symbol_data_t *table_entry);
 err_t expression(compiler_data_t *cdata, ast_node_t **return_node);
 
@@ -461,6 +461,8 @@ err_t func_def(compiler_data_t *cdata, ast_node_t *program_node)
 
 	// <return-type>
 	result = return_type(cdata, def_node);
+	if (result)
+		return result;
 
 	// Destroy the local var table;
 	cdata->local_var_table = local_table_destroy(cdata->local_var_table);
@@ -472,7 +474,7 @@ err_t func_def(compiler_data_t *cdata, ast_node_t *program_node)
 		return ERR_INTERNAL;
 	}
 
-	return result;
+	return ERR_OK;
 }
 
 /**
@@ -1121,10 +1123,21 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		if (result)
 			return result;
 
+		bool multiline_header = cdata->token.starts_logical_line;
+		unsigned generator_indent = cdata->token.indent;
+
 		// identifier
 		if (cdata->token.type != TOKEN_IDENTIFIER)
 		{
 			print_err_l("Expected an iterator identifier after \"for\".", ERR_SYNTAX, cdata->token.line);
+			return ERR_SYNTAX;
+		}
+
+		if (multiline_header && generator_indent <= statement_indent_level)
+		{
+			print_err_l(
+				"The generator and guards in a multiline for loop must be indented further than the \"for\" keyword.",
+				ERR_SYNTAX, cdata->token.line);
 			return ERR_SYNTAX;
 		}
 
@@ -1144,6 +1157,13 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 		}
 
+		if (cdata->token.starts_logical_line)
+		{
+			free(iterator_id);
+			print_err_l("The generator of a for loop must be on one logical line.", ERR_SYNTAX, cdata->token.line);
+			return ERR_SYNTAX;
+		}
+
 		// <-
 		if (cdata->token.type != TOKEN_FOR_GEN_ASSIGN)
 		{
@@ -1156,6 +1176,13 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		{
 			free(iterator_id);
 			return result;
+		}
+
+		if (cdata->token.starts_logical_line)
+		{
+			free(iterator_id);
+			print_err_l("The generator of a for loop must be on one logical line.", ERR_SYNTAX, cdata->token.line);
+			return ERR_SYNTAX;
 		}
 
 		// <expression>
@@ -1204,7 +1231,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 
 		// <for-guard>
-		result = for_guard(cdata, statement_node);
+		result = for_guard(cdata, statement_node, multiline_header, generator_indent);
 		if (result)
 			return result;
 
@@ -1214,6 +1241,29 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			print_err_l("Expected the \"do\" keyword after a for guard.", ERR_SYNTAX, cdata->token.line);
 			return ERR_SYNTAX;
 		}
+		if (multiline_header)
+		{
+			if (!cdata->token.starts_logical_line)
+			{
+				print_err_l("The \"do\" keyword in a multiline for loop must be on a separate line.", ERR_SYNTAX,
+							cdata->token.line);
+				return ERR_SYNTAX;
+			}
+			else if (cdata->token.indent != statement_indent_level)
+			{
+				print_err_l(
+					"The \"do\" keyword in a multiline for loop must be on the same indentation level as \"for\".",
+					ERR_SYNTAX, cdata->token.line);
+				return ERR_SYNTAX;
+			}
+		}
+		else if (cdata->token.starts_logical_line)
+		{
+			print_err_l("The \"do\" keyword in a single line for loop header must not be on a separate line.",
+						ERR_SYNTAX, cdata->token.line);
+			return ERR_SYNTAX;
+		}
+
 		result = get_next_token(&cdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
@@ -1530,12 +1580,25 @@ err_t for_generator(compiler_data_t *cdata, ast_node_t *for_node)
 	{
 		err_t result;
 
+		if (cdata->token.starts_logical_line)
+		{
+			print_err_l("The generator of a for loop must be on a single logical line.", ERR_SYNTAX, cdata->token.line);
+			return ERR_SYNTAX;
+		}
+
 		// to
 		if (!strcmp(cdata->token.attribute.string, "to"))
 		{
 			result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 			if (result)
 				return result;
+
+			if (cdata->token.starts_logical_line)
+			{
+				print_err_l("The generator of a for loop must be on a single logical line.", ERR_SYNTAX,
+							cdata->token.line);
+				return ERR_SYNTAX;
+			}
 
 			// <expression>
 			ast_node_t *to_node;
@@ -1557,6 +1620,13 @@ err_t for_generator(compiler_data_t *cdata, ast_node_t *for_node)
 			result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 			if (result)
 				return result;
+
+			if (cdata->token.starts_logical_line)
+			{
+				print_err_l("The generator of a for loop must be on a single logical line.", ERR_SYNTAX,
+							cdata->token.line);
+				return ERR_SYNTAX;
+			}
 
 			// <expression>
 			ast_node_t *until_node;
@@ -1590,9 +1660,21 @@ err_t for_by(compiler_data_t *cdata, ast_node_t *for_node)
 	// by
 	if (cdata->token.type == TOKEN_IDENTIFIER && !strcmp(cdata->token.attribute.string, "by"))
 	{
+		if (cdata->token.starts_logical_line)
+		{
+			print_err_l("The generator of a for loop must be on a single logical line.", ERR_SYNTAX, cdata->token.line);
+			return ERR_SYNTAX;
+		}
+
 		result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 		if (result)
 			return result;
+
+		if (cdata->token.starts_logical_line)
+		{
+			print_err_l("The generator of a for loop must be on a single logical line.", ERR_SYNTAX, cdata->token.line);
+			return ERR_SYNTAX;
+		}
 
 		// <expression>
 		ast_node_t *by_node;
@@ -1620,16 +1702,47 @@ err_t for_by(compiler_data_t *cdata, ast_node_t *for_node)
  *
  * @param cdata Compiler data
  * @param for_node AST for statement node
+ * @param multiline_header Whether the for header uses the multiline form
+ * @param generator_indent Indentation level of the for loop generator
  * @return err_t Error code
  */
-err_t for_guard(compiler_data_t *cdata, ast_node_t *for_node)
+err_t for_guard(compiler_data_t *cdata, ast_node_t *for_node, bool multiline_header, unsigned generator_indent)
 {
 	// if
 	if (cdata->token.type == TOKEN_KEYWORD && cdata->token.attribute.keyword == KW_IF)
 	{
+		if (multiline_header)
+		{
+			if (!cdata->token.starts_logical_line)
+			{
+				print_err_l("All guards in a multiline for loop must be on their own line.", ERR_SYNTAX,
+							cdata->token.line);
+				return ERR_SYNTAX;
+			}
+			else if (cdata->token.indent != generator_indent)
+			{
+				print_err_l("The generator and all guards in a multiline for loop must be on the same indent level.",
+							ERR_SYNTAX, cdata->token.line);
+				return ERR_SYNTAX;
+			}
+		}
+		else if (cdata->token.starts_logical_line)
+		{
+			print_err_l("All guards in a single-line for loop header must be on the same logical line.", ERR_SYNTAX,
+						cdata->token.line);
+			return ERR_SYNTAX;
+		}
+
 		err_t result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 		if (result)
 			return result;
+
+		if (cdata->token.starts_logical_line)
+		{
+			print_err_l("A for loop guard condition must be on the same line as the \"if\".", ERR_SYNTAX,
+						cdata->token.line);
+			return ERR_SYNTAX;
+		}
 
 		// <expression>
 		ast_node_t *condition_node;
@@ -1642,7 +1755,7 @@ err_t for_guard(compiler_data_t *cdata, ast_node_t *for_node)
 			return result;
 
 		// <for-guard>
-		return for_guard(cdata, for_node);
+		return for_guard(cdata, for_node, multiline_header, generator_indent);
 	}
 
 	// Epsilon rule
