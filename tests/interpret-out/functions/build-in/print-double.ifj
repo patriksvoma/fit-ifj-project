@@ -1,0 +1,4 @@
+import ifj26.*
+
+@main def print_int(): Unit =
+  print(6.654)
