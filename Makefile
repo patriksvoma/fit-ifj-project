@@ -3,7 +3,7 @@
 # Authors:
 #	xsvomap00 (Patrik Švoma)
 
-.PHONY: build check build-check test e2e-test format clean
+.PHONY: build check build-check test e2e-test interpret-test format clean
 
 CC = gcc-14
 CFLAGS = -Wall -Wextra -Werror -MMD -MP
@@ -48,6 +48,10 @@ tests/%.test: tests/%.c $(LIB_SRC) $(UNITY_DIR)/unity.c
 # Run compiler integration tests against source fixtures
 e2e-test: build
 	sh ./tests/e2e.sh
+
+# Run generated IFJcode26 output through an external interpreter
+interpret-test: build
+	sh ./tests/interpret-out.sh
 
 # Formats all .c and .h files
 format:

@@ -285,6 +285,7 @@ void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 	new_func_def->for_counter = 0;
 	new_func_def->if_counter = 0;
 	new_func_def->while_counter = 0;
+	new_func_def->read_val_counter = 0;
 
 	new_func_def->func_name = unique_id;
 
@@ -296,6 +297,13 @@ void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 	}
 
 	printf("LABEL %s\n", unique_id);
+
+	// Prints another label to know witch function is main, if named differently
+	if (func_params->data.function.is_main && strcmp(unique_id, "main") != 0)
+	{
+		printf("LABEL main\n");
+	}
+
 	printf("CREATEFRAME\n");
 	printf("PUSHFRAME\n");
 
@@ -318,12 +326,30 @@ void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 }
 
 /**
+ * @brief Function to change output of buil-in read functions from nil to correct output
+ *
+ * @param new_func_def Passed for uniquely naming labels when calling readInt, readDouble and readBoolean
+ */
+void read_val_nil(names_counter *new_func_def, const char *ret)
+{
+	unsigned curr_read = new_func_def->read_val_counter;
+	new_func_def->read_val_counter++;
+	printf("MOVE GF@temp2 nil@nil\n");
+	printf("JUMPIFNEQ %s$read$%u GF@temp1 GF@temp2\n", new_func_def->func_name, curr_read);
+	printf("PUSHS %s\n", ret);
+	printf("JUMP %s$read$%u$end\n", new_func_def->func_name, curr_read);
+	printf("LABEL %s$read$%u\n", new_func_def->func_name, curr_read);
+	printf("PUSHS GF@temp1\n");
+	printf("LABEL %s$read$%u$end\n", new_func_def->func_name, curr_read);
+}
+
+/**
  * @brief Prints code for build-in function calling
  *
  * @param identifier Name of the functions
  * @param param_lists Pointer to array of lists of parameters
  * @param symtables Passed only so generate_nodes() can be called and not to be lost
- * @param new_func_def Passed only so generate_nodes() can be called and not to be lost
+ * @param new_func_def Passed for uniquely naming labels when calling readInt, readDouble and readBoolean
  * @return true When the function as a built-in function
  * @return false When it wasn't a built-in function
  */
@@ -348,7 +374,7 @@ bool print_build_in_func_call(const char *identifier, param_node_list_t **param_
 		}
 		printf("PUSHS nil@nil\n");
 	}
-	// TODO: Nejspis bude potreba predelat
+
 	else if (strcmp(id, "readLine") == 0)
 	{
 		printf("READ GF@temp1 string\n");
@@ -357,17 +383,17 @@ bool print_build_in_func_call(const char *identifier, param_node_list_t **param_
 	else if (strcmp(id, "readInt") == 0)
 	{
 		printf("READ GF@temp1 int\n");
-		printf("PUSHS GF@temp1\n");
+		read_val_nil(new_func_def, "int@0");
 	}
 	else if (strcmp(id, "readDouble") == 0)
 	{
 		printf("READ GF@temp1 float\n");
-		printf("PUSHS GF@temp1\n");
+		read_val_nil(new_func_def, "float@0x0p+0");
 	}
 	else if (strcmp(id, "readBoolean") == 0)
 	{
 		printf("READ GF@temp1 bool\n");
-		printf("PUSHS GF@temp1\n");
+		read_val_nil(new_func_def, "bool@false");
 	}
 	else if (strcmp(id, "toStr") == 0)
 	{
@@ -469,6 +495,7 @@ err_t print_ext_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 	new_func_def->for_counter = 0;
 	new_func_def->if_counter = 0;
 	new_func_def->while_counter = 0;
+	new_func_def->read_val_counter = 0;
 
 	new_func_def->func_name = unique_id;
 
