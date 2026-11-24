@@ -96,7 +96,7 @@ run_case()
 		cat "$stdout_file" >&2
 		printf '>\n' >&2
 		if [ -s "$stderr_file" ]; then
-			cat "$stderr_file" >&2
+			cat "$stderr_file" >&2¨
 		fi
 		failed=$((failed + 1))
 	fi
@@ -105,6 +105,7 @@ run_case()
 echo "$YELLOW-----Interpret output tests-----$RESET"
 
 run_case "main-def" "main/main.ifj" "" ""
+run_case "print-int" "functions/build-in/print-int.ifj" "" "6"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then

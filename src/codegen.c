@@ -296,6 +296,13 @@ void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 	}
 
 	printf("LABEL %s\n", unique_id);
+
+	// Prints another label to know witch function is main, if named differently
+	if (func_params->data.function.is_main && strcmp(unique_id, "main") != 0)
+	{
+		printf("LABEL main\n");
+	}
+
 	printf("CREATEFRAME\n");
 	printf("PUSHFRAME\n");
 
