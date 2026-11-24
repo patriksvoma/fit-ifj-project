@@ -355,18 +355,28 @@ err_t func_def(compiler_data_t *cdata, ast_node_t *program_node)
 	// Create a new AST node and a symbol table entry
 	if (cdata->in_extension)
 	{
-		// FIXME: Extension should probably be able to have the same name if they are extending a different type
-		// If the extension was already defined, throw an error
-		if (symtable_item_defined(&cdata->extension_table, cdata->token.attribute.string))
+		// Generate a unique id for the extension based on the type
+		char *unique_id = generate_unique_ext_id(cdata->token.attribute.string, cdata->last_extension_param.type);
+		if (!unique_id)
 		{
+			free(unique_id);
+			print_err_l("Failed to generate a unique extension id.", ERR_INTERNAL, cdata->token.line);
+			return ERR_INTERNAL;
+		}
+
+		// If the extension was already defined, throw an error
+		if (symtable_item_defined(&cdata->extension_table, unique_id))
+		{
+			free(unique_id);
 			print_err_l("An extension can only be defined once.", ERR_SEMANTIC_REDEFINITION, cdata->token.line);
 			return ERR_SEMANTIC_REDEFINITION;
 		}
 
 		// Create a symbol table entry
-		table_entry = symtable_item_create(&cdata->extension_table, cdata->token.attribute.string);
+		table_entry = symtable_item_create(&cdata->extension_table, unique_id);
 		if (!table_entry)
 		{
+			free(unique_id);
 			print_err_l("Failed to create a symbol table entry in func_def().", ERR_INTERNAL, cdata->token.line);
 			return ERR_INTERNAL;
 		}
@@ -378,10 +388,12 @@ err_t func_def(compiler_data_t *cdata, ast_node_t *program_node)
 		def_node = ast_ext_def_make(cdata->last_extension_param.type);
 		if (!def_node)
 		{
+			free(unique_id);
 			print_err_l("Failed to create an AST Node in func_def().", ERR_INTERNAL, cdata->token.line);
 			return ERR_INTERNAL;
 		}
-		result = ast_ext_def_set_id(def_node, cdata->token.attribute.string);
+		result = ast_ext_def_set_id(def_node, unique_id);
+		free(unique_id);
 		if (result)
 			return result;
 		result = ast_program_add_ext_def(program_node, def_node);
