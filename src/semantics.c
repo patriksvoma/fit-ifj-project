@@ -872,7 +872,7 @@ err_t check_var_use(const ast_node_t *node, const compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	if (node->variable_use_unique_id == NULL)
+	if (node->variable_use.unique_id == NULL)
 	{
 		print_err("A variable use unique_id is NULL. This should not happen!", ERR_INTERNAL);
 		return ERR_INTERNAL;
