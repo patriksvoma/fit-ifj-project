@@ -185,6 +185,7 @@ err_t ext_def(compiler_data_t *cdata, ast_node_t *program_node)
 		print_err_l("Missing \"(\" after an extension keyword.", ERR_SYNTAX, cdata->token.line);
 		return ERR_SYNTAX;
 	}
+	cdata->in_parenthesis = true;
 	result = get_next_token(&cdata->token, EOL_OPTIONAL);
 	if (result)
 		return result;
@@ -200,6 +201,7 @@ err_t ext_def(compiler_data_t *cdata, ast_node_t *program_node)
 		print_err_l("Missing \")\" after an extension type declaration.", ERR_SYNTAX, cdata->token.line);
 		return ERR_SYNTAX;
 	}
+	cdata->in_parenthesis = false;
 	result = get_next_token(&cdata->token, EOL_REQUIRED);
 	if (result)
 		return result;
@@ -485,6 +487,8 @@ err_t func_params(compiler_data_t *cdata, symbol_data_t *table_entry)
 	// (, go to <param-first>
 	if (cdata->token.type == TOKEN_OPENING_BRACKET)
 	{
+		cdata->in_parenthesis = true;
+
 		err_t result = get_next_token(&cdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
@@ -515,6 +519,7 @@ err_t param_first(compiler_data_t *cdata, symbol_data_t *table_entry)
 	// ), go to <func-params>
 	if (cdata->token.type == TOKEN_CLOSING_BRACKET)
 	{
+		cdata->in_parenthesis = false;
 		result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 		if (result)
 			return result;
@@ -560,6 +565,7 @@ err_t param_list(compiler_data_t *cdata, symbol_data_t *table_entry)
 		if (result)
 			return result;
 
+		cdata->in_parenthesis = false;
 		return func_params(cdata, table_entry);
 	}
 	// ","
@@ -570,7 +576,7 @@ err_t param_list(compiler_data_t *cdata, symbol_data_t *table_entry)
 		if (result)
 			return result;
 
-		result = get_next_token(&cdata->token, EOL_FORBIDDEN);
+		result = get_next_token(&cdata->token, cdata->in_parenthesis ? EOL_OPTIONAL : EOL_FORBIDDEN);
 		if (result)
 			return result;
 
@@ -612,7 +618,7 @@ err_t param(compiler_data_t *cdata, param_t *param_out)
 	}
 	strcpy(param_out->identifier, cdata->token.attribute.string);
 
-	result = get_next_token(&cdata->token, EOL_OPTIONAL);
+	result = get_next_token(&cdata->token, cdata->in_parenthesis ? EOL_OPTIONAL : EOL_FORBIDDEN);
 	if (result)
 		return result;
 	// :
@@ -621,7 +627,7 @@ err_t param(compiler_data_t *cdata, param_t *param_out)
 		print_err_l("Expected a \":\" separator between identifier and type.", ERR_SYNTAX, cdata->token.line);
 		return ERR_SYNTAX;
 	}
-	result = get_next_token(&cdata->token, EOL_OPTIONAL);
+	result = get_next_token(&cdata->token, cdata->in_parenthesis ? EOL_OPTIONAL : EOL_FORBIDDEN);
 	if (result)
 		return result;
 
@@ -835,10 +841,7 @@ err_t type(compiler_data_t *cdata, data_type_t *return_type)
 
 	if (valid_keyword)
 	{
-		// FIXME: The end of line cannot be decided here, as the <type> rule can be used both inside and outside
-		// parenthesis.
-		// The fix is probably to hold a "in_parenthesis" value in the compiler data and decide based on that.
-		return get_next_token(&cdata->token, EOL_OPTIONAL);
+		return get_next_token(&cdata->token, cdata->in_parenthesis ? EOL_OPTIONAL : EOL_FORBIDDEN);
 	}
 	else
 	{
