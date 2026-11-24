@@ -117,7 +117,11 @@ run_case "print-unit" "functions/build-in/print-unit.ifj" "" "()"
 run_case "readLine" "functions/build-in/readLine.ifj" "ahoj" "ahoj"
 run_case "readLine" "functions/build-in/readLine.ifj" "" ""
 
-
+#Build-in readInt
+run_case "readInt" "functions/build-in/readInt.ifj" "10" "10"
+run_case "readInt" "functions/build-in/readInt.ifj" "" "0"
+run_case "readInt" "functions/build-in/readInt.ifj" "asd10da" "0"
+run_case "readInt" "functions/build-in/readInt.ifj" "10__0" "0"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
