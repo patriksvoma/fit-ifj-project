@@ -669,7 +669,7 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 
 			for (unsigned param_index = 0; param_index < list->param_count; param_index++)
 			{
-				const param_t *param = list->params[param_index];
+				param_t *param = list->params[param_index];
 				if (param == NULL)
 				{
 					print_err("Trying to access NULL param inside symbol_func_add_parameters_into_table()!",
@@ -698,6 +698,16 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 				result = symbol_generate_unique_id(param->identifier, entry, table);
 				if (result)
 					return result;
+
+				// Also rewrite the original param name with the unique id
+				free(param->identifier);
+				param->identifier = malloc(strlen(entry->data.variable.unique_name) + 1);
+				if (param->identifier == NULL)
+				{
+					print_err("Failed to allocate memory in symbol_func_add_parameters_into_table()!", ERR_INTERNAL);
+					return ERR_INTERNAL;
+				}
+				strcpy(param->identifier, entry->data.variable.unique_name);
 			}
 		}
 	}
