@@ -11,7 +11,7 @@ COMPILER="$ROOT/ifj-project"
 FIXTURES="$ROOT/tests/interpret-out"
 TMP_DIR=$(mktemp -d)
 # Keep the interpreter outside the repository; IC26INT can select another binary.
-INTERPRETER=${IC26INT:-/home/petrm/IFJ/ic26int-linux-x86_64}
+INTERPRETER="$ROOT/ic26int-linux-x86_64"
 trap 'rm -rf "$TMP_DIR"' 0
 trap 'exit 1' HUP INT TERM
 
