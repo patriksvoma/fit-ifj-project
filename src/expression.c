@@ -736,39 +736,63 @@ err_t try_parse_if_expression(compiler_data_t *cdata, symstack_item_t *item, boo
 	ast_node_t *condition_node = NULL;
 	result = parse_expression_internal(cdata, &condition_node, stop_at_delimiter);
 	if (result)
+	{
+		destruct(condition_node);
 		return result;
+	}
 
 	// Consume then
 	if (cdata->token.type != TOKEN_KEYWORD || cdata->token.attribute.keyword != KW_THEN)
 	{
 		print_err_l("Expected the \"then\" keyword after an if expression condition.", ERR_SYNTAX, cdata->token.line);
+		destruct(condition_node);
 		return ERR_SYNTAX;
 	}
+
 	result = get_next_token(&cdata->token, EOL_OPTIONAL);
 	if (result)
+	{
+		destruct(condition_node);
 		return result;
+	}
 
 	// Parse the then node
 	ast_node_t *then_node = NULL;
 	result = parse_expression_internal(cdata, &then_node, stop_at_delimiter);
 	if (result)
+	{
+		destruct(condition_node);
+		destruct(then_node);
 		return result;
+	}
 
 	// Consume else
 	if (cdata->token.type != TOKEN_KEYWORD || cdata->token.attribute.keyword != KW_ELSE)
 	{
 		print_err_l("Expected the \"else\" keyword after an if expression branch.", ERR_SYNTAX, cdata->token.line);
+		destruct(condition_node);
+		destruct(then_node);
 		return ERR_SYNTAX;
 	}
+
 	result = get_next_token(&cdata->token, EOL_OPTIONAL);
 	if (result)
+	{
+		destruct(condition_node);
+		destruct(then_node);
 		return result;
+	}
 
 	// Parse the else node
 	ast_node_t *else_node = NULL;
 	result = parse_expression_internal(cdata, &else_node, stop_at_delimiter);
 	if (result)
+	{
+		destruct(condition_node);
+		destruct(then_node);
+		destruct(else_node);
 		return result;
+	}
 
 	// Create the AST node
 	item->type = STACKITEM_TYPE_TERMINAL;
@@ -777,6 +801,9 @@ err_t try_parse_if_expression(compiler_data_t *cdata, symstack_item_t *item, boo
 	if (!item->node)
 	{
 		print_err_l("Failed to create an AST node for an if expression.", ERR_INTERNAL, item->source_token.line);
+		destruct(condition_node);
+		destruct(then_node);
+		destruct(else_node);
 		return ERR_INTERNAL;
 	}
 
