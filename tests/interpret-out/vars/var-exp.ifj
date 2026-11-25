@@ -6,6 +6,26 @@ import ifj26.*
   var z: Double = 1.65
   var w: Boolean = true
 
-  x = x + 1
-  print(x)
+  x = -x
+  print(x )
+
+  x = 5 * z
+  print(x )
+
+  x = 15 / 2
+  print(x )
+
+  z = x / z
+  print(toStr(z))
+  print(" ")
+
+  z = z + 15.78
+  print(toStr(z))
+  print(" ")
+
+  x = x - 10
+  print(x )
+
+  y = y + toStr(w)
+  print(y)
 

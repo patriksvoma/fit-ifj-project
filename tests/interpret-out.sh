@@ -201,7 +201,7 @@ echo "$YELLOW-----Variables-----$RESET"
 echo "$BLUE-----var definition-----$RESET"
 run_case "var_def" "vars/var-def.ifj" "" ""
 run_case "var_use" "vars/var-use.ifj" "" "ahoj1.657"
-run_case "var_operations" "vars/var-exp.ifj" "" ""
+run_case "var_operations" "vars/var-exp.ifj" "" "-7 8.25 7 4.24 17.43 -3 ahojtrue"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
