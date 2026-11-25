@@ -204,10 +204,20 @@ err_t check_func_def(ast_node_t *node, compiler_data_t *cdata)
 		return result;
 
 	// If the return type is explicit and not Unit, the last statement must match the return type
+	size_t last = node->func_def.block->block.statement_count - 1;
+
 	if (cdata->func_return_explicit && entry->data.function.return_type != TYPE_UNIT)
 	{
-		if (entry->data.function.return_type !=
-			node->func_def.block->block.statements[node->func_def.block->block.statement_count - 1]->eval_type)
+		// Allow implicit int to double conversions
+		if (entry->data.function.return_type == TYPE_DOUBLE &&
+			node->func_def.block->block.statements[last]->eval_type == TYPE_INT)
+		{
+			result = insert_int_to_double_node(&node->func_def.block->block.statements[last]);
+			if (result)
+				return result;
+		}
+
+		if (entry->data.function.return_type != node->func_def.block->block.statements[last]->eval_type)
 		{
 			print_err("The last statement of a function with an explicit return type must evaluate to the return type.",
 					  ERR_SEMANTIC_INVALID_TYPE);
@@ -1025,6 +1035,14 @@ err_t check_return_call(ast_node_t *node, compiler_data_t *cdata)
 		print_err("Return statements are not allowed in functions with implict return types.",
 				  ERR_SEMANTIC_INVALID_TYPE);
 		return ERR_SEMANTIC_INVALID_TYPE;
+	}
+
+	// Allow implicit int to double conversions
+	if (cdata->func_return_type == TYPE_DOUBLE && node->return_call->eval_type == TYPE_INT)
+	{
+		result = insert_int_to_double_node(&node->return_call);
+		if (result)
+			return result;
 	}
 
 	if (cdata->func_return_type != TYPE_UNIT)
