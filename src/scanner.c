@@ -225,7 +225,10 @@ err_t convert_number(const char *text, token_t *token)
 		long long value = strtoll(text, NULL, 10);
 
 		if (errno == ERANGE)
+		{
+			print_err_l("Number is out of range for long long.", ERR_SCANNER, token->line);
 			return ERR_SCANNER;
+		}
 
 		token->attribute.integer = value;
 		return ERR_OK;
@@ -234,7 +237,10 @@ err_t convert_number(const char *text, token_t *token)
 	double value = strtod(text, NULL);
 
 	if (errno == ERANGE && (value == HUGE_VAL || value == -HUGE_VAL))
+	{
+		print_err_l("Number is out of range for double.", ERR_SCANNER, token->line);
 		return ERR_SCANNER;
+	}
 
 	token->attribute.decimal = value;
 	return ERR_OK;
@@ -283,7 +289,8 @@ static err_t check_eol(const token_t *token, eol_rule_t eol)
 	case EOL_OPTIONAL:
 		return ERR_OK;
 	default:
-		return ERR_SYNTAX;
+		print_err_l("Invalid EOL rule. This should not happen.", ERR_INTERNAL, token->line);
+		return ERR_INTERNAL;
 	}
 }
 
@@ -495,15 +502,22 @@ err_t scan_next_token(token_t *token)
 				return scan_accept(&buf, token, comment_eol);
 			case '&':
 				if (!next_is('&'))
+				{
+					print_err_l("A \"&\" must follow after a \"&\".", ERR_SCANNER, token->line);
 					return scan_fail(&buf, ERR_SCANNER);
+				}
 				token->type = TOKEN_AND;
 				return scan_accept(&buf, token, comment_eol);
 			case '|':
 				if (!next_is('|'))
+				{
+					print_err_l("A \"|\" must follow after a \"|\".", ERR_SCANNER, token->line);
 					return scan_fail(&buf, ERR_SCANNER);
+				}
 				token->type = TOKEN_OR;
 				return scan_accept(&buf, token, comment_eol);
 			default:
+				print_err_l("Invalid character for a start of a token", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
 			}
 
@@ -525,7 +539,10 @@ err_t scan_next_token(token_t *token)
 			}
 
 			if (buf.data[0] == '@')
+			{
+				print_err_l("A \"@\" must not be inside an identifier.", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			if (strcmp(buf.data, "true") == 0 || strcmp(buf.data, "false") == 0)
 			{
@@ -573,7 +590,11 @@ err_t scan_next_token(token_t *token)
 			}
 
 			if (isalnum(c) || c == '_')
+			{
+				print_err_l("A \"0\" cannot be followed by a letter, number digit or underscore.", ERR_SCANNER,
+							token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			unread_char(c);
 			token->type = TOKEN_INT;
@@ -613,7 +634,10 @@ err_t scan_next_token(token_t *token)
 			}
 
 			if (isalpha(c))
+			{
+				print_err_l("A number must not be followed by a letter.", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			unread_char(c);
 			token->type = TOKEN_INT;
@@ -624,7 +648,10 @@ err_t scan_next_token(token_t *token)
 				break;
 
 			if (!isdigit(c))
+			{
+				print_err_l("An underscore must not be followed by a letter.", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			if (!buf_append(&buf, (char)c))
 				return scan_fail(&buf, ERR_INTERNAL);
@@ -634,7 +661,10 @@ err_t scan_next_token(token_t *token)
 
 		case S_DOT:
 			if (!isdigit(c))
+			{
+				print_err_l("A \".\" must be followed by a digit.", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			if (!buf_append(&buf, (char)c))
 				return scan_fail(&buf, ERR_INTERNAL);
@@ -673,7 +703,10 @@ err_t scan_next_token(token_t *token)
 			}
 
 			if (isalpha(c) || c == '.')
+			{
+				print_err_l("A decimal number must not be followed by another dot.", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			unread_char(c);
 			token->type = TOKEN_DOUBLE;
@@ -684,7 +717,11 @@ err_t scan_next_token(token_t *token)
 				break;
 
 			if (!isdigit(c))
+			{
+				print_err_l("An underscore inside a decimal number must be followed by a digit.", ERR_SCANNER,
+							token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			if (!buf_append(&buf, (char)c))
 				return scan_fail(&buf, ERR_INTERNAL);
@@ -705,7 +742,10 @@ err_t scan_next_token(token_t *token)
 
 		case S_EXP_SIGN:
 			if (!isdigit(c))
+			{
+				print_err_l("The exponent sign must be followed by a digit.", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			if (!buf_append(&buf, (char)c))
 				return scan_fail(&buf, ERR_INTERNAL);
@@ -735,7 +775,10 @@ err_t scan_next_token(token_t *token)
 			}
 
 			if (isalpha(c) || c == '.')
+			{
+				print_err_l("The exponent end must not be followed by a letter or a dot.", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			unread_char(c);
 			token->type = TOKEN_DOUBLE;
@@ -746,7 +789,10 @@ err_t scan_next_token(token_t *token)
 				break;
 
 			if (!isdigit(c))
+			{
+				print_err_l("An S_EXP_END underscore must be followed by a digit.", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			if (!buf_append(&buf, (char)c))
 				return scan_fail(&buf, ERR_INTERNAL);
@@ -767,7 +813,10 @@ err_t scan_next_token(token_t *token)
 				return scan_string(&buf, token, comment_eol);
 
 			if (c == '\n' || c == EOF)
+			{
+				print_err_l("An EOL or EOF is not allowed inside a string.", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			if (c == '\\')
 			{
@@ -797,6 +846,8 @@ err_t scan_next_token(token_t *token)
 				c = '\t';
 				break;
 			default:
+
+				print_err_l("Invalid escape character.", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
 			}
 
@@ -818,7 +869,10 @@ err_t scan_next_token(token_t *token)
 
 		case S_MULTILINE_STRING:
 			if (c == EOF)
+			{
+				print_err_l("An EOF is not allowed inside a multiline string.", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			if (c == '"')
 			{
@@ -895,7 +949,10 @@ err_t scan_next_token(token_t *token)
 
 		case S_COMMENT_BLOCK:
 			if (c == EOF)
+			{
+				print_err_l("An EOF is not allowed inside a comment block", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			if (c == '\n')
 				block_newline = true;
@@ -909,7 +966,10 @@ err_t scan_next_token(token_t *token)
 
 		case S_COMMENT_BLOCK_1:
 			if (c == EOF)
+			{
+				print_err_l("An EOF is not allowed inside a comment block.", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			if (c == '\n')
 				block_newline = true;
@@ -927,7 +987,10 @@ err_t scan_next_token(token_t *token)
 
 		case S_COMMENT_BLOCK_2:
 			if (c == EOF)
+			{
+				print_err_l("An EOF is not allowed inside a comment block.", ERR_SCANNER, token->line);
 				return scan_fail(&buf, ERR_SCANNER);
+			}
 
 			if (c == '\n')
 				block_newline = true;
