@@ -32,6 +32,8 @@ err_t check_for(ast_node_t *node, compiler_data_t *cdata);
 err_t check_int_to_double(ast_node_t *node, compiler_data_t *cdata);
 err_t insert_int_to_double_node(ast_node_t **node);
 err_t check_unknown_node(ast_node_t *node, compiler_data_t *cdata);
+bool node_always_returns(const ast_node_t *node);
+bool block_always_returns(const ast_node_t *block);
 
 /**
  * @brief Recursive checks for the literal_int node
@@ -206,7 +208,8 @@ err_t check_func_def(ast_node_t *node, compiler_data_t *cdata)
 	// If the return type is explicit and not Unit, the last statement must match the return type
 	size_t last = node->func_def.block->block.statement_count - 1;
 
-	if (cdata->func_return_explicit && entry->data.function.return_type != TYPE_UNIT)
+	if (cdata->func_return_explicit && entry->data.function.return_type != TYPE_UNIT &&
+		!block_always_returns(node->func_def.block))
 	{
 		// Allow implicit int to double conversions
 		if (entry->data.function.return_type == TYPE_DOUBLE &&
@@ -1383,6 +1386,51 @@ err_t check_unknown_node(ast_node_t *node, compiler_data_t *cdata)
 		print_err("Error in check_unknown_node()", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
+}
+
+/**
+ * @brief Checks if a node returns in all paths
+ *
+ * @param node Node to check recursively
+ * @return true A return check is in every path
+ * @return false A return check is not in every path
+ */
+bool node_always_returns(const ast_node_t *node)
+{
+	if (!node)
+		return false;
+
+	if (node->node_type == AST_RETURN_CALL)
+		return true;
+
+	if (node->node_type == AST_BLOCK)
+		return block_always_returns(node);
+
+	if (node->node_type == AST_IF)
+	{
+		return node->if_statement.else_block != NULL && node_always_returns(node->if_statement.if_block) &&
+			   node_always_returns(node->if_statement.else_block);
+	}
+
+	return false;
+}
+
+/**
+ * @brief Checks if a block returns in all paths
+ *
+ * @param block Block to check recursively
+ * @return true A return check is in every path
+ * @return false A return check is not in every path
+ */
+bool block_always_returns(const ast_node_t *block)
+{
+	for (size_t i = 0; i < block->block.statement_count; i++)
+	{
+		if (node_always_returns(block->block.statements[i]))
+			return true;
+	}
+
+	return false;
 }
 
 err_t do_semantic_checks(ast_node_t *program_node, compiler_data_t *cdata)
