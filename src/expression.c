@@ -922,7 +922,7 @@ err_t parse_expression_internal(compiler_data_t *cdata, ast_node_t **return_node
 			else if (b->source_token.type == TOKEN_CLOSING_BRACKET && parenthesis_level > 0)
 				parenthesis_level--;
 
-			//  Only get the next token if it wasn't already requested while parsing a function call
+			// Only get the next token if it wasn't already requested while parsing a function call
 			if (!call_consumed)
 			{
 				result = get_next_token(&cdata->token, EOL_OPTIONAL);
@@ -940,7 +940,7 @@ err_t parse_expression_internal(compiler_data_t *cdata, ast_node_t **return_node
 			if (result)
 				return result;
 
-			// Preserve a new-line token for the enclosing block parser.
+			// Try to parse a function call, but only if it is not on another logical line
 			if (expression_started && parenthesis_level == 0 && b->source_token.starts_logical_line)
 				call_consumed = false;
 			else
