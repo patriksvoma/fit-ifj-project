@@ -1058,6 +1058,24 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 	if (result)
 		return result;
 
+	// readBoolean(): Boolean
+	entry = symtable_item_create(func_table, "readBoolean");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for readBool().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_BOOLEAN;
+	result = symbol_generate_unique_id("readBoolean", entry, func_table);
+	if (result)
+		return result;
+	result = symbol_add_param_list(entry);
+	if (result)
+		return result;
+
 	// VALMEM
 
 	// Any.toString: String
