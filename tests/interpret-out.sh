@@ -197,6 +197,12 @@ echo "$BLUE-----function call-----$RESET"
 run_case "func_call" "functions/user/func-call.ifj" "" "5"
 run_case "func_call" "functions/user/func-call-lists.ifj" "" "-5ahoj"
 
+echo "$YELLOW-----Variables-----$RESET"
+echo "$BLUE-----var definition-----$RESET"
+run_case "var_def" "vars/var-def.ifj" "" ""
+run_case "var_use" "vars/var-use.ifj" "" "ahoj1.657"
+run_case "var_operations" "vars/var-exp.ifj" "" ""
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 	printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
