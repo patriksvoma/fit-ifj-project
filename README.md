@@ -6,7 +6,8 @@ This is an implementation of a IFJ26 to IFJcode26 compiler built for the Formal 
 - check - Runs a formatting check and static analysis
 - build-check - Builds the executable only after passing the check target
 - test - Runs unit tests
-- test-e2e - Runs end-to-end compiler tests
+- e2e-test - Runs end-to-end compiler tests
+- interpret-test - Runs generated IFJcode26 through an external interpreter
 - format - Runs a formatter on the code
 - clean - Removes any files created during compilation
 

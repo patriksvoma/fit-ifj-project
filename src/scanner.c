@@ -241,29 +241,136 @@ err_t convert_number(const char *text, token_t *token)
 }
 
 /**
+ * @brief Free the token buffer and return an error
+ *
+ * @param buf Token buffer
+ * @param err Error to return
+ * @return err_t The given error
+ */
+err_t scan_fail(buffer_t *buf, err_t err)
+{
+	buf_free(buf);
+	return err;
+}
+
+/**
+ * @brief Check if the token matches the end of line rule
+ *
+ * @param token Token
+ * @param eol EOL rule
+ * @return err_t Error code
+ */
+static err_t check_eol(const token_t *token, eol_rule_t eol)
+{
+	switch (eol)
+	{
+	case EOL_REQUIRED:
+		if (token->starts_logical_line)
+			return ERR_OK;
+		else
+		{
+			print_err_l("End-of-line is required but is missing.", ERR_SYNTAX, token->line);
+			return ERR_SYNTAX;
+		}
+	case EOL_FORBIDDEN:
+		if (token->starts_logical_line)
+		{
+			print_err_l("End-of-line is not allowed here.", ERR_SYNTAX, token->line);
+			return ERR_SYNTAX;
+		}
+		else
+			return ERR_OK;
+	case EOL_OPTIONAL:
+		return ERR_OK;
+	default:
+		return ERR_SYNTAX;
+	}
+}
+
+/**
+ * @brief Finish an accepted token
+ *
+ * @param buf Token buffer
+ * @param token Accepted token
+ * @param comment_eol A multiline block comment was read on the current line
+ * @return err_t ERR_OK, or ERR_SYNTAX if a token follows a multiline block comment on the same line
+ */
+err_t scan_accept(buffer_t *buf, token_t *token, bool comment_eol)
+{
+	buf_free(buf);
+
+	if (comment_eol && token->type != TOKEN_EOF)
+	{
+		free(token->attribute.string);
+		token->attribute.string = NULL;
+		return ERR_SYNTAX;
+	}
+
+	return ERR_OK;
+}
+
+/**
+ * @brief Convert the number in the buffer and finish the token
+ *
+ * @param buf Token buffer with the digits of the number
+ * @param token Token with its type set to TOKEN_INT or TOKEN_DOUBLE
+ * @param comment_eol A multiline block comment was read on the current line
+ * @return err_t Error
+ */
+err_t scan_number(buffer_t *buf, token_t *token, bool comment_eol)
+{
+	err_t err = convert_number(buf->data, token);
+	if (err != ERR_OK)
+		return scan_fail(buf, err);
+
+	return scan_accept(buf, token, comment_eol);
+}
+
+/**
+ * @brief Move the string from the buffer to the token and finish it
+ *
+ * @param buf Token buffer with the value of the string
+ * @param token Output token
+ * @param comment_eol A multiline block comment was read on the current line
+ * @return err_t Error
+ */
+err_t scan_string(buffer_t *buf, token_t *token, bool comment_eol)
+{
+	if (buf->data == NULL)
+	{
+		buf->data = calloc(1, 1);
+		if (buf->data == NULL)
+			return scan_fail(buf, ERR_INTERNAL);
+	}
+
+	token->type = TOKEN_STRING;
+	token->attribute.string = buf->data;
+	buf->data = NULL;
+	return scan_accept(buf, token, comment_eol);
+}
+
+/**
  * @brief Get the next token object
  *
  * @param token
  * @param eol
  * @return err_t
  */
-err_t scan_next_token(token_t *token, eol_rule_t eol)
+err_t scan_next_token(token_t *token)
 {
 	buffer_t buf = {0};
 	state_t state = S_START;
 	bool newline_seen = false;
 	token->indent = 0;
-	err_t err = ERR_SCANNER;
 	unsigned depth = 0;
 	bool block_newline = false;
 	bool comment_eol = false;
-	int c;
 
 	memset(token, 0, sizeof(*token));
 
 	while (true)
 	{
-		c = next_char();
+		int c = next_char();
 
 		switch (state)
 		{
@@ -286,7 +393,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (isalpha(c) || c == '@')
 			{
 				if (!buf_append(&buf, (char)c))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				state = S_IDENTIFIER;
 				break;
@@ -295,7 +402,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (c == '_')
 			{
 				if (!buf_append(&buf, (char)c))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				state = S_UNDERSCORE;
 				break;
@@ -304,7 +411,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (isdigit(c))
 			{
 				if (!buf_append(&buf, (char)c))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				state = (c == '0') ? S_ZERO : S_NUMBER_INT;
 				break;
@@ -318,11 +425,11 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 				if (!isdigit(next))
 				{
 					token->type = TOKEN_DOT;
-					goto accept;
+					return scan_accept(&buf, token, comment_eol);
 				}
 
 				if (!buf_append(&buf, '.'))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				state = S_DOT;
 				break;
@@ -344,37 +451,37 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			{
 			case EOF:
 				token->type = TOKEN_EOF;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '(':
 				token->type = TOKEN_OPENING_BRACKET;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case ')':
 				token->type = TOKEN_CLOSING_BRACKET;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case ',':
 				token->type = TOKEN_COMMA;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case ':':
 				token->type = TOKEN_COLON;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '+':
 				token->type = TOKEN_PLUS;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '-':
 				token->type = TOKEN_MINUS;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '*':
 				token->type = TOKEN_ASTERISK;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case ';':
 				token->type = TOKEN_SEMICOLON;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '=':
 				token->type = next_is('=') ? TOKEN_EQUAL : TOKEN_ASSIGN;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '!':
 				token->type = next_is('=') ? TOKEN_NOT_EQUAL : TOKEN_NEG;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '<':
 				if (next_is('='))
 					token->type = TOKEN_LESS_EQUAL;
@@ -382,29 +489,29 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 					token->type = TOKEN_FOR_GEN_ASSIGN;
 				else
 					token->type = TOKEN_LESS;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '>':
 				token->type = next_is('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '&':
 				if (!next_is('&'))
-					goto fail;
+					return scan_fail(&buf, ERR_SCANNER);
 				token->type = TOKEN_AND;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			case '|':
 				if (!next_is('|'))
-					goto fail;
+					return scan_fail(&buf, ERR_SCANNER);
 				token->type = TOKEN_OR;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			default:
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 			}
 
 		case S_IDENTIFIER:
 			if (isalnum(c) || c == '_')
 			{
 				if (!buf_append(&buf, (char)c))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				break;
 			}
@@ -414,29 +521,29 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (find_keyword(buf.data, &token->attribute.keyword))
 			{
 				token->type = TOKEN_KEYWORD;
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			}
 
 			if (buf.data[0] == '@')
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			if (strcmp(buf.data, "true") == 0 || strcmp(buf.data, "false") == 0)
 			{
 				token->type = TOKEN_BOOLEAN;
 				token->attribute.boolean = (buf.data[0] == 't');
-				goto accept;
+				return scan_accept(&buf, token, comment_eol);
 			}
 
 			token->type = TOKEN_IDENTIFIER;
 			token->attribute.string = buf.data;
 			buf.data = NULL;
-			goto accept;
+			return scan_accept(&buf, token, comment_eol);
 
 		case S_UNDERSCORE:
 			if (isalnum(c) || c == '_')
 			{
 				if (!buf_append(&buf, (char)c))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				state = S_IDENTIFIER;
 				break;
@@ -444,13 +551,13 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 			unread_char(c);
 			token->type = TOKEN_UNDERSCORE;
-			goto accept;
+			return scan_accept(&buf, token, comment_eol);
 
 		case S_ZERO:
 			if (c == '.')
 			{
 				if (!buf_append(&buf, (char)c))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				state = S_DOT;
 				break;
@@ -459,24 +566,24 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (c == 'e' || c == 'E')
 			{
 				if (!buf_append(&buf, 'e'))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				state = S_EXPONENT;
 				break;
 			}
 
 			if (isalnum(c) || c == '_')
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			unread_char(c);
 			token->type = TOKEN_INT;
-			goto number;
+			return scan_number(&buf, token, comment_eol);
 
 		case S_NUMBER_INT:
 			if (isdigit(c))
 			{
 				if (!buf_append(&buf, (char)c))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				break;
 			}
@@ -490,7 +597,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (c == '.')
 			{
 				if (!buf_append(&buf, (char)c))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				state = S_DOT;
 				break;
@@ -499,38 +606,38 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (c == 'e' || c == 'E')
 			{
 				if (!buf_append(&buf, 'e'))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				state = S_EXPONENT;
 				break;
 			}
 
 			if (isalpha(c))
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			unread_char(c);
 			token->type = TOKEN_INT;
-			goto number;
+			return scan_number(&buf, token, comment_eol);
 
 		case S_NUM_INT_UNDERSCORE:
 			if (c == '_')
 				break;
 
 			if (!isdigit(c))
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			if (!buf_append(&buf, (char)c))
-				goto internal_error;
+				return scan_fail(&buf, ERR_INTERNAL);
 
 			state = S_NUMBER_INT;
 			break;
 
 		case S_DOT:
 			if (!isdigit(c))
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			if (!buf_append(&buf, (char)c))
-				goto internal_error;
+				return scan_fail(&buf, ERR_INTERNAL);
 
 			state = S_NUMBER_DOUBLE;
 			break;
@@ -539,7 +646,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (isdigit(c))
 			{
 				if (!buf_append(&buf, (char)c))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				break;
 			}
@@ -553,7 +660,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (c == 'e' || c == 'E')
 			{
 				if (!buf_append(&buf, 'e'))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				state = S_EXPONENT;
 				break;
@@ -562,25 +669,25 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (c == 'd' || c == 'D')
 			{
 				token->type = TOKEN_DOUBLE;
-				goto number;
+				return scan_number(&buf, token, comment_eol);
 			}
 
 			if (isalpha(c) || c == '.')
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			unread_char(c);
 			token->type = TOKEN_DOUBLE;
-			goto number;
+			return scan_number(&buf, token, comment_eol);
 
 		case S_NUM_DOUBLE_UNDERSCORE:
 			if (c == '_')
 				break;
 
 			if (!isdigit(c))
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			if (!buf_append(&buf, (char)c))
-				goto internal_error;
+				return scan_fail(&buf, ERR_INTERNAL);
 
 			state = S_NUMBER_DOUBLE;
 			break;
@@ -589,7 +696,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (c == '+' || c == '-')
 			{
 				if (!buf_append(&buf, (char)c))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				state = S_EXP_SIGN;
 				break;
@@ -598,10 +705,10 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 		case S_EXP_SIGN:
 			if (!isdigit(c))
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			if (!buf_append(&buf, (char)c))
-				goto internal_error;
+				return scan_fail(&buf, ERR_INTERNAL);
 
 			state = S_EXP_END;
 			break;
@@ -610,7 +717,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (isdigit(c))
 			{
 				if (!buf_append(&buf, (char)c))
-					goto internal_error;
+					return scan_fail(&buf, ERR_INTERNAL);
 
 				break;
 			}
@@ -624,25 +731,25 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			if (c == 'd' || c == 'D')
 			{
 				token->type = TOKEN_DOUBLE;
-				goto number;
+				return scan_number(&buf, token, comment_eol);
 			}
 
 			if (isalpha(c) || c == '.')
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			unread_char(c);
 			token->type = TOKEN_DOUBLE;
-			goto number;
+			return scan_number(&buf, token, comment_eol);
 
 		case S_EXP_END_UNDERSCORE:
 			if (c == '_')
 				break;
 
 			if (!isdigit(c))
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			if (!buf_append(&buf, (char)c))
-				goto internal_error;
+				return scan_fail(&buf, ERR_INTERNAL);
 
 			state = S_EXP_END;
 			break;
@@ -657,10 +764,10 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 		case S_STRING:
 			if (c == '"')
-				goto string;
+				return scan_string(&buf, token, comment_eol);
 
 			if (c == '\n' || c == EOF)
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			if (c == '\\')
 			{
@@ -669,7 +776,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			}
 
 			if (!buf_append(&buf, (char)c))
-				goto internal_error;
+				return scan_fail(&buf, ERR_INTERNAL);
 
 			state = S_STRING;
 			break;
@@ -690,11 +797,11 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 				c = '\t';
 				break;
 			default:
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 			}
 
 			if (!buf_append(&buf, (char)c))
-				goto internal_error;
+				return scan_fail(&buf, ERR_INTERNAL);
 
 			state = S_STRING;
 			break;
@@ -707,11 +814,11 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			}
 
 			unread_char(c);
-			goto string;
+			return scan_string(&buf, token, comment_eol);
 
 		case S_MULTILINE_STRING:
 			if (c == EOF)
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			if (c == '"')
 			{
@@ -720,7 +827,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			}
 
 			if (!buf_append(&buf, (char)c))
-				goto internal_error;
+				return scan_fail(&buf, ERR_INTERNAL);
 
 			break;
 
@@ -734,7 +841,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			unread_char(c);
 
 			if (!buf_append(&buf, '"'))
-				goto internal_error;
+				return scan_fail(&buf, ERR_INTERNAL);
 
 			state = S_MULTILINE_STRING;
 			break;
@@ -745,16 +852,16 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 				while (next_is('"'))
 				{
 					if (!buf_append(&buf, '"'))
-						goto internal_error;
+						return scan_fail(&buf, ERR_INTERNAL);
 				}
 
-				goto string;
+				return scan_string(&buf, token, comment_eol);
 			}
 
 			unread_char(c);
 
 			if (!buf_append(&buf, '"') || !buf_append(&buf, '"'))
-				goto internal_error;
+				return scan_fail(&buf, ERR_INTERNAL);
 
 			state = S_MULTILINE_STRING;
 			break;
@@ -776,7 +883,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 			unread_char(c);
 			token->type = TOKEN_DIV;
-			goto accept;
+			return scan_accept(&buf, token, comment_eol);
 
 		case S_COMMENT:
 			if (c == '\n' || c == EOF)
@@ -788,7 +895,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 		case S_COMMENT_BLOCK:
 			if (c == EOF)
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			if (c == '\n')
 				block_newline = true;
@@ -802,7 +909,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 		case S_COMMENT_BLOCK_1:
 			if (c == EOF)
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			if (c == '\n')
 				block_newline = true;
@@ -820,7 +927,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 
 		case S_COMMENT_BLOCK_2:
 			if (c == EOF)
-				goto fail;
+				return scan_fail(&buf, ERR_SCANNER);
 
 			if (c == '\n')
 				block_newline = true;
@@ -847,45 +954,6 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			break;
 		}
 	}
-
-string:
-	if (buf.data == NULL)
-	{
-		buf.data = calloc(1, 1);
-		if (buf.data == NULL)
-			goto internal_error;
-	}
-
-	token->type = TOKEN_STRING;
-	token->attribute.string = buf.data;
-	buf.data = NULL;
-	goto accept;
-
-number:
-	err = convert_number(buf.data, token);
-	if (err != ERR_OK)
-		goto fail;
-
-accept:
-	buf_free(&buf);
-
-	if (comment_eol && token->type != TOKEN_EOF)
-	{
-		free(token->attribute.string);
-		token->attribute.string = NULL;
-		return ERR_SYNTAX;
-	}
-
-	(void)eol; // TODO: check EOL
-	return ERR_OK;
-
-internal_error:
-	err = ERR_INTERNAL;
-	// fall through
-
-fail:
-	buf_free(&buf);
-	return err;
 }
 
 static bool token_cached;
@@ -900,23 +968,24 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 	}
 	else
 	{
-		return scan_next_token(token, eol);
+		err_t result = scan_next_token(token);
+		if (result)
+			return result;
 	}
 
-	return ERR_OK;
+	return check_eol(token, eol);
 }
 
 err_t peek_next_token(token_t *token, eol_rule_t eol)
 {
 	if (!token_cached)
 	{
-		err_t result = scan_next_token(&token_cache, eol);
+		err_t result = scan_next_token(&token_cache);
 		if (result)
 			return result;
 		token_cached = true;
 	}
 
 	*token = token_cache;
-
-	return ERR_OK;
+	return check_eol(token, eol);
 }

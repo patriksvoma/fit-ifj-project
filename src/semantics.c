@@ -186,6 +186,37 @@ err_t check_func_def(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
+	// Check if it is a main function, if so, check the parameters and return type
+	const symbol_data_t *entry = symtable_item_find(&cdata->function_table, node->func_def.unique_id);
+	if (entry == NULL)
+	{
+		print_err("A function definition exists in the AST, but no in the symbol table. This should not happen.",
+				  ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	if (entry->data.function.is_main)
+	{
+		// Not sure if these checks are required by the specs
+		if (entry->data.function.param_list_count != 1)
+		{
+			print_err("The main function must have exactly 1 empty parameter list!", ERR_SEMANTIC_INVALID_ARG);
+			return ERR_SEMANTIC_INVALID_ARG;
+		}
+
+		if (entry->data.function.param_lists[0]->param_count != 0)
+		{
+			print_err("The main function must have exactly 1 empty parameter list!", ERR_SEMANTIC_INVALID_ARG);
+			return ERR_SEMANTIC_INVALID_ARG;
+		}
+
+		if (entry->data.function.return_type != TYPE_UNIT)
+		{
+			print_err("The return type of the main function must be Unit!", ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+	}
+
 	return check_block(node->func_def.block, cdata);
 }
 
@@ -211,7 +242,6 @@ err_t check_func_call(ast_node_t *node, compiler_data_t *cdata)
 	}
 
 	const symbol_data_t *entry = symtable_item_find(&cdata->function_table, node->func_call.unique_id);
-
 	if (entry == NULL)
 	{
 		// TODO: Formatted output with the function name
@@ -872,7 +902,7 @@ err_t check_var_use(const ast_node_t *node, const compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	if (node->variable_use_unique_id == NULL)
+	if (node->variable_use.unique_id == NULL)
 	{
 		print_err("A variable use unique_id is NULL. This should not happen!", ERR_INTERNAL);
 		return ERR_INTERNAL;

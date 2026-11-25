@@ -21,6 +21,7 @@
 typedef struct
 {
 	token_t token;
+	bool in_parenthesis;
 
 	bool in_main;
 	bool in_extension;

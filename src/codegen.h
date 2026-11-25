@@ -12,7 +12,7 @@
 #include "parser.h"
 
 /**
- * @brief Structure to help make labels for if, for and while
+ * @brief Structure to help make labels for if, for, while and build-in read functions
  *
  */
 typedef struct names_counter
@@ -21,6 +21,7 @@ typedef struct names_counter
 	unsigned if_counter;
 	unsigned for_counter;
 	unsigned while_counter;
+	unsigned read_val_counter;
 } names_counter;
 
 /**

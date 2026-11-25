@@ -1,0 +1,9 @@
+import ifj26.*
+
+@main def main(): Unit =
+    if true then
+        print("ac")
+    else if false then
+        print("bc")
+    else
+        print("dc")

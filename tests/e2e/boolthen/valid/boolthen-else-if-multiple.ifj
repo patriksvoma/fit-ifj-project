@@ -1,0 +1,14 @@
+import ifj26.*
+
+@main def main(): Unit =
+    val x: Boolean = true
+    val y: Boolean = false
+
+    if x == true && y == true then
+        print("a")
+    else if x == true && y == false then
+        print("b")
+    else if x == false && y == true then
+        print("c")
+    else if x == false && y == false then
+        print("d")

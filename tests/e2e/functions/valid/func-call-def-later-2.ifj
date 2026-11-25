@@ -1,7 +1,7 @@
 import ifj26.*
 
 @main
-def main() =
+def main(): Unit =
   func1("ahoj")
   func2(54)
   ()

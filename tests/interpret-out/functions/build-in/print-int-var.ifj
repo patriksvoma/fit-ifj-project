@@ -1,0 +1,5 @@
+import ifj26.*
+
+@main def print_int(): Unit =
+  var x = 5
+  print(x)
