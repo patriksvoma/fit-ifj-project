@@ -1,0 +1,41 @@
+import ifj26.*
+
+@main def main(): Unit =
+  var x: Boolean = true
+  var y: Boolean = false
+  var z: Boolean = false
+
+  z = 5 < 3.14
+  print(z)
+  print(" ")
+
+  z = 3 <= 3.14
+  print(z)
+  print(" ")
+
+  z = 11.2 > 15
+  print(z)
+  print(" ")
+
+  z = 5 >= 5
+  print(z)
+  print(" ")
+
+  z = 5 == 5.0
+  print(z)
+  print(" ")
+
+  z = 5 != 3.1
+  print(z)
+  print(" ")
+
+  z = !x
+  print(z)
+  print(" ")
+
+  z = x && y
+  print(z)
+  print(" ")
+
+  z = x || y
+  print(z)

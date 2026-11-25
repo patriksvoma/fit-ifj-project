@@ -198,10 +198,14 @@ run_case "func_call" "functions/user/func-call.ifj" "" "5"
 run_case "func_call" "functions/user/func-call-lists.ifj" "" "-5ahoj"
 
 echo "$YELLOW-----Variables-----$RESET"
-echo "$BLUE-----var definition-----$RESET"
 run_case "var_def" "vars/var-def.ifj" "" ""
 run_case "var_use" "vars/var-use.ifj" "" "ahoj1.657"
-run_case "var_operations" "vars/var-exp.ifj" "" "-7 8.25 3 4.24 22.78 -3 ahojtrue"
+run_case "var_op" "vars/var-exp.ifj" "" "-7 8.25 3 4.24 22.78 -3 ahojtrue"
+run_case "var_bool_op" "vars/var-bool.ifj" "" "false true false true true true false false true"
+#TODO: Testy pro uroven vnoreni
+
+echo "$YELLOW-----If statements-----$RESET"
+
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
