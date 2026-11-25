@@ -186,8 +186,8 @@ err_t check_func_def(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// Check if it is a main function, if so, check the parameters and return type
-	const symbol_data_t *entry = symtable_item_find(&cdata->function_table, node->func_def.unique_id);
+	// Get the symbol table entry
+	symbol_data_t *entry = symtable_item_find(&cdata->function_table, node->func_def.unique_id);
 	if (entry == NULL)
 	{
 		print_err("A function definition exists in the AST, but no in the symbol table. This should not happen.",
@@ -195,6 +195,34 @@ err_t check_func_def(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
+	// Resolve the block (the return types are used for return statement semantic checks)
+	cdata->func_return_type = entry->data.function.return_type;
+	cdata->func_return_explicit = cdata->func_return_type != TYPE_NONE;
+
+	err_t result = check_block(node->func_def.block, cdata);
+	if (result)
+		return result;
+
+	// If the return type is explicit and not Unit, the last statement must match the return type
+	if (cdata->func_return_explicit && entry->data.function.return_type != TYPE_UNIT)
+	{
+		if (entry->data.function.return_type !=
+			node->func_def.block->block.statements[node->func_def.block->block.statement_count - 1]->eval_type)
+		{
+			print_err("The last statement of a function with an explicit return type must evaluate to the return type.",
+					  ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+	}
+
+	// If the return type is implicit, it is taken from the last statement
+	if (!cdata->func_return_explicit)
+	{
+		entry->data.function.return_type =
+			node->func_def.block->block.statements[node->func_def.block->block.statement_count - 1]->eval_type;
+	}
+
+	// Check if it is a main function, if so, check the parameters and return type
 	if (entry->data.function.is_main)
 	{
 		// Not sure if these checks are required by the specs
@@ -217,7 +245,7 @@ err_t check_func_def(ast_node_t *node, compiler_data_t *cdata)
 		}
 	}
 
-	return check_block(node->func_def.block, cdata);
+	return ERR_OK;
 }
 
 /**
@@ -888,6 +916,8 @@ err_t check_var_def(ast_node_t *node, compiler_data_t *cdata)
 		}
 	}
 
+	node->eval_type = TYPE_UNIT;
+
 	return ERR_OK;
 }
 
@@ -984,7 +1014,28 @@ err_t check_return_call(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	return check_unknown_node(node->return_call, cdata);
+	err_t result = check_unknown_node(node->return_call, cdata);
+	if (result)
+		return result;
+
+	if (!cdata->func_return_explicit)
+	{
+		print_err("Return statements are not allowed in functions with implict return types.",
+				  ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
+	}
+
+	if (cdata->func_return_type != TYPE_UNIT)
+	{
+		if (cdata->func_return_type != node->return_call->eval_type)
+		{
+			print_err("Expression inside a return statement must match the functions return type.",
+					  ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+	}
+
+	return ERR_OK;
 }
 
 /**
