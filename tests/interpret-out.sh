@@ -205,7 +205,10 @@ run_case "var_bool_op" "vars/var-bool.ifj" "" "false true false true true true f
 #TODO: Testy pro uroven vnoreni
 
 echo "$YELLOW-----If statements-----$RESET"
-
+run_case "if_else" "if/if-else.ifj" "15" "x>10"
+run_case "if_else" "if/if-else.ifj" "5" "x<10"
+run_case "only_if" "if/only-if.ifj" "15" "x>10 a"
+run_case "only_if" "if/only-if.ifj" "5" "a"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then

@@ -1,0 +1,8 @@
+import ifj26.*
+
+@main def main(): Unit =
+  var x: Int = readInt()
+  if x > 10 then
+    print("x>10")
+    print(" ")
+  print("a")
