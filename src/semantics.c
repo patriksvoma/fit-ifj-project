@@ -961,6 +961,8 @@ err_t check_var_assign(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_SEMANTIC_INVALID_TYPE;
 	}
 
+	node->eval_type = TYPE_UNIT;
+
 	return ERR_OK;
 }
 
@@ -1109,6 +1111,8 @@ err_t check_while(ast_node_t *node, compiler_data_t *cdata)
 	if (result)
 		return result;
 
+	node->eval_type = TYPE_UNIT;
+
 	return ERR_OK;
 }
 
@@ -1235,6 +1239,8 @@ err_t check_for(ast_node_t *node, compiler_data_t *cdata)
 	result = check_block(node->for_loop.block, cdata);
 	if (result)
 		return result;
+
+	node->eval_type = TYPE_UNIT;
 
 	return ERR_OK;
 }
