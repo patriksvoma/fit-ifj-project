@@ -258,6 +258,9 @@ run_case "control-for-by-negative.ifj" 0 "control/valid/control-for-by-negative.
 run_case "control-for-until.ifj" 0 "control/valid/control-for-until.ifj"
 
 echo "$BLUE-----For guards-----$RESET"
+run_case "control-for-guard.ifj" 0 "control/valid/control-for-guard.ifj"
+run_case "control-for-guard-expression.ifj" 0 "control/valid/control-for-guard-expression.ifj"
+run_case "control-for-multiple-guards.ifj" 0 "control/valid/control-for-multiple-guards.ifj"
 
 echo "$BLUE-----For syntax-----$RESET"
 run_case "control-for-single-body.ifj" 0 "control/valid/control-for-single-body.ifj"
