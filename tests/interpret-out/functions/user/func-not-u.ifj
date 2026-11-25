@@ -1,0 +1,8 @@
+import ifj26.*
+
+@main def main(): Unit =
+  var x: Int = foo(20)
+  print(x)
+
+def foo(n: Int) : Int =
+  return (n * 20) / 4

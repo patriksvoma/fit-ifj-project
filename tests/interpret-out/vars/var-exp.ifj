@@ -7,24 +7,32 @@ import ifj26.*
   var w: Boolean = true
 
   x = -x
-  print(x )
+  print(x)
+  print(" ")
+  x = 7
 
-  x = 5 * z
-  print(x )
+  z = 5 * z
+  print(toStr(z))
+  print(" ")
+  z = 1.65
 
-  x = 15 / 2
-  print(x )
+  x = x / 2
+  print(x)
+  print(" ")
+  x = 7
 
   z = x / z
   print(toStr(z))
   print(" ")
+  z = 1.65
 
-  z = z + 15.78
+  z = x + 15.78
   print(toStr(z))
   print(" ")
 
   x = x - 10
-  print(x )
+  print(x)
+  print(" ")
 
   y = y + toStr(w)
   print(y)

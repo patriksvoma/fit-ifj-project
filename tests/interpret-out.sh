@@ -96,7 +96,7 @@ run_case()
 		cat "$stdout_file" >&2
 		printf '>\n' >&2
 		if [ -s "$stderr_file" ]; then
-			cat "$stderr_file" >&2¨
+			cat "$stderr_file" >&2
 		fi
 		failed=$((failed + 1))
 	fi
@@ -197,11 +197,25 @@ echo "$BLUE-----function call-----$RESET"
 run_case "func_call" "functions/user/func-call.ifj" "" "5"
 run_case "func_call" "functions/user/func-call-lists.ifj" "" "-5ahoj"
 
+#Function return
+echo "$BLUE-----unit function return-----$RESET"
+run_case "func_ret" "functions/user/func-ret.ifj" "" "()"
+run_case "func_no_ret" "functions/user/func-no-ret.ifj" "" "()"
+run_case "func_no_ret_no_exp" "functions/user/func-no-ret-ex.ifj" "" "()"
+run_case "func_ret_not_unit" "functions/user/func-not-u.ifj" "" "100"
+
 echo "$YELLOW-----Variables-----$RESET"
-echo "$BLUE-----var definition-----$RESET"
 run_case "var_def" "vars/var-def.ifj" "" ""
 run_case "var_use" "vars/var-use.ifj" "" "ahoj1.657"
-run_case "var_operations" "vars/var-exp.ifj" "" "-7 8.25 7 4.24 17.43 -3 ahojtrue"
+run_case "var_op" "vars/var-exp.ifj" "" "-7 8.25 3 4.24 22.78 -3 ahojtrue"
+run_case "var_bool_op" "vars/var-bool.ifj" "" "false true false true true true false false true"
+#TODO: Testy pro uroven vnoreni
+
+echo "$YELLOW-----If statements-----$RESET"
+run_case "if_else" "if/if-else.ifj" "15" "x>10"
+run_case "if_else" "if/if-else.ifj" "5" "x<10"
+run_case "only_if" "if/only-if.ifj" "15" "x>10 a"
+run_case "only_if" "if/only-if.ifj" "5" "a"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then

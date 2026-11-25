@@ -279,8 +279,10 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
  * @param unique_id Unique name for the function
  * @param symtables Symtables with functions to find parameters
  * @param new_func_def Struct with couter for loops and function name, to name labels corectly
+ * @return true When a function returns Unit
+ * @return false When a function doesn't return Unit
  */
-void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_func_def)
+bool print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_func_def)
 {
 	new_func_def->for_counter = 0;
 	new_func_def->if_counter = 0;
@@ -293,7 +295,7 @@ void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 	const symbol_data_t *func_params = symtable_item_find(&symtables[0], unique_id);
 	if (func_params == NULL)
 	{
-		return;
+		return false;
 	}
 
 	printf("LABEL %s\n", unique_id);
@@ -320,7 +322,11 @@ void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 			}
 		}
 	}
-	return;
+	if (func_params->data.function.return_type == TYPE_UNIT)
+	{
+		return true;
+	}
+	return false;
 }
 
 /**
@@ -806,7 +812,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		break;
 
 	case AST_FUNC_DEF:
-		print_func_def(node->func_def.unique_id, symtables, new_func_def);
+		bool ret_unit = print_func_def(node->func_def.unique_id, symtables, new_func_def);
 		var_def(node->func_def.block, symtables, new_func_def);
 
 		// Definition of variables to help in for cycle before loops
@@ -820,6 +826,11 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		new_func_def->for_counter = 0;
 
 		generate_nodes(node->func_def.block, symtables, new_func_def);
+
+		if (ret_unit)
+		{
+			printf("PUSHS nil@nil\n");
+		}
 
 		// If there isnt a return, the frame must be cleaned
 		printf("POPFRAME\n");

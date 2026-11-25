@@ -1,0 +1,9 @@
+import ifj26.*
+
+@main def main(): Unit =
+  var x: Unit = foo()
+  print(x)
+
+def foo(): Unit =
+  var y: Int = 15
+  y = y + 15
