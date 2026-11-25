@@ -96,6 +96,8 @@ unsigned scanner_line = 1;		  // Line of the last read character
 unsigned scanner_column = 0;	  // Column of the last read character
 unsigned scanner_prev_column = 0; // Column before the last newline, used by unread_char
 bool scanner_first_token = true;   // The next token is the first one in the file
+unsigned scanner_line_indent = 0;  // Spaces at the start of the current line
+bool scanner_line_start = true;    // Still reading spaces at the start of the line
 
 /**
  * @brief Read the next character from the input and update the position
@@ -328,7 +330,6 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 	buffer_t buf = {0};
 	state_t state = S_START;
 	bool newline_seen = scanner_first_token;
-	token->indent = 0;
 	unsigned depth = 0;
 	bool block_newline = false;
 	bool comment_eol = false;
@@ -347,16 +348,26 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			{
 				newline_seen = true;
 				comment_eol = false;
-				break;
-			}
-			if (c == ' ' || c == '\r')
-			{
-				token->indent++;
+				scanner_line_indent = 0;
+				scanner_line_start = true;
 				break;
 			}
 
+			if (c == ' ')
+			{
+				if (scanner_line_start)
+					scanner_line_indent++;
+				break;
+			}
+
+			if (c == '\r')
+				break;
+
+			scanner_line_start = false;
+
 			token->line = scanner_line;
 			token->starts_logical_line = newline_seen;
+			token->indent = scanner_line_indent;
 			scanner_first_token = false;
 
 			if (isalpha(c) || c == '@')
