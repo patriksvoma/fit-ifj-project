@@ -24,7 +24,7 @@ err_t check_un_operator(ast_node_t *node, compiler_data_t *cdata);
 err_t check_bin_operator(ast_node_t *node, compiler_data_t *cdata);
 err_t check_var_def(ast_node_t *node, compiler_data_t *cdata);
 err_t check_var_assign(ast_node_t *node, compiler_data_t *cdata);
-err_t check_var_use(const ast_node_t *node, const compiler_data_t *cdata);
+err_t check_var_use(ast_node_t *node, const compiler_data_t *cdata);
 err_t check_return_call(ast_node_t *node, compiler_data_t *cdata);
 err_t check_if(ast_node_t *node, compiler_data_t *cdata);
 err_t check_while(ast_node_t *node, compiler_data_t *cdata);
@@ -856,6 +856,38 @@ err_t check_var_def(ast_node_t *node, compiler_data_t *cdata)
 	if (result)
 		return result;
 
+	// Check and set the variable type
+	symbol_data_t *entry = node->variable_definition.sym_table_entry;
+	if (!entry)
+	{
+		print_err("A variable definiton AST node is missing the symbol_table_entry record. This shoud not happepen",
+				  ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	if (entry->data.variable.type == TYPE_NONE)
+	{
+		// Implicit definition
+		entry->data.variable.type = node->variable_definition.assigned_value->eval_type;
+		if (entry->data.variable.type == TYPE_NONE)
+		{
+			print_err("An expression assigned to a variable resolved to TYPE_NONE. This should not happen.",
+					  ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+	}
+	else
+	{
+		// Explicit definition, check if the types match
+		if (entry->data.variable.type != node->variable_definition.assigned_value->eval_type)
+		{
+			// TODO: Formatted output
+			print_err("A variable has an explicit type, but is assigned a value of a different type.",
+					  ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+	}
+
 	return ERR_OK;
 }
 
@@ -884,6 +916,21 @@ err_t check_var_assign(ast_node_t *node, compiler_data_t *cdata)
 	if (result)
 		return result;
 
+	// Check the variable type
+	const symbol_data_t *entry = node->variable_assignment.sym_table_entry;
+	if (!entry)
+	{
+		print_err("A variable definiton AST node is missing the symbol_table_entry record. This shoud not happepen",
+				  ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	if (entry->data.variable.type != node->variable_assignment.assigned_value->eval_type)
+	{
+		print_err("Trying to assign value of a wrong type to a variable.", ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
+	}
+
 	return ERR_OK;
 }
 
@@ -894,7 +941,7 @@ err_t check_var_assign(ast_node_t *node, compiler_data_t *cdata)
  * @param cdata Compiler data
  * @return err_t Error code
  */
-err_t check_var_use(const ast_node_t *node, const compiler_data_t *cdata)
+err_t check_var_use(ast_node_t *node, const compiler_data_t *cdata)
 {
 	if (!node || !cdata)
 	{
@@ -907,6 +954,17 @@ err_t check_var_use(const ast_node_t *node, const compiler_data_t *cdata)
 		print_err("A variable use unique_id is NULL. This should not happen!", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
+
+	// Use the variable type as the new eval_type
+	symbol_data_t *entry = node->variable_use.sym_table_entry;
+	if (!entry)
+	{
+		print_err("A variable definiton AST node is missing the symbol_table_entry record. This shoud not happepen",
+				  ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	node->eval_type = entry->data.variable.type;
 
 	return ERR_OK;
 }

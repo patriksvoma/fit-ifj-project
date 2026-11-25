@@ -522,36 +522,6 @@ void symtable_destroy(symtable_t **table)
 	*table = NULL;
 }
 
-symtable_t *local_table_create(symtable_t *parent)
-{
-	symtable_t *table = malloc(sizeof(symtable_t));
-	if (!table)
-		return NULL;
-
-	table->parent = parent;
-	table->root_node = NULL;
-	table->child_table_counter = 0;
-
-	// Increase the parent nodes child counter
-	// Used for generating unique identifiers
-	if (parent)
-		parent->child_table_counter++;
-
-	return table;
-}
-
-symtable_t *local_table_destroy(symtable_t *table)
-{
-	if (!table)
-		return NULL;
-
-	symtable_t *parent = table->parent;
-
-	symtable_destroy(&table);
-
-	return parent;
-}
-
 err_t append_last_table_counter(char **buf, size_t *buf_len, symtable_t *table)
 {
 	// Go recuresively to the global table, as that is supposed to be the first one to be appended

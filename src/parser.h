@@ -31,8 +31,21 @@ typedef struct
 	symtable_t extension_table;
 
 	symtable_t *local_var_table;
+
+	symtable_t **var_tables;
+	size_t var_table_count;
+
 	bool main_defined;
-} compiler_data_t;
+}
+
+compiler_data_t;
+/**
+ * @brief Destroys all symbol tables saved in the compiler data var_tables
+ *
+ * @param cdata Compiler data
+ * @return err_t Error code
+ */
+err_t local_tables_destroy(compiler_data_t *cdata);
 
 /**
  * @brief Main parsing function

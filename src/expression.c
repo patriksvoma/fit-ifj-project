@@ -457,6 +457,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 						print_err_l("Failed to create an AST node in apply_rule()!", ERR_INTERNAL, line);
 						return ERR_INTERNAL;
 					}
+					node->variable_use.sym_table_entry = entry;
 				}
 				else if (entry->symbol_type == SYM_FUNCTION)
 				{
