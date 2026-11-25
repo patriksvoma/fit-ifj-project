@@ -96,7 +96,7 @@ run_case()
 		cat "$stdout_file" >&2
 		printf '>\n' >&2
 		if [ -s "$stderr_file" ]; then
-			cat "$stderr_file" >&2¨
+			cat "$stderr_file" >&2
 		fi
 		failed=$((failed + 1))
 	fi
@@ -196,6 +196,12 @@ run_case "func_def_more_lists" "functions/user/func-def-lists.ifj" "" ""
 echo "$BLUE-----function call-----$RESET"
 run_case "func_call" "functions/user/func-call.ifj" "" "5"
 run_case "func_call" "functions/user/func-call-lists.ifj" "" "-5ahoj"
+
+#Function return
+echo "$BLUE-----unit function return-----$RESET"
+run_case "func_ret" "functions/user/func-ret.ifj" "" "()"
+run_case "func_no_ret" "functions/user/func-no-ret.ifj" "" "()"
+run_case "func_no_ret_no_exp" "functions/user/func-no-ret-ex.ifj" "" "()"
 
 echo "$YELLOW-----Variables-----$RESET"
 run_case "var_def" "vars/var-def.ifj" "" ""
