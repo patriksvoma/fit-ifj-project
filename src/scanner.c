@@ -92,9 +92,16 @@ bool find_keyword(const char *word, keyword_t *keyword)
 	return false;
 }
 
-unsigned scanner_line = 1;		  // Line of the last read character
-unsigned scanner_column = 0;	  // Column of the last read character
-unsigned scanner_prev_column = 0; // Column before the last newline, used by unread_char
+unsigned scanner_line = 1;			  // Line of the last read character
+unsigned scanner_column = 0;		  // Column of the last read character
+unsigned scanner_prev_column = 0;	  // Column before the last newline, used by unread_char
+bool scanner_first_token = true;	  // The next token is the first one in the file
+unsigned scanner_line_indent = 0;	  // Spaces at the start of the current line
+bool scanner_line_start = true;		  // Still reading spaces at the start of the line
+bool scanner_line_tab = false;		  // A tab was found at the start of the line
+unsigned scanner_paren_depth = 0;	  // Number of open parentheses
+unsigned scanner_logical_indent = 0;  // Indentation of the current logical line
+bool scanner_line_bad_indent = false; // A line inside parentheses is not indented enough
 
 /**
  * @brief Read the next character from the input and update the position
@@ -247,51 +254,18 @@ err_t convert_number(const char *text, token_t *token)
 }
 
 /**
- * @brief Free the token buffer and return an error
+ * @brief Free the token buffer, print an error message and return the error
  *
  * @param buf Token buffer
  * @param err Error to return
+ * @param message Error message
  * @return err_t The given error
  */
-err_t scan_fail(buffer_t *buf, err_t err)
+err_t scan_fail(buffer_t *buf, err_t err, const char *message)
 {
 	buf_free(buf);
+	print_err_l(message, err, scanner_line);
 	return err;
-}
-
-/**
- * @brief Check if the token matches the end of line rule
- *
- * @param token Token
- * @param eol EOL rule
- * @return err_t Error code
- */
-static err_t check_eol(const token_t *token, eol_rule_t eol)
-{
-	switch (eol)
-	{
-	case EOL_REQUIRED:
-		if (token->starts_logical_line)
-			return ERR_OK;
-		else
-		{
-			print_err_l("End-of-line is required but is missing.", ERR_SYNTAX, token->line);
-			return ERR_SYNTAX;
-		}
-	case EOL_FORBIDDEN:
-		if (token->starts_logical_line)
-		{
-			print_err_l("End-of-line is not allowed here.", ERR_SYNTAX, token->line);
-			return ERR_SYNTAX;
-		}
-		else
-			return ERR_OK;
-	case EOL_OPTIONAL:
-		return ERR_OK;
-	default:
-		print_err_l("Invalid EOL rule. This should not happen.", ERR_INTERNAL, token->line);
-		return ERR_INTERNAL;
-	}
 }
 
 /**
@@ -300,14 +274,34 @@ static err_t check_eol(const token_t *token, eol_rule_t eol)
  * @param buf Token buffer
  * @param token Accepted token
  * @param comment_eol A multiline block comment was read on the current line
- * @return err_t ERR_OK, or ERR_SYNTAX if a token follows a multiline block comment on the same line
+ * @return err_t ERR_OK, ERR_SCANNER if the line starts with a tab,
+ *         or ERR_SYNTAX if a token follows a multiline block comment on the same line
+ *         or a line inside parentheses is not indented enough
  */
 err_t scan_accept(buffer_t *buf, token_t *token, bool comment_eol)
 {
 	buf_free(buf);
 
+	if (scanner_line_tab && token->type != TOKEN_EOF)
+	{
+		print_err_l("Tabs cannot be used for indentation.", ERR_SCANNER, token->line);
+		free(token->attribute.string);
+		token->attribute.string = NULL;
+		return ERR_SCANNER;
+	}
+
+	if (scanner_line_bad_indent && token->type != TOKEN_EOF)
+	{
+		print_err_l("A line inside parentheses must be indented more than the start of the logical line.", ERR_SYNTAX,
+					token->line);
+		free(token->attribute.string);
+		token->attribute.string = NULL;
+		return ERR_SYNTAX;
+	}
+
 	if (comment_eol && token->type != TOKEN_EOF)
 	{
+		print_err_l("No token can follow a multiline block comment on the same line.", ERR_SYNTAX, token->line);
 		free(token->attribute.string);
 		token->attribute.string = NULL;
 		return ERR_SYNTAX;
@@ -328,8 +322,10 @@ err_t scan_number(buffer_t *buf, token_t *token, bool comment_eol)
 {
 	err_t err = convert_number(buf->data, token);
 	if (err != ERR_OK)
-		return scan_fail(buf, err);
-
+	{
+		buf_free(buf);
+		return err;
+	}
 	return scan_accept(buf, token, comment_eol);
 }
 
@@ -347,7 +343,7 @@ err_t scan_string(buffer_t *buf, token_t *token, bool comment_eol)
 	{
 		buf->data = calloc(1, 1);
 		if (buf->data == NULL)
-			return scan_fail(buf, ERR_INTERNAL);
+			return scan_fail(buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 	}
 
 	token->type = TOKEN_STRING;
@@ -357,18 +353,16 @@ err_t scan_string(buffer_t *buf, token_t *token, bool comment_eol)
 }
 
 /**
- * @brief Get the next token object
+ * @brief Read the next token from the input
  *
- * @param token
- * @param eol
- * @return err_t
+ * @param token Pointer to where the accepted token should be saved
+ * @return err_t Error
  */
 err_t scan_next_token(token_t *token)
 {
 	buffer_t buf = {0};
 	state_t state = S_START;
-	bool newline_seen = false;
-	token->indent = 0;
+	bool newline_seen = scanner_first_token;
 	unsigned depth = 0;
 	bool block_newline = false;
 	bool comment_eol = false;
@@ -384,23 +378,55 @@ err_t scan_next_token(token_t *token)
 		case S_START:
 			if (c == '\n')
 			{
-				newline_seen = true;
-				comment_eol = false;
-				break;
-			}
-			if (c == ' ' || c == '\r')
-			{
-				token->indent++;
+				if (scanner_paren_depth == 0)
+				{
+					newline_seen = true;
+					comment_eol = false;
+				}
+
+				scanner_line_indent = 0;
+				scanner_line_start = true;
+				scanner_line_tab = false;
+				scanner_line_bad_indent = false;
 				break;
 			}
 
+			if (c == ' ')
+			{
+				if (scanner_line_start)
+					scanner_line_indent++;
+				break;
+			}
+
+			if (c == '\t')
+			{
+				if (scanner_line_start)
+					scanner_line_tab = true;
+				break;
+			}
+
+			if (c == '\r')
+				break;
+
+			if (scanner_line_start)
+			{
+				if (newline_seen)
+					scanner_logical_indent = scanner_line_indent;
+				else if (scanner_paren_depth > 0 && scanner_line_indent <= scanner_logical_indent)
+					scanner_line_bad_indent = true;
+			}
+
+			scanner_line_start = false;
+
 			token->line = scanner_line;
 			token->starts_logical_line = newline_seen;
+			token->indent = scanner_line_indent;
+			scanner_first_token = false;
 
 			if (isalpha(c) || c == '@')
 			{
 				if (!buf_append(&buf, (char)c))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				state = S_IDENTIFIER;
 				break;
@@ -409,7 +435,7 @@ err_t scan_next_token(token_t *token)
 			if (c == '_')
 			{
 				if (!buf_append(&buf, (char)c))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				state = S_UNDERSCORE;
 				break;
@@ -418,7 +444,7 @@ err_t scan_next_token(token_t *token)
 			if (isdigit(c))
 			{
 				if (!buf_append(&buf, (char)c))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				state = (c == '0') ? S_ZERO : S_NUMBER_INT;
 				break;
@@ -436,7 +462,7 @@ err_t scan_next_token(token_t *token)
 				}
 
 				if (!buf_append(&buf, '.'))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				state = S_DOT;
 				break;
@@ -460,9 +486,12 @@ err_t scan_next_token(token_t *token)
 				token->type = TOKEN_EOF;
 				return scan_accept(&buf, token, comment_eol);
 			case '(':
+				scanner_paren_depth++;
 				token->type = TOKEN_OPENING_BRACKET;
 				return scan_accept(&buf, token, comment_eol);
 			case ')':
+				if (scanner_paren_depth > 0)
+					scanner_paren_depth--;
 				token->type = TOKEN_CLOSING_BRACKET;
 				return scan_accept(&buf, token, comment_eol);
 			case ',':
@@ -502,30 +531,23 @@ err_t scan_next_token(token_t *token)
 				return scan_accept(&buf, token, comment_eol);
 			case '&':
 				if (!next_is('&'))
-				{
-					print_err_l("A \"&\" must follow after a \"&\".", ERR_SCANNER, token->line);
-					return scan_fail(&buf, ERR_SCANNER);
-				}
+					return scan_fail(&buf, ERR_SCANNER, "Expected \"&&\".");
 				token->type = TOKEN_AND;
 				return scan_accept(&buf, token, comment_eol);
 			case '|':
 				if (!next_is('|'))
-				{
-					print_err_l("A \"|\" must follow after a \"|\".", ERR_SCANNER, token->line);
-					return scan_fail(&buf, ERR_SCANNER);
-				}
+					return scan_fail(&buf, ERR_SCANNER, "Expected \"||\".");
 				token->type = TOKEN_OR;
 				return scan_accept(&buf, token, comment_eol);
 			default:
-				print_err_l("Invalid character for a start of a token", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
+				return scan_fail(&buf, ERR_SCANNER, "Unknown character.");
 			}
 
 		case S_IDENTIFIER:
 			if (isalnum(c) || c == '_')
 			{
 				if (!buf_append(&buf, (char)c))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				break;
 			}
@@ -539,10 +561,7 @@ err_t scan_next_token(token_t *token)
 			}
 
 			if (buf.data[0] == '@')
-			{
-				print_err_l("A \"@\" must not be inside an identifier.", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "Unknown annotation, only @main is allowed.");
 
 			if (strcmp(buf.data, "true") == 0 || strcmp(buf.data, "false") == 0)
 			{
@@ -560,7 +579,7 @@ err_t scan_next_token(token_t *token)
 			if (isalnum(c) || c == '_')
 			{
 				if (!buf_append(&buf, (char)c))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				state = S_IDENTIFIER;
 				break;
@@ -574,7 +593,7 @@ err_t scan_next_token(token_t *token)
 			if (c == '.')
 			{
 				if (!buf_append(&buf, (char)c))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				state = S_DOT;
 				break;
@@ -583,18 +602,14 @@ err_t scan_next_token(token_t *token)
 			if (c == 'e' || c == 'E')
 			{
 				if (!buf_append(&buf, 'e'))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				state = S_EXPONENT;
 				break;
 			}
 
 			if (isalnum(c) || c == '_')
-			{
-				print_err_l("A \"0\" cannot be followed by a letter, number digit or underscore.", ERR_SCANNER,
-							token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "Non-zero number literal cannot start with a zero.");
 
 			unread_char(c);
 			token->type = TOKEN_INT;
@@ -604,7 +619,7 @@ err_t scan_next_token(token_t *token)
 			if (isdigit(c))
 			{
 				if (!buf_append(&buf, (char)c))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				break;
 			}
@@ -618,7 +633,7 @@ err_t scan_next_token(token_t *token)
 			if (c == '.')
 			{
 				if (!buf_append(&buf, (char)c))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				state = S_DOT;
 				break;
@@ -627,17 +642,14 @@ err_t scan_next_token(token_t *token)
 			if (c == 'e' || c == 'E')
 			{
 				if (!buf_append(&buf, 'e'))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				state = S_EXPONENT;
 				break;
 			}
 
 			if (isalpha(c))
-			{
-				print_err_l("A number must not be followed by a letter.", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "Invalid character in a number literal.");
 
 			unread_char(c);
 			token->type = TOKEN_INT;
@@ -648,26 +660,20 @@ err_t scan_next_token(token_t *token)
 				break;
 
 			if (!isdigit(c))
-			{
-				print_err_l("An underscore must not be followed by a letter.", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "An underscore in a number literal must be followed by a digit.");
 
 			if (!buf_append(&buf, (char)c))
-				return scan_fail(&buf, ERR_INTERNAL);
+				return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 			state = S_NUMBER_INT;
 			break;
 
 		case S_DOT:
 			if (!isdigit(c))
-			{
-				print_err_l("A \".\" must be followed by a digit.", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "Expected a digit after the decimal point.");
 
 			if (!buf_append(&buf, (char)c))
-				return scan_fail(&buf, ERR_INTERNAL);
+				return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 			state = S_NUMBER_DOUBLE;
 			break;
@@ -676,7 +682,7 @@ err_t scan_next_token(token_t *token)
 			if (isdigit(c))
 			{
 				if (!buf_append(&buf, (char)c))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				break;
 			}
@@ -690,7 +696,7 @@ err_t scan_next_token(token_t *token)
 			if (c == 'e' || c == 'E')
 			{
 				if (!buf_append(&buf, 'e'))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				state = S_EXPONENT;
 				break;
@@ -703,10 +709,7 @@ err_t scan_next_token(token_t *token)
 			}
 
 			if (isalpha(c) || c == '.')
-			{
-				print_err_l("A decimal number must not be followed by another dot.", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "Invalid character in a number literal.");
 
 			unread_char(c);
 			token->type = TOKEN_DOUBLE;
@@ -717,14 +720,10 @@ err_t scan_next_token(token_t *token)
 				break;
 
 			if (!isdigit(c))
-			{
-				print_err_l("An underscore inside a decimal number must be followed by a digit.", ERR_SCANNER,
-							token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "An underscore in a number literal must be followed by a digit.");
 
 			if (!buf_append(&buf, (char)c))
-				return scan_fail(&buf, ERR_INTERNAL);
+				return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 			state = S_NUMBER_DOUBLE;
 			break;
@@ -733,7 +732,7 @@ err_t scan_next_token(token_t *token)
 			if (c == '+' || c == '-')
 			{
 				if (!buf_append(&buf, (char)c))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				state = S_EXP_SIGN;
 				break;
@@ -742,13 +741,10 @@ err_t scan_next_token(token_t *token)
 
 		case S_EXP_SIGN:
 			if (!isdigit(c))
-			{
-				print_err_l("The exponent sign must be followed by a digit.", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "Expected a digit in the exponent.");
 
 			if (!buf_append(&buf, (char)c))
-				return scan_fail(&buf, ERR_INTERNAL);
+				return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 			state = S_EXP_END;
 			break;
@@ -757,7 +753,7 @@ err_t scan_next_token(token_t *token)
 			if (isdigit(c))
 			{
 				if (!buf_append(&buf, (char)c))
-					return scan_fail(&buf, ERR_INTERNAL);
+					return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 				break;
 			}
@@ -775,10 +771,7 @@ err_t scan_next_token(token_t *token)
 			}
 
 			if (isalpha(c) || c == '.')
-			{
-				print_err_l("The exponent end must not be followed by a letter or a dot.", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "Invalid character in a number literal.");
 
 			unread_char(c);
 			token->type = TOKEN_DOUBLE;
@@ -789,13 +782,10 @@ err_t scan_next_token(token_t *token)
 				break;
 
 			if (!isdigit(c))
-			{
-				print_err_l("An S_EXP_END underscore must be followed by a digit.", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "An underscore in a number literal must be followed by a digit.");
 
 			if (!buf_append(&buf, (char)c))
-				return scan_fail(&buf, ERR_INTERNAL);
+				return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 			state = S_EXP_END;
 			break;
@@ -813,10 +803,7 @@ err_t scan_next_token(token_t *token)
 				return scan_string(&buf, token, comment_eol);
 
 			if (c == '\n' || c == EOF)
-			{
-				print_err_l("An EOL or EOF is not allowed inside a string.", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "Unterminated string literal.");
 
 			if (c == '\\')
 			{
@@ -825,7 +812,7 @@ err_t scan_next_token(token_t *token)
 			}
 
 			if (!buf_append(&buf, (char)c))
-				return scan_fail(&buf, ERR_INTERNAL);
+				return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 			state = S_STRING;
 			break;
@@ -846,13 +833,11 @@ err_t scan_next_token(token_t *token)
 				c = '\t';
 				break;
 			default:
-
-				print_err_l("Invalid escape character.", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
+				return scan_fail(&buf, ERR_SCANNER, "Invalid escape sequence.");
 			}
 
 			if (!buf_append(&buf, (char)c))
-				return scan_fail(&buf, ERR_INTERNAL);
+				return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 			state = S_STRING;
 			break;
@@ -869,10 +854,7 @@ err_t scan_next_token(token_t *token)
 
 		case S_MULTILINE_STRING:
 			if (c == EOF)
-			{
-				print_err_l("An EOF is not allowed inside a multiline string.", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "Unterminated multiline string literal.");
 
 			if (c == '"')
 			{
@@ -881,7 +863,7 @@ err_t scan_next_token(token_t *token)
 			}
 
 			if (!buf_append(&buf, (char)c))
-				return scan_fail(&buf, ERR_INTERNAL);
+				return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 			break;
 
@@ -895,7 +877,7 @@ err_t scan_next_token(token_t *token)
 			unread_char(c);
 
 			if (!buf_append(&buf, '"'))
-				return scan_fail(&buf, ERR_INTERNAL);
+				return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 			state = S_MULTILINE_STRING;
 			break;
@@ -906,7 +888,7 @@ err_t scan_next_token(token_t *token)
 				while (next_is('"'))
 				{
 					if (!buf_append(&buf, '"'))
-						return scan_fail(&buf, ERR_INTERNAL);
+						return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 				}
 
 				return scan_string(&buf, token, comment_eol);
@@ -915,7 +897,7 @@ err_t scan_next_token(token_t *token)
 			unread_char(c);
 
 			if (!buf_append(&buf, '"') || !buf_append(&buf, '"'))
-				return scan_fail(&buf, ERR_INTERNAL);
+				return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
 
 			state = S_MULTILINE_STRING;
 			break;
@@ -949,10 +931,7 @@ err_t scan_next_token(token_t *token)
 
 		case S_COMMENT_BLOCK:
 			if (c == EOF)
-			{
-				print_err_l("An EOF is not allowed inside a comment block", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "Unterminated block comment.");
 
 			if (c == '\n')
 				block_newline = true;
@@ -966,10 +945,7 @@ err_t scan_next_token(token_t *token)
 
 		case S_COMMENT_BLOCK_1:
 			if (c == EOF)
-			{
-				print_err_l("An EOF is not allowed inside a comment block.", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "Unterminated block comment.");
 
 			if (c == '\n')
 				block_newline = true;
@@ -987,10 +963,7 @@ err_t scan_next_token(token_t *token)
 
 		case S_COMMENT_BLOCK_2:
 			if (c == EOF)
-			{
-				print_err_l("An EOF is not allowed inside a comment block.", ERR_SCANNER, token->line);
-				return scan_fail(&buf, ERR_SCANNER);
-			}
+				return scan_fail(&buf, ERR_SCANNER, "Unterminated block comment.");
 
 			if (c == '\n')
 				block_newline = true;
@@ -999,7 +972,7 @@ err_t scan_next_token(token_t *token)
 			{
 				depth--;
 
-				if (depth == 0 && block_newline)
+				if (depth == 0 && block_newline && scanner_paren_depth == 0)
 				{
 					newline_seen = true;
 					comment_eol = true;
@@ -1022,8 +995,37 @@ err_t scan_next_token(token_t *token)
 static bool token_cached;
 static token_t token_cache;
 
+/**
+ * @brief Check if the token follows the newline rule given by the parser
+ *
+ * @param token Accepted token
+ * @param eol Newline rule
+ * @return err_t ERR_OK, or ERR_SYNTAX if the rule is broken
+ */
+err_t check_eol(const token_t *token, eol_rule_t eol)
+{
+	if (token->type == TOKEN_EOF)
+		return ERR_OK;
+
+	if (eol == EOL_REQUIRED && !token->starts_logical_line)
+	{
+		print_err_l("Expected a newline before the token.", ERR_SYNTAX, token->line);
+		return ERR_SYNTAX;
+	}
+
+	if (eol == EOL_FORBIDDEN && token->starts_logical_line)
+	{
+		print_err_l("Unexpected newline before the token.", ERR_SYNTAX, token->line);
+		return ERR_SYNTAX;
+	}
+
+	return ERR_OK;
+}
+
 err_t get_next_token(token_t *token, eol_rule_t eol)
 {
+	err_t result = ERR_OK;
+
 	if (token_cached)
 	{
 		*token = token_cache;
@@ -1031,12 +1033,19 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 	}
 	else
 	{
-		err_t result = scan_next_token(token);
+		result = scan_next_token(token);
 		if (result)
 			return result;
 	}
 
-	return check_eol(token, eol);
+	result = check_eol(token, eol);
+	if (result)
+	{
+		free(token->attribute.string);
+		token->attribute.string = NULL;
+	}
+
+	return result;
 }
 
 err_t peek_next_token(token_t *token, eol_rule_t eol)
