@@ -666,6 +666,27 @@ ast_node_t *ast_if_make(ast_node_t *condition_node)
 	return node;
 }
 
+ast_node_t *ast_if_expr_make(ast_node_t *condition_node, ast_node_t *then_node, ast_node_t *else_node)
+{
+	if (condition_node == NULL || then_node == NULL || else_node == NULL)
+	{
+		return NULL;
+	}
+
+	ast_node_t *node = malloc(sizeof(ast_node_t));
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_IF_EXPR;
+	node->if_expression.condition = condition_node;
+	node->if_expression.then_branch = then_node;
+	node->if_expression.else_branch = else_node;
+	return node;
+}
+
 err_t ast_if_set_then_block(ast_node_t *if_node, ast_node_t *block)
 {
 	if (if_node == NULL || block == NULL)
@@ -948,6 +969,12 @@ void destruct(ast_node_t *root)
 		destruct(root->if_statement.condition);
 		destruct(root->if_statement.if_block);
 		destruct(root->if_statement.else_block);
+		break;
+
+	case AST_IF_EXPR:
+		destruct(root->if_expression.condition);
+		destruct(root->if_expression.then_branch);
+		destruct(root->if_expression.else_branch);
 		break;
 
 	case AST_WHILE:
