@@ -4,5 +4,5 @@ def xyz() =
   1+2
 
 @main
-def main() =
+def main(): Unit =
   abc()()
