@@ -27,6 +27,7 @@ err_t check_var_assign(ast_node_t *node, compiler_data_t *cdata);
 err_t check_var_use(ast_node_t *node, const compiler_data_t *cdata);
 err_t check_return_call(ast_node_t *node, compiler_data_t *cdata);
 err_t check_if(ast_node_t *node, compiler_data_t *cdata);
+err_t check_if_expression(ast_node_t *node, compiler_data_t *cdata);
 err_t check_while(ast_node_t *node, compiler_data_t *cdata);
 err_t check_for(ast_node_t *node, compiler_data_t *cdata);
 err_t check_int_to_double(ast_node_t *node, compiler_data_t *cdata);
@@ -1103,6 +1104,67 @@ err_t check_if(ast_node_t *node, compiler_data_t *cdata)
 }
 
 /**
+ * @brief Recursive checks for the if_expression node
+ *
+ * @param node AST if expression
+ * @param cdata Compiler data
+ * @return err_t Error code
+ */
+err_t check_if_expression(ast_node_t *node, compiler_data_t *cdata)
+{
+	if (!node || !cdata)
+	{
+		print_err("Null-pointer reference in check_if_expression()!", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	// Evaluate the condition
+	err_t result = check_unknown_node(node->if_expression.condition, cdata);
+	if (result)
+		return result;
+
+	if (node->if_expression.condition->eval_type != TYPE_BOOLEAN)
+	{
+		print_err("The condition of an if expression must be a Boolean.", ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
+	}
+
+	// Evaluate the branches
+	result = check_unknown_node(node->if_expression.then_branch, cdata);
+	if (result)
+		return result;
+	data_type_t then_type = node->if_expression.then_branch->eval_type;
+
+	result = check_unknown_node(node->if_expression.else_branch, cdata);
+	if (result)
+		return result;
+	data_type_t else_type = node->if_expression.else_branch->eval_type;
+
+	// Check for int to double conversions
+	if (then_type == TYPE_DOUBLE && else_type == TYPE_INT)
+	{
+		result = insert_int_to_double_node(&node->if_expression.else_branch);
+		if (result)
+			return result;
+	}
+	else if (then_type == TYPE_INT && else_type == TYPE_DOUBLE)
+	{
+		result = insert_int_to_double_node(&node->if_expression.then_branch);
+		if (result)
+			return result;
+	}
+	// Check if both branches have the same type
+	else if (then_type != else_type)
+	{
+		print_err("The branches of an if expression must have compatible types.", ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
+	}
+
+	node->eval_type = node->if_expression.then_branch->eval_type;
+	return ERR_OK;
+}
+
+/**
  * @brief Recursive checks for the while node
  *
  * @param node AST while node
@@ -1376,6 +1438,8 @@ err_t check_unknown_node(ast_node_t *node, compiler_data_t *cdata)
 		return check_return_call(node, cdata);
 	case AST_IF:
 		return check_if(node, cdata);
+	case AST_IF_EXPR:
+		return check_if_expression(node, cdata);
 	case AST_WHILE:
 		return check_while(node, cdata);
 	case AST_FOR:

@@ -896,6 +896,27 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		printf("LABEL %s$if$%u$end\n", new_func_def->func_name, curr_if);
 		break;
 
+	case AST_IF_EXPR:
+		unsigned curr_if_expr = new_func_def->if_counter;
+		new_func_def->if_counter++;
+
+		generate_nodes(node->if_expression.condition, symtables, new_func_def);
+
+		// Condition evaluation
+		printf("PUSHS bool@true\n");
+		printf("JUMPIFNEQS %s$if$%u$else\n", new_func_def->func_name, curr_if_expr);
+
+		// If block
+		generate_nodes(node->if_expression.then_branch, symtables, new_func_def);
+		printf("JUMP %s$if$%u$end\n", new_func_def->func_name, curr_if_expr);
+
+		// Else block
+		printf("LABEL %s$if$%u$else\n", new_func_def->func_name, curr_if_expr);
+		generate_nodes(node->if_expression.else_branch, symtables, new_func_def);
+
+		printf("LABEL %s$if$%u$end\n", new_func_def->func_name, curr_if_expr);
+		break;
+
 	case AST_WHILE:
 		unsigned curr_while = new_func_def->while_counter;
 		new_func_def->while_counter++;
