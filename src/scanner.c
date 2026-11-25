@@ -356,7 +356,7 @@ err_t scan_string(buffer_t *buf, token_t *token, bool comment_eol)
  * @param eol
  * @return err_t
  */
-err_t scan_next_token(token_t *token, eol_rule_t eol)
+err_t scan_next_token(token_t *token)
 {
 	buffer_t buf = {0};
 	state_t state = S_START;
@@ -968,7 +968,7 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 	}
 	else
 	{
-		err_t result = scan_next_token(token, eol);
+		err_t result = scan_next_token(token);
 		if (result)
 			return result;
 	}
@@ -980,7 +980,7 @@ err_t peek_next_token(token_t *token, eol_rule_t eol)
 {
 	if (!token_cached)
 	{
-		err_t result = scan_next_token(&token_cache, eol);
+		err_t result = scan_next_token(&token_cache);
 		if (result)
 			return result;
 		token_cached = true;
