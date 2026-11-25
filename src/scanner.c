@@ -329,13 +329,12 @@ err_t scan_string(buffer_t *buf, token_t *token, bool comment_eol)
 }
 
 /**
- * @brief Get the next token object
+ * @brief Read the next token from the input
  *
- * @param token
- * @param eol
- * @return err_t
+ * @param token Pointer to where the accepted token should be saved
+ * @return err_t Error
  */
-err_t scan_next_token(token_t *token, eol_rule_t eol)
+err_t scan_next_token(token_t *token)
 {
 	buffer_t buf = {0};
 	state_t state = S_START;
@@ -345,7 +344,6 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 	bool comment_eol = false;
 
 	memset(token, 0, sizeof(*token));
-	(void)eol; // TODO: check EOL
 
 	while (true)
 	{
@@ -964,8 +962,31 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 static bool token_cached;
 static token_t token_cache;
 
+/**
+ * @brief Check if the token follows the newline rule given by the parser
+ *
+ * @param token Accepted token
+ * @param eol Newline rule
+ * @return err_t ERR_OK, or ERR_SYNTAX if the rule is broken
+ */
+err_t check_eol(const token_t *token, eol_rule_t eol)
+{
+	if (token->type == TOKEN_EOF)
+		return ERR_OK;
+
+	if (eol == EOL_REQUIRED && !token->starts_logical_line)
+		return ERR_SYNTAX;
+
+	if (eol == EOL_FORBIDDEN && token->starts_logical_line)
+		return ERR_SYNTAX;
+
+	return ERR_OK;
+}
+
 err_t get_next_token(token_t *token, eol_rule_t eol)
 {
+	err_t result = ERR_OK;
+
 	if (token_cached)
 	{
 		*token = token_cache;
@@ -973,17 +994,28 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 	}
 	else
 	{
-		return scan_next_token(token, eol);
+		result = scan_next_token(token);
+		if (result)
+			return result;
 	}
 
-	return ERR_OK;
+	result = check_eol(token, eol);
+	if (result)
+	{
+		free(token->attribute.string);
+		token->attribute.string = NULL;
+	}
+
+	return result;
 }
 
 err_t peek_next_token(token_t *token, eol_rule_t eol)
 {
+	(void)eol; // Checked later by get_next_token
+
 	if (!token_cached)
 	{
-		err_t result = scan_next_token(&token_cache, eol);
+		err_t result = scan_next_token(&token_cache);
 		if (result)
 			return result;
 		token_cached = true;
