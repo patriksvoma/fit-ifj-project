@@ -99,6 +99,7 @@ bool scanner_first_token = true;   // The next token is the first one in the fil
 unsigned scanner_line_indent = 0;  // Spaces at the start of the current line
 bool scanner_line_start = true;    // Still reading spaces at the start of the line
 bool scanner_line_tab = false;     // A tab was found at the start of the line
+unsigned scanner_paren_depth = 0;  // Number of open parentheses
 
 /**
  * @brief Read the next character from the input and update the position
@@ -355,8 +356,12 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 		case S_START:
 			if (c == '\n')
 			{
-				newline_seen = true;
-				comment_eol = false;
+				if (scanner_paren_depth == 0)
+				{
+					newline_seen = true;
+					comment_eol = false;
+				}
+
 				scanner_line_indent = 0;
 				scanner_line_start = true;
 				scanner_line_tab = false;
@@ -450,9 +455,12 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 				token->type = TOKEN_EOF;
 				return scan_accept(&buf, token, comment_eol);
 			case '(':
+				scanner_paren_depth++;
 				token->type = TOKEN_OPENING_BRACKET;
 				return scan_accept(&buf, token, comment_eol);
 			case ')':
+				if (scanner_paren_depth > 0)
+					scanner_paren_depth--;
 				token->type = TOKEN_CLOSING_BRACKET;
 				return scan_accept(&buf, token, comment_eol);
 			case ',':
@@ -933,7 +941,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			{
 				depth--;
 
-				if (depth == 0 && block_newline)
+				if (depth == 0 && block_newline && scanner_paren_depth == 0)
 				{
 					newline_seen = true;
 					comment_eol = true;
