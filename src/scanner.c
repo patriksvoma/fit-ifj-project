@@ -269,41 +269,6 @@ err_t scan_fail(buffer_t *buf, err_t err, const char *message)
 }
 
 /**
- * @brief Check if the token matches the end of line rule
- *
- * @param token Token
- * @param eol EOL rule
- * @return err_t Error code
- */
-static err_t check_eol(const token_t *token, eol_rule_t eol)
-{
-	switch (eol)
-	{
-	case EOL_REQUIRED:
-		if (token->starts_logical_line)
-			return ERR_OK;
-		else
-		{
-			print_err_l("End-of-line is required but is missing.", ERR_SYNTAX, token->line);
-			return ERR_SYNTAX;
-		}
-	case EOL_FORBIDDEN:
-		if (token->starts_logical_line)
-		{
-			print_err_l("End-of-line is not allowed here.", ERR_SYNTAX, token->line);
-			return ERR_SYNTAX;
-		}
-		else
-			return ERR_OK;
-	case EOL_OPTIONAL:
-		return ERR_OK;
-	default:
-		print_err_l("Invalid EOL rule. This should not happen.", ERR_INTERNAL, token->line);
-		return ERR_INTERNAL;
-	}
-}
-
-/**
  * @brief Finish an accepted token
  *
  * @param buf Token buffer
@@ -357,8 +322,10 @@ err_t scan_number(buffer_t *buf, token_t *token, bool comment_eol)
 {
 	err_t err = convert_number(buf->data, token);
 	if (err != ERR_OK)
-		return scan_fail(buf, err, "Number literal is out of range.");
-
+	{
+		buf_free(buf);
+		return err;
+	}
 	return scan_accept(buf, token, comment_eol);
 }
 
@@ -1083,8 +1050,6 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 
 err_t peek_next_token(token_t *token, eol_rule_t eol)
 {
-	(void)eol; // Checked later by get_next_token
-
 	if (!token_cached)
 	{
 		err_t result = scan_next_token(&token_cache);
