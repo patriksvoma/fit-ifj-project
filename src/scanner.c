@@ -98,6 +98,7 @@ unsigned scanner_prev_column = 0; // Column before the last newline, used by unr
 bool scanner_first_token = true;   // The next token is the first one in the file
 unsigned scanner_line_indent = 0;  // Spaces at the start of the current line
 bool scanner_line_start = true;    // Still reading spaces at the start of the line
+bool scanner_line_tab = false;     // A tab was found at the start of the line
 
 /**
  * @brief Read the next character from the input and update the position
@@ -262,11 +263,19 @@ err_t scan_fail(buffer_t *buf, err_t err)
  * @param buf Token buffer
  * @param token Accepted token
  * @param comment_eol A multiline block comment was read on the current line
- * @return err_t ERR_OK, or ERR_SYNTAX if a token follows a multiline block comment on the same line
+ * @return err_t ERR_OK, ERR_SCANNER if the line starts with a tab,
+ *         or ERR_SYNTAX if a token follows a multiline block comment on the same line
  */
 err_t scan_accept(buffer_t *buf, token_t *token, bool comment_eol)
 {
 	buf_free(buf);
+
+	if (scanner_line_tab && token->type != TOKEN_EOF)
+	{
+		free(token->attribute.string);
+		token->attribute.string = NULL;
+		return ERR_SCANNER;
+	}
 
 	if (comment_eol && token->type != TOKEN_EOF)
 	{
@@ -350,6 +359,7 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 				comment_eol = false;
 				scanner_line_indent = 0;
 				scanner_line_start = true;
+				scanner_line_tab = false;
 				break;
 			}
 
@@ -357,6 +367,13 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 			{
 				if (scanner_line_start)
 					scanner_line_indent++;
+				break;
+			}
+
+			if (c == '\t')
+			{
+				if (scanner_line_start)
+					scanner_line_tab = true;
 				break;
 			}
 
