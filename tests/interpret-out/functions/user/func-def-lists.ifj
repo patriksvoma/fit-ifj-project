@@ -1,0 +1,8 @@
+import ifj26.*
+
+@main def main(): Unit =
+  return
+
+def foo (n: Int)(m: String, o: Unit)(): Int =
+  var x = n
+  return o
