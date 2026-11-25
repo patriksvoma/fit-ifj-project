@@ -240,9 +240,32 @@ run_case "boolthen-operators.ifj" 0 "boolthen/valid/boolthen-operators.ifj"
 echo "$BLUE-----While-----$RESET"
 run_case "boolthen-while.ifj" 0 "boolthen/valid/boolthen-while.ifj"
 
-echo "BLUE-----Built-in functions-----$RESET"
+echo "$BLUE-----Built-in functions-----$RESET"
 run_case "boolthen-readboolean.ifj" 0 "boolthen/valid/boolthen-readboolean.ifj"
 run_case "boolthen-tostr.ifj" 0 "boolthen/valid/boolthen-tostr.ifj"
+
+echo "$YELLOW-----CONTROL-----$RESET"
+echo "$BLUE-----If expression-----$RESET"
+run_case "control-if-expression-int.ifj" 0 "control/valid/control-if-expression-int.ifj"
+run_case "control-if-expression-bool.ifj" 0 "control/valid/control-if-expression-bool.ifj"
+run_case "control-if-expression-string.ifj" 0 "control/valid/control-if-expression-string.ifj"
+run_case "control-if-expression-multiline.ifj" 0 "control/valid/control-if-expression-multiline.ifj"
+
+echo "$BLUE-----For loops-----$RESET"
+run_case "control-for-to.ifj" 0 "control/valid/control-for-to.ifj"
+run_case "control-for-by.ifj" 0 "control/valid/control-for-by.ifj"
+run_case "control-for-by-negative.ifj" 0 "control/valid/control-for-by-negative.ifj"
+run_case "control-for-until.ifj" 0 "control/valid/control-for-until.ifj"
+
+echo "$BLUE-----For guards-----$RESET"
+run_case "control-for-guard.ifj" 0 "control/valid/control-for-guard.ifj"
+run_case "control-for-guard-expression.ifj" 0 "control/valid/control-for-guard-expression.ifj"
+run_case "control-for-multiple-guards.ifj" 0 "control/valid/control-for-multiple-guards.ifj"
+
+echo "$BLUE-----For syntax-----$RESET"
+run_case "control-for-single-body.ifj" 0 "control/valid/control-for-single-body.ifj"
+run_case "control-for-multiline.ifj" 0 "control/valid/control-for-multiline.ifj"
+
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then

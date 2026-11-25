@@ -1,0 +1,9 @@
+import ifj26.*
+
+@main def main(): Unit =
+    val x: Int = 1
+    val y: Int = 10
+    val z: Int = 2
+
+    for i <- x to y by z do
+        print(i)

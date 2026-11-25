@@ -1,0 +1,5 @@
+import ifj26.*
+
+@main def main(): Unit =
+    val x: Int = 5
+    val y: Int = if x < 5 then 54 + x else x
