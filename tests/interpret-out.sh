@@ -195,7 +195,7 @@ run_case "func_def_more_lists" "functions/user/func-def-lists.ifj" "" ""
 
 echo "$BLUE-----function call-----$RESET"
 run_case "func_call" "functions/user/func-call.ifj" "" "5"
-run_case "func_call" "functions/user/func-call-lists.ifj" "" "-50"
+run_case "func_call" "functions/user/func-call-lists.ifj" "" "-5ahoj"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
