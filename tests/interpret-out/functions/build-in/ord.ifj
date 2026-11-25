@@ -1,0 +1,4 @@
+import ifj26.*
+
+@main def ord_i(): Unit =
+  print(ord(readLine(), 3))

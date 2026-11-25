@@ -315,10 +315,8 @@ void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 		{
 			for (size_t j = func_params->data.function.param_lists[i - 1]->param_count; j > 0; j--)
 			{
-				printf("DEFVAR LF@%s$%s\n", unique_id,
-					   func_params->data.function.param_lists[i - 1]->params[j - 1]->identifier);
-				printf("POPS LF@%s$%s\n", unique_id,
-					   func_params->data.function.param_lists[i - 1]->params[j - 1]->identifier);
+				printf("DEFVAR LF@%s\n", func_params->data.function.param_lists[i - 1]->params[j - 1]->identifier);
+				printf("POPS LF@%s\n", func_params->data.function.param_lists[i - 1]->params[j - 1]->identifier);
 			}
 		}
 	}
@@ -512,8 +510,8 @@ err_t print_ext_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 	printf("PUSHFRAME\n");
 
 	// Base
-	printf("DEFVAR LF@%s$%s\n", unique_id, ext_params->data.extension.base_param.identifier);
-	printf("POPS LF@%s$%s\n", unique_id, ext_params->data.extension.base_param.identifier);
+	printf("DEFVAR LF@%s\n", ext_params->data.extension.base_param.identifier);
+	printf("POPS LF@%s\n", ext_params->data.extension.base_param.identifier);
 
 	// Definition and assigment of parameters from the last one, because parameters will be pushed to stack in order
 	// when calling the function
@@ -523,10 +521,8 @@ err_t print_ext_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 		{
 			for (size_t j = ext_params->data.extension.param_lists[i - 1]->param_count; j > 0; j--)
 			{
-				printf("DEFVAR LF@%s$%s\n", unique_id,
-					   ext_params->data.extension.param_lists[i - 1]->params[j - 1]->identifier);
-				printf("POPS LF@%s$%s\n", unique_id,
-					   ext_params->data.extension.param_lists[i - 1]->params[j - 1]->identifier);
+				printf("DEFVAR LF@%s\n", ext_params->data.extension.param_lists[i - 1]->params[j - 1]->identifier);
+				printf("POPS LF@%s\n", ext_params->data.extension.param_lists[i - 1]->params[j - 1]->identifier);
 			}
 		}
 	}

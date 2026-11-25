@@ -103,25 +103,99 @@ run_case()
 }
 
 echo "$YELLOW-----Interpret output tests-----$RESET"
-
+echo "$BLUE-----main definition-----$RESET"
 run_case "main-def" "main/main.ifj" "" ""
 
+echo "$YELLOW-----Built-in functions-----$RESET"
 #Build-it print tests
+echo "$BLUE-----print-----$RESET"
 run_case "print-int" "functions/build-in/print-int.ifj" "" "6"
-run_case "print-int-var" "functions/build-in/print-int-var.ifj" "" "5"
 run_case "print-double" "functions/build-in/print-double.ifj" "" "0x1.a9db22d0e5604p+2"
 run_case "print-string" "functions/build-in/print-string.ifj" "" "ahoj svete"
 run_case "print-unit" "functions/build-in/print-unit.ifj" "" "()"
 
 #Build-in readLine tests
+echo "$BLUE-----readLine-----$RESET"
 run_case "readLine" "functions/build-in/readLine.ifj" "ahoj" "ahoj"
 run_case "readLine" "functions/build-in/readLine.ifj" "" ""
 
 #Build-in readInt
+echo "$BLUE-----readInt-----$RESET"
 run_case "readInt" "functions/build-in/readInt.ifj" "10" "10"
 run_case "readInt" "functions/build-in/readInt.ifj" "" "0"
 run_case "readInt" "functions/build-in/readInt.ifj" "asd10da" "0"
 run_case "readInt" "functions/build-in/readInt.ifj" "10__0" "0"
+
+#Build-in readDouble
+echo "$BLUE-----readDouble-----$RESET"
+run_case "readDouble" "functions/build-in/readDouble.ifj" "0x0p+0" "0x0p+0"
+run_case "readDouble" "functions/build-in/readDouble.ifj" "10" "0x1.4p+3"
+run_case "readDouble" "functions/build-in/readDouble.ifj" "10__" "0x0p+0"
+run_case "readDouble" "functions/build-in/readDouble.ifj" "fdh541n" "0x0p+0"
+run_case "readDouble" "functions/build-in/readDouble.ifj" "" "0x0p+0"
+
+#Build-in readBoolean
+echo "$BLUE-----readBoolean-----$RESET"
+run_case "readBool" "functions/build-in/readBool.ifj" "0" "false"
+run_case "readBool" "functions/build-in/readBool.ifj" "1" "false"
+run_case "readBool" "functions/build-in/readBool.ifj" "asdtruefs" "false"
+run_case "readBool" "functions/build-in/readBool.ifj" "_true" "false"
+run_case "readBool" "functions/build-in/readBool.ifj" "true" "true"
+
+#Build-in toStr
+echo "$BLUE-----toStr-----$RESET"
+run_case "toStr_int" "functions/build-in/toStr-int.ifj" "" "654"
+run_case "toStr_double" "functions/build-in/toStr-double.ifj" "" "615.16"
+run_case "toStr_string" "functions/build-in/toStr-string.ifj" "" "ahoj"
+run_case "toStr_bool" "functions/build-in/toStr-bool.ifj" "" "true"
+run_case "toStr_unit" "functions/build-in/toStr-unit.ifj" "" "()"
+
+#Build-in toInt
+echo "$BLUE-----toInt-----$RESET"
+run_case "toInt" "functions/build-in/toInt.ifj" "" "120"
+
+#Build-in strLength
+echo "$BLUE-----strLength-----$RESET"
+run_case "strLength" "functions/build-in/strLength.ifj" "ahoj svete" "10"
+run_case "strLength" "functions/build-in/strLength.ifj" "" "0"
+
+#Build-in subStr
+echo "$BLUE-----subStr-----$RESET"
+run_case "subStr" "functions/build-in/subStr.ifj" "ahoj svete" "svete"
+run_case "subStr" "functions/build-in/subStr.ifj" "ah" "" "40"
+run_case "subStr" "functions/build-in/subStr.ifj" "ahoj svet" "" "40"
+run_case "subStr" "functions/build-in/subStr-invalid-start.ifj" "ahoj svete" "" "40"
+run_case "subStr" "functions/build-in/subStr-invalid-end.ifj" "ahoj svete" "" "40"
+run_case "subStr" "functions/build-in/subStr-invalid-both.ifj" "ahoj svete" "" "40"
+
+#Build-in ord
+echo "$BLUE-----ord-----$RESET"
+run_case "ord" "functions/build-in/ord.ifj" "ahoj svete" "106"
+run_case "ord" "functions/build-in/ord-invalid.ifj" "-1" "-1"
+run_case "ord" "functions/build-in/ord-invalid.ifj" "10" "-1"
+
+#Build-in chr
+echo "$BLUE-----chr-----$RESET"
+run_case "chr" "functions/build-in/chr.ifj" "97" "a"
+run_case "chr" "functions/build-in/chr.ifj" "-1" "" "58"
+run_case "chr" "functions/build-in/chr.ifj" "200" "" "58"
+
+echo "$YELLOW-----User functions-----$RESET"
+#Function definition
+
+#TODO: Pridat vice testu
+
+echo "$BLUE-----function def-----$RESET"
+run_case "func_def" "functions/user/func-def.ifj" "" ""
+run_case "func_def_more_lists" "functions/user/func-def-lists.ifj" "" ""
+
+#Function calling
+
+#TODO: Pridat vice testu
+
+echo "$BLUE-----function call-----$RESET"
+run_case "func_call" "functions/user/func-call.ifj" "" "5"
+run_case "func_call" "functions/user/func-call-lists.ifj" "" "-50"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
