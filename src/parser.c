@@ -982,6 +982,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		}
 		entry->symbol_type = SYM_VARIABLE;
 		entry->data.variable.mutable = false;
+		entry->data.variable.type = TYPE_NONE;
 		result = symbol_generate_unique_id(cdata->token.attribute.string, entry, cdata->local_var_table);
 		if (result)
 			return result;
@@ -992,6 +993,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 
 		// Create an AST node
 		statement_node = ast_var_def_make(entry->data.variable.unique_name);
+		statement_node->variable_definition.sym_table_entry = entry;
 
 		// <val-var-def>
 		result = val_var_def(cdata, statement_node, entry);
@@ -1031,6 +1033,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		}
 		entry->symbol_type = SYM_VARIABLE;
 		entry->data.variable.mutable = true;
+		entry->data.variable.type = TYPE_NONE;
 		result = symbol_generate_unique_id(cdata->token.attribute.string, entry, cdata->local_var_table);
 		if (result)
 			return result;
@@ -1041,6 +1044,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 
 		// Create an AST node
 		statement_node = ast_var_def_make(entry->data.variable.unique_name);
+		statement_node->variable_definition.sym_table_entry = entry;
 
 		// <val-var-def>
 		result = val_var_def(cdata, statement_node, entry);
@@ -1411,7 +1415,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			if (result)
 				return result;
 
-			const symbol_data_t *entry = symtable_item_find(cdata->local_var_table, id_token.attribute.string);
+			symbol_data_t *entry = symtable_item_find(cdata->local_var_table, id_token.attribute.string);
 			if (!entry)
 			{
 				print_err_l("Variable must be defined before assignment.", ERR_SEMANTIC_UNDEFINED, cdata->token.line);
@@ -1424,6 +1428,8 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 				print_err_l("Failed to create an AST node in statement().", ERR_INTERNAL, cdata->token.line);
 				return ERR_INTERNAL;
 			}
+			statement_node->variable_assignment.sym_table_entry = entry;
+
 			return ast_block_add_statement(block_node, statement_node);
 		}
 
@@ -1858,14 +1864,6 @@ err_t val_var_def(compiler_data_t *cdata, ast_node_t *var_def_node, symbol_data_
 		if (result)
 			return result;
 
-		// If types dont match, throw a semantic error
-		if (table_entry->data.variable.type != assigned_value_node->eval_type)
-		{
-			print_err_l("Type of the expression assigned to variable does not match its type.",
-						ERR_SEMANTIC_INVALID_TYPE, cdata->token.line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		return ast_var_def_set_assignment(var_def_node, assigned_value_node);
 	}
 
@@ -1881,9 +1879,6 @@ err_t val_var_def(compiler_data_t *cdata, ast_node_t *var_def_node, symbol_data_
 		result = expression(cdata, &assigned_value_node);
 		if (result)
 			return result;
-
-		// Set the type of the variable
-		table_entry->data.variable.type = assigned_value_node->eval_type;
 
 		return ast_var_def_set_assignment(var_def_node, assigned_value_node);
 	}
