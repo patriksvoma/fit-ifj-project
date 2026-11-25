@@ -8,3 +8,10 @@ ifj-project
 
 # Test runners
 *.test
+
+# Test files
+test-input.txt
+out.prog
+
+# Archive file
+xsvomap00.zip

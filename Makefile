@@ -57,6 +57,20 @@ interpret-test: build
 format:
 	clang-format -i $(SRC) $(HEADERS)
 
+# Packs the archive for submission and tests it on merlin
+pack: clean
+	zip -r xsvomap00.zip src dokumentace.pdf rozdeleni rozsireni Makefile tests
+	scp ./xsvomap00.zip merlin:~/xsvomap00.zip
+	scp ./is_it_ok.sh merlin:~/is_it_ok.sh
+	ssh merlin '\
+	mkdir -p tmp_ifj && \
+	mv xsvomap00.zip tmp_ifj/xsvomap00.zip && \
+	mv is_it_ok.sh tmp_ifj/is_it_ok.sh && \
+	cd tmp_ifj && \
+	./is_it_ok.sh xsvomap00.zip && \
+	exit \
+	'
+
 # Cleans files created during a build
 clean:
-	rm -f $(OBJ) $(DEP) $(TARGET) $(TEST_BIN) $(TEST_BIN:.test=.d) $(TEST_BIN:=.test)
+	rm -f $(OBJ) $(DEP) $(TARGET) $(TEST_BIN) $(TEST_BIN:.test=.d) $(TEST_BIN:=.test) xsvomap00.zip
