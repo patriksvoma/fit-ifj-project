@@ -14,13 +14,15 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+struct symbol_data;
+
 typedef struct ast_node ast_node_t;
 
 /**
  * @brief Data types
  *
  */
-typedef enum
+typedef enum data_type
 {
 	TYPE_NONE,
 	TYPE_INT,
@@ -78,6 +80,7 @@ typedef enum
 	AST_VAR_USE,
 	AST_RETURN_CALL,
 	AST_IF,
+	AST_IF_EXPR,
 	AST_WHILE,
 	AST_FOR,
 	AST_INT_TO_DOUBLE
@@ -200,6 +203,7 @@ struct ast_node
 		struct
 		{
 			char *unique_id;
+			struct symbol_data *sym_table_entry;
 			ast_node_t *assigned_value;
 		} variable_definition;
 
@@ -207,11 +211,16 @@ struct ast_node
 		struct
 		{
 			char *unique_id;
+			struct symbol_data *sym_table_entry;
 			ast_node_t *assigned_value;
 		} variable_assignment;
 
 		// Variable usage
-		char *variable_use_unique_id;
+		struct
+		{
+			char *unique_id;
+			struct symbol_data *sym_table_entry;
+		} variable_use;
 
 		// Return expression
 		ast_node_t *return_call;
@@ -223,6 +232,14 @@ struct ast_node
 			ast_node_t *if_block;
 			ast_node_t *else_block;
 		} if_statement;
+
+		// If expression
+		struct
+		{
+			ast_node_t *condition;
+			ast_node_t *then_branch;
+			ast_node_t *else_branch;
+		} if_expression;
 
 		// While loop
 		struct
@@ -476,6 +493,16 @@ ast_node_t *ast_return_call_make(ast_node_t *return_value_node);
  * @return ast_node_t* Pointer to the node
  */
 ast_node_t *ast_if_make(ast_node_t *condition_node);
+
+/**
+ * @brief Makes a node for an if expression
+ *
+ * @param condition_node Node containing the condition
+ * @param then_node Node containing the then expression
+ * @param else_node Node containing the else expression
+ * @return ast_node_t* Pointer to the node
+ */
+ast_node_t *ast_if_expr_make(ast_node_t *condition_node, ast_node_t *then_node, ast_node_t *else_node);
 
 /**
  * @brief Sets block for if branch

@@ -522,36 +522,6 @@ void symtable_destroy(symtable_t **table)
 	*table = NULL;
 }
 
-symtable_t *local_table_create(symtable_t *parent)
-{
-	symtable_t *table = malloc(sizeof(symtable_t));
-	if (!table)
-		return NULL;
-
-	table->parent = parent;
-	table->root_node = NULL;
-	table->child_table_counter = 0;
-
-	// Increase the parent nodes child counter
-	// Used for generating unique identifiers
-	if (parent)
-		parent->child_table_counter++;
-
-	return table;
-}
-
-symtable_t *local_table_destroy(symtable_t *table)
-{
-	if (!table)
-		return NULL;
-
-	symtable_t *parent = table->parent;
-
-	symtable_destroy(&table);
-
-	return parent;
-}
-
 err_t append_last_table_counter(char **buf, size_t *buf_len, symtable_t *table)
 {
 	// Go recuresively to the global table, as that is supposed to be the first one to be appended
@@ -669,7 +639,7 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 
 			for (unsigned param_index = 0; param_index < list->param_count; param_index++)
 			{
-				const param_t *param = list->params[param_index];
+				param_t *param = list->params[param_index];
 				if (param == NULL)
 				{
 					print_err("Trying to access NULL param inside symbol_func_add_parameters_into_table()!",
@@ -698,6 +668,16 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 				result = symbol_generate_unique_id(param->identifier, entry, table);
 				if (result)
 					return result;
+
+				// Also rewrite the original param name with the unique id
+				free(param->identifier);
+				param->identifier = malloc(strlen(entry->data.variable.unique_name) + 1);
+				if (param->identifier == NULL)
+				{
+					print_err("Failed to allocate memory in symbol_func_add_parameters_into_table()!", ERR_INTERNAL);
+					return ERR_INTERNAL;
+				}
+				strcpy(param->identifier, entry->data.variable.unique_name);
 			}
 		}
 	}
@@ -1075,6 +1055,24 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 	if (result)
 		return result;
 	result = symbol_add_param_named(entry, "code", TYPE_INT);
+	if (result)
+		return result;
+
+	// readBoolean(): Boolean
+	entry = symtable_item_create(func_table, "readBoolean");
+	if (!entry)
+	{
+		print_err("Faild to create a symbol table entry for readBool().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	entry->symbol_type = SYM_FUNCTION;
+	entry->data.function.is_defined = true;
+	entry->data.function.is_main = false;
+	entry->data.function.return_type = TYPE_BOOLEAN;
+	result = symbol_generate_unique_id("readBoolean", entry, func_table);
+	if (result)
+		return result;
+	result = symbol_add_param_list(entry);
 	if (result)
 		return result;
 

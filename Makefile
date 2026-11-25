@@ -3,7 +3,7 @@
 # Authors:
 #	xsvomap00 (Patrik Švoma)
 
-.PHONY: build check build-check test e2e-test format clean
+.PHONY: build check build-check test e2e-test interpret-test format clean
 
 CC = gcc-14
 CFLAGS = -Wall -Wextra -Werror -MMD -MP
@@ -49,10 +49,28 @@ tests/%.test: tests/%.c $(LIB_SRC) $(UNITY_DIR)/unity.c
 e2e-test: build
 	sh ./tests/e2e.sh
 
+# Run generated IFJcode26 output through an external interpreter
+interpret-test: build
+	sh ./tests/interpret-out.sh
+
 # Formats all .c and .h files
 format:
 	clang-format -i $(SRC) $(HEADERS)
 
+# Packs the archive for submission and tests it on merlin
+pack: clean
+	zip -r xsvomap00.zip src dokumentace.pdf rozdeleni rozsireni Makefile tests
+	scp ./xsvomap00.zip merlin:~/xsvomap00.zip
+	scp ./is_it_ok.sh merlin:~/is_it_ok.sh
+	ssh merlin '\
+	mkdir -p tmp_ifj && \
+	mv xsvomap00.zip tmp_ifj/xsvomap00.zip && \
+	mv is_it_ok.sh tmp_ifj/is_it_ok.sh && \
+	cd tmp_ifj && \
+	./is_it_ok.sh xsvomap00.zip && \
+	exit \
+	'
+
 # Cleans files created during a build
 clean:
-	rm -f $(OBJ) $(DEP) $(TARGET) $(TEST_BIN) $(TEST_BIN:.test=.d) $(TEST_BIN:=.test)
+	rm -f $(OBJ) $(DEP) $(TARGET) $(TEST_BIN) $(TEST_BIN:.test=.d) $(TEST_BIN:=.test) xsvomap00.zip

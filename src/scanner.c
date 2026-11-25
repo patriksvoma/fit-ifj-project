@@ -232,7 +232,10 @@ err_t convert_number(const char *text, token_t *token)
 		long long value = strtoll(text, NULL, 10);
 
 		if (errno == ERANGE)
+		{
+			print_err_l("Number is out of range for long long.", ERR_SCANNER, token->line);
 			return ERR_SCANNER;
+		}
 
 		token->attribute.integer = value;
 		return ERR_OK;
@@ -241,7 +244,10 @@ err_t convert_number(const char *text, token_t *token)
 	double value = strtod(text, NULL);
 
 	if (errno == ERANGE && (value == HUGE_VAL || value == -HUGE_VAL))
+	{
+		print_err_l("Number is out of range for double.", ERR_SCANNER, token->line);
 		return ERR_SCANNER;
+	}
 
 	token->attribute.decimal = value;
 	return ERR_OK;
@@ -260,6 +266,41 @@ err_t scan_fail(buffer_t *buf, err_t err, const char *message)
 	buf_free(buf);
 	print_err_l(message, err, scanner_line);
 	return err;
+}
+
+/**
+ * @brief Check if the token matches the end of line rule
+ *
+ * @param token Token
+ * @param eol EOL rule
+ * @return err_t Error code
+ */
+static err_t check_eol(const token_t *token, eol_rule_t eol)
+{
+	switch (eol)
+	{
+	case EOL_REQUIRED:
+		if (token->starts_logical_line)
+			return ERR_OK;
+		else
+		{
+			print_err_l("End-of-line is required but is missing.", ERR_SYNTAX, token->line);
+			return ERR_SYNTAX;
+		}
+	case EOL_FORBIDDEN:
+		if (token->starts_logical_line)
+		{
+			print_err_l("End-of-line is not allowed here.", ERR_SYNTAX, token->line);
+			return ERR_SYNTAX;
+		}
+		else
+			return ERR_OK;
+	case EOL_OPTIONAL:
+		return ERR_OK;
+	default:
+		print_err_l("Invalid EOL rule. This should not happen.", ERR_INTERNAL, token->line);
+		return ERR_INTERNAL;
+	}
 }
 
 /**
@@ -1053,6 +1094,5 @@ err_t peek_next_token(token_t *token, eol_rule_t eol)
 	}
 
 	*token = token_cache;
-
-	return ERR_OK;
+	return check_eol(token, eol);
 }

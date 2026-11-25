@@ -1,0 +1,4 @@
+import ifj26.*
+
+@main def toStr_int(): Unit =
+  print(toStr(654))

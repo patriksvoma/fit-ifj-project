@@ -15,6 +15,8 @@
 
 static err_t parse_expression_internal(compiler_data_t *cdata, ast_node_t **return_node, bool stop_at_call_delimiter);
 static err_t parse_function_call(compiler_data_t *cdata, const token_t *identifier_token, ast_node_t **return_node);
+static err_t try_parse_if_expression(compiler_data_t *cdata, symstack_item_t *item, bool expect_operand,
+									 bool stop_at_closing_parenthesis, bool *expression_consumed);
 
 /**
  * @brief All possible grammar rules
@@ -457,6 +459,7 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 						print_err_l("Failed to create an AST node in apply_rule()!", ERR_INTERNAL, line);
 						return ERR_INTERNAL;
 					}
+					node->variable_use.sym_table_entry = entry;
 				}
 				else if (entry->symbol_type == SYM_FUNCTION)
 				{
@@ -699,6 +702,116 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 }
 
 /**
+ * @brief Checks if an if statement can start at the current position, if so, parses it
+ *
+ * @param cdata Compiler data
+ * @param item Symstack item to be checked
+ * @param expect_operand If an operator or operand is currently expected (Prevents the expression consuming another if
+ *                       statement)
+ * @param stop_at_closing_parenthesis If the expression should stop at a closing bracket
+ * @param expression_consumed Returns true if an expression was parsed
+ * @return err_t Error code
+ */
+err_t try_parse_if_expression(compiler_data_t *cdata, symstack_item_t *item, bool expect_operand,
+							  bool stop_at_closing_parenthesis, bool *expression_consumed)
+{
+	if (!cdata || !item || !expression_consumed)
+	{
+		print_err("Null-reference error in try_parse_if_expression().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	*expression_consumed = false;
+	bool stop_at_delimiter = stop_at_closing_parenthesis;
+
+	if (!expect_operand || item->source_token.type != TOKEN_KEYWORD || item->source_token.attribute.keyword != KW_IF)
+		return ERR_OK;
+
+	// Consume if
+	err_t result = get_next_token(&cdata->token, EOL_OPTIONAL);
+	if (result)
+		return result;
+
+	// Parse the condition node
+	ast_node_t *condition_node = NULL;
+	result = parse_expression_internal(cdata, &condition_node, stop_at_delimiter);
+	if (result)
+	{
+		destruct(condition_node);
+		return result;
+	}
+
+	// Consume then
+	if (cdata->token.type != TOKEN_KEYWORD || cdata->token.attribute.keyword != KW_THEN)
+	{
+		print_err_l("Expected the \"then\" keyword after an if expression condition.", ERR_SYNTAX, cdata->token.line);
+		destruct(condition_node);
+		return ERR_SYNTAX;
+	}
+
+	result = get_next_token(&cdata->token, EOL_OPTIONAL);
+	if (result)
+	{
+		destruct(condition_node);
+		return result;
+	}
+
+	// Parse the then node
+	ast_node_t *then_node = NULL;
+	result = parse_expression_internal(cdata, &then_node, stop_at_delimiter);
+	if (result)
+	{
+		destruct(condition_node);
+		destruct(then_node);
+		return result;
+	}
+
+	// Consume else
+	if (cdata->token.type != TOKEN_KEYWORD || cdata->token.attribute.keyword != KW_ELSE)
+	{
+		print_err_l("Expected the \"else\" keyword after an if expression branch.", ERR_SYNTAX, cdata->token.line);
+		destruct(condition_node);
+		destruct(then_node);
+		return ERR_SYNTAX;
+	}
+
+	result = get_next_token(&cdata->token, EOL_OPTIONAL);
+	if (result)
+	{
+		destruct(condition_node);
+		destruct(then_node);
+		return result;
+	}
+
+	// Parse the else node
+	ast_node_t *else_node = NULL;
+	result = parse_expression_internal(cdata, &else_node, stop_at_delimiter);
+	if (result)
+	{
+		destruct(condition_node);
+		destruct(then_node);
+		destruct(else_node);
+		return result;
+	}
+
+	// Create the AST node
+	item->type = STACKITEM_TYPE_TERMINAL;
+	item->data.terminal = TERMINAL_I;
+	item->node = ast_if_expr_make(condition_node, then_node, else_node);
+	if (!item->node)
+	{
+		print_err_l("Failed to create an AST node for an if expression.", ERR_INTERNAL, item->source_token.line);
+		destruct(condition_node);
+		destruct(then_node);
+		destruct(else_node);
+		return ERR_INTERNAL;
+	}
+
+	*expression_consumed = true;
+	return ERR_OK;
+}
+
+/**
  * @brief Checks if the next item is a function call by peeking the next token. If so, parses the function call.
  *
  * @param cdata Compiler data
@@ -724,7 +837,7 @@ err_t try_parse_func_call(compiler_data_t *cdata, symstack_item_t *item, bool *c
 	err_t result = peek_next_token(&next_token, EOL_OPTIONAL);
 	if (result)
 		return result;
-	if (next_token.type != TOKEN_OPENING_BRACKET)
+	if (next_token.type != TOKEN_OPENING_BRACKET || next_token.starts_logical_line)
 		return ERR_OK;
 
 	// Parse the function call
@@ -777,7 +890,7 @@ err_t parse_function_call(compiler_data_t *cdata, const token_t *identifier_toke
 		return result;
 
 	// Cycle through parameter lists
-	while (cdata->token.type == TOKEN_OPENING_BRACKET)
+	while (cdata->token.type == TOKEN_OPENING_BRACKET && !cdata->token.starts_logical_line)
 	{
 		// Add an empty parameter list into the AST
 		result = ast_func_call_add_empty_param_list(call_node);
@@ -812,7 +925,7 @@ err_t parse_function_call(compiler_data_t *cdata, const token_t *identifier_toke
 				// Check for a comma separating the parameters
 				if (cdata->token.type == TOKEN_COMMA)
 				{
-					result = get_next_token(&cdata->token, EOL_FORBIDDEN);
+					result = get_next_token(&cdata->token, EOL_OPTIONAL);
 					if (result)
 						return result;
 
@@ -888,8 +1001,14 @@ err_t parse_expression_internal(compiler_data_t *cdata, ast_node_t **return_node
 	result = try_parse_func_call(cdata, b, &call_consumed);
 	if (result)
 		return result;
+	if (!call_consumed)
+	{
+		result = try_parse_if_expression(cdata, b, expect_unary, stop_at_call_delimiter, &call_consumed);
+		if (result)
+			return result;
+	}
 
-	expression_start_line = cdata->token.line;
+	expression_start_line = b->source_token.line;
 
 	while (!((b->type == STACKITEM_TYPE_TERMINAL && b->data.terminal == TERMINAL_DOLLAR) &&
 			 (stack.top->type == STACKITEM_TYPE_EXPRESSION && stack.top->next->type == STACKITEM_TYPE_TERMINAL &&
@@ -922,7 +1041,7 @@ err_t parse_expression_internal(compiler_data_t *cdata, ast_node_t **return_node
 			else if (b->source_token.type == TOKEN_CLOSING_BRACKET && parenthesis_level > 0)
 				parenthesis_level--;
 
-			//  Only get the next token if it wasn't already requested while parsing a function call
+			// Only get the next token if it wasn't already requested while parsing a function call
 			if (!call_consumed)
 			{
 				result = get_next_token(&cdata->token, EOL_OPTIONAL);
@@ -940,10 +1059,22 @@ err_t parse_expression_internal(compiler_data_t *cdata, ast_node_t **return_node
 			if (result)
 				return result;
 
-			// Try to parse a function call
-			result = try_parse_func_call(cdata, b, &call_consumed);
-			if (result)
-				return result;
+			// Try to parse a function call, but only if it is not on another logical line
+			if (expression_started && parenthesis_level == 0 && b->source_token.starts_logical_line)
+				call_consumed = false;
+			else
+			{
+				result = try_parse_func_call(cdata, b, &call_consumed);
+				if (result)
+					return result;
+				if (!call_consumed)
+				{
+					result = try_parse_if_expression(cdata, b, expect_unary,
+													 stop_at_call_delimiter || parenthesis_level > 0, &call_consumed);
+					if (result)
+						return result;
+				}
+			}
 
 			break;
 		case S:
@@ -983,10 +1114,22 @@ err_t parse_expression_internal(compiler_data_t *cdata, ast_node_t **return_node
 			if (result)
 				return result;
 
-			// Try to parse a function call
-			result = try_parse_func_call(cdata, b, &call_consumed);
-			if (result)
-				return result;
+			// Try to parse a function call, but only if it is not on another logical line
+			if (expression_started && parenthesis_level == 0 && b->source_token.starts_logical_line)
+				call_consumed = false;
+			else
+			{
+				result = try_parse_func_call(cdata, b, &call_consumed);
+				if (result)
+					return result;
+				if (!call_consumed)
+				{
+					result = try_parse_if_expression(cdata, b, expect_unary,
+													 stop_at_call_delimiter || parenthesis_level > 0, &call_consumed);
+					if (result)
+						return result;
+				}
+			}
 
 			break;
 		case R:

@@ -1,0 +1,8 @@
+import ifj26.*
+
+@main def main(): Unit =
+    val x: Int = 1
+    val y: Int = 10
+
+    for i <- x to y if i > 3 do
+        print(i)

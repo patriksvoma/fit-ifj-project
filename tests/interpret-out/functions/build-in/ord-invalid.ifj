@@ -1,0 +1,4 @@
+import ifj26.*
+
+@main def ord_str(): Unit =
+  print(ord("ahoj", readInt()))

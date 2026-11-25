@@ -33,9 +33,93 @@ err_t else_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header_in
 err_t else_if_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header_indent_level);
 err_t for_generator(compiler_data_t *cdata, ast_node_t *for_node);
 err_t for_by(compiler_data_t *cdata, ast_node_t *for_node);
-err_t for_guard(compiler_data_t *cdata, ast_node_t *for_node);
+err_t for_guard(compiler_data_t *cdata, ast_node_t *for_node, bool multiline_header, unsigned generator_indent);
 err_t val_var_def(compiler_data_t *cdata, ast_node_t *var_def_node, symbol_data_t *table_entry);
 err_t expression(compiler_data_t *cdata, ast_node_t **return_node);
+
+/**
+ * @brief Creates a new local variable table, adds it to the list and sets it as the currect table
+ *
+ * @param cdata Compiler data
+ * @return err_t Error code
+ */
+err_t local_table_create(compiler_data_t *cdata)
+{
+	if (!cdata)
+	{
+		print_err("Null-pointer reference in local_table_create().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	symtable_t *table = malloc(sizeof(symtable_t));
+	if (!table)
+	{
+		print_err("Failed to allocate memory in local_table_create().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	table->parent = cdata->local_var_table;
+	if (!table->parent)
+		table->parent = &cdata->function_table;
+
+	table->root_node = NULL;
+	table->child_table_counter = 0;
+
+	// Add the table to the table array, which holds all references to all the tables that will later be destroyed
+	symtable_t **new_tables = realloc(cdata->var_tables, sizeof(symtable_t *) * (cdata->var_table_count + 1));
+	if (!new_tables)
+	{
+		free(table);
+		print_err("Failed to allocate memory in local_table_create().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+	cdata->var_tables = new_tables;
+	cdata->var_table_count++;
+
+	cdata->var_tables[cdata->var_table_count - 1] = table;
+
+	// Increase the parent nodes child counter
+	// Used for generating unique identifiers
+	if (table->parent)
+		table->parent->child_table_counter++;
+
+	cdata->local_var_table = table;
+
+	return ERR_OK;
+}
+
+/**
+ * @brief Switches the local variable table to the parent of the current one. The previous table is not destroyed
+ *
+ * @param cdata Compiler data
+ * @return err_t Error code
+ */
+err_t local_table_leave(compiler_data_t *cdata)
+{
+	if (!cdata)
+	{
+		print_err("Null-pointer reference in local_table_leave().", ERR_INTERNAL);
+		return ERR_INTERNAL;
+	}
+
+	cdata->local_var_table = cdata->local_var_table->parent;
+
+	return ERR_OK;
+}
+
+err_t local_tables_destroy(compiler_data_t *cdata)
+{
+	for (size_t i = 0; i < cdata->var_table_count; i++)
+	{
+		symtable_destroy(&cdata->var_tables[i]);
+	}
+
+	free(cdata->var_tables);
+	cdata->var_tables = NULL;
+	cdata->var_table_count = 0;
+
+	return ERR_OK;
+}
 
 /**
  * @brief The entry rule of syntax analysis | <prologue>
@@ -185,6 +269,7 @@ err_t ext_def(compiler_data_t *cdata, ast_node_t *program_node)
 		print_err_l("Missing \"(\" after an extension keyword.", ERR_SYNTAX, cdata->token.line);
 		return ERR_SYNTAX;
 	}
+	cdata->in_parenthesis = true;
 	result = get_next_token(&cdata->token, EOL_OPTIONAL);
 	if (result)
 		return result;
@@ -200,6 +285,7 @@ err_t ext_def(compiler_data_t *cdata, ast_node_t *program_node)
 		print_err_l("Missing \")\" after an extension type declaration.", ERR_SYNTAX, cdata->token.line);
 		return ERR_SYNTAX;
 	}
+	cdata->in_parenthesis = false;
 	result = get_next_token(&cdata->token, EOL_REQUIRED);
 	if (result)
 		return result;
@@ -440,12 +526,9 @@ err_t func_def(compiler_data_t *cdata, ast_node_t *program_node)
 		return result;
 
 	// Create a symbol table for the function
-	cdata->local_var_table = local_table_create(&cdata->function_table);
-	if (!cdata->local_var_table)
-	{
-		print_err_l("Failed to create a local symbol table.", ERR_INTERNAL, cdata->token.line);
-		return ERR_INTERNAL;
-	}
+	result = local_table_create(cdata);
+	if (result)
+		return result;
 
 	// <func-params>
 	result = func_params(cdata, table_entry);
@@ -459,9 +542,14 @@ err_t func_def(compiler_data_t *cdata, ast_node_t *program_node)
 
 	// <return-type>
 	result = return_type(cdata, def_node);
+	if (result)
+		return result;
 
-	// Destroy the local var table;
-	cdata->local_var_table = local_table_destroy(cdata->local_var_table);
+	// Leave the local var table
+	result = local_table_leave(cdata);
+	if (result)
+		return result;
+
 	if (cdata->local_var_table->parent)
 	{
 		print_err_l("A symbol table destroyed in func_def() does not have the function table as a parent, this should "
@@ -470,7 +558,7 @@ err_t func_def(compiler_data_t *cdata, ast_node_t *program_node)
 		return ERR_INTERNAL;
 	}
 
-	return result;
+	return ERR_OK;
 }
 
 /**
@@ -485,6 +573,8 @@ err_t func_params(compiler_data_t *cdata, symbol_data_t *table_entry)
 	// (, go to <param-first>
 	if (cdata->token.type == TOKEN_OPENING_BRACKET)
 	{
+		cdata->in_parenthesis = true;
+
 		err_t result = get_next_token(&cdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
@@ -515,6 +605,7 @@ err_t param_first(compiler_data_t *cdata, symbol_data_t *table_entry)
 	// ), go to <func-params>
 	if (cdata->token.type == TOKEN_CLOSING_BRACKET)
 	{
+		cdata->in_parenthesis = false;
 		result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 		if (result)
 			return result;
@@ -560,6 +651,7 @@ err_t param_list(compiler_data_t *cdata, symbol_data_t *table_entry)
 		if (result)
 			return result;
 
+		cdata->in_parenthesis = false;
 		return func_params(cdata, table_entry);
 	}
 	// ","
@@ -570,7 +662,7 @@ err_t param_list(compiler_data_t *cdata, symbol_data_t *table_entry)
 		if (result)
 			return result;
 
-		result = get_next_token(&cdata->token, EOL_FORBIDDEN);
+		result = get_next_token(&cdata->token, cdata->in_parenthesis ? EOL_OPTIONAL : EOL_FORBIDDEN);
 		if (result)
 			return result;
 
@@ -612,7 +704,7 @@ err_t param(compiler_data_t *cdata, param_t *param_out)
 	}
 	strcpy(param_out->identifier, cdata->token.attribute.string);
 
-	result = get_next_token(&cdata->token, EOL_OPTIONAL);
+	result = get_next_token(&cdata->token, cdata->in_parenthesis ? EOL_OPTIONAL : EOL_FORBIDDEN);
 	if (result)
 		return result;
 	// :
@@ -621,7 +713,7 @@ err_t param(compiler_data_t *cdata, param_t *param_out)
 		print_err_l("Expected a \":\" separator between identifier and type.", ERR_SYNTAX, cdata->token.line);
 		return ERR_SYNTAX;
 	}
-	result = get_next_token(&cdata->token, EOL_OPTIONAL);
+	result = get_next_token(&cdata->token, cdata->in_parenthesis ? EOL_OPTIONAL : EOL_FORBIDDEN);
 	if (result)
 		return result;
 
@@ -835,10 +927,7 @@ err_t type(compiler_data_t *cdata, data_type_t *return_type)
 
 	if (valid_keyword)
 	{
-		// FIXME: The end of line cannot be decided here, as the <type> rule can be used both inside and outside
-		// parenthesis.
-		// The fix is probably to hold a "in_parenthesis" value in the compiler data and decide based on that.
-		return get_next_token(&cdata->token, EOL_OPTIONAL);
+		return get_next_token(&cdata->token, cdata->in_parenthesis ? EOL_OPTIONAL : EOL_FORBIDDEN);
 	}
 	else
 	{
@@ -893,6 +982,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		}
 		entry->symbol_type = SYM_VARIABLE;
 		entry->data.variable.mutable = false;
+		entry->data.variable.type = TYPE_NONE;
 		result = symbol_generate_unique_id(cdata->token.attribute.string, entry, cdata->local_var_table);
 		if (result)
 			return result;
@@ -903,6 +993,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 
 		// Create an AST node
 		statement_node = ast_var_def_make(entry->data.variable.unique_name);
+		statement_node->variable_definition.sym_table_entry = entry;
 
 		// <val-var-def>
 		result = val_var_def(cdata, statement_node, entry);
@@ -942,6 +1033,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		}
 		entry->symbol_type = SYM_VARIABLE;
 		entry->data.variable.mutable = true;
+		entry->data.variable.type = TYPE_NONE;
 		result = symbol_generate_unique_id(cdata->token.attribute.string, entry, cdata->local_var_table);
 		if (result)
 			return result;
@@ -952,6 +1044,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 
 		// Create an AST node
 		statement_node = ast_var_def_make(entry->data.variable.unique_name);
+		statement_node->variable_definition.sym_table_entry = entry;
 
 		// <val-var-def>
 		result = val_var_def(cdata, statement_node, entry);
@@ -1009,24 +1102,18 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		}
 
 		// Create the local table for the then branch
-		cdata->local_var_table = local_table_create(cdata->local_var_table);
-		if (!cdata->local_var_table)
-		{
-			print_err("Failed to create a local variable table!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		result = local_table_create(cdata);
+		if (result)
+			return result;
 
 		result = block_start(cdata, then_block_node, statement_indent_level);
 		if (result)
 			return result;
 
 		// Destroy the local table for the then branch
-		cdata->local_var_table = local_table_destroy(cdata->local_var_table);
-		if (!cdata->local_var_table)
-		{
-			print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		result = local_table_leave(cdata);
+		if (result)
+			return result;
 
 		// Set the then branch
 		result = ast_if_set_then_block(statement_node, then_block_node);
@@ -1072,12 +1159,9 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 
 		// Create the local table
-		cdata->local_var_table = local_table_create(cdata->local_var_table);
-		if (!cdata->local_var_table)
-		{
-			print_err("Failed to create a local variable table!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		result = local_table_create(cdata);
+		if (result)
+			return result;
 
 		// <block-start>
 		ast_node_t *inner_block_node = ast_block_make();
@@ -1091,12 +1175,9 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 
 		// Destroy the local table
-		cdata->local_var_table = local_table_destroy(cdata->local_var_table);
-		if (!cdata->local_var_table)
-		{
-			print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		result = local_table_leave(cdata);
+		if (result)
+			return result;
 
 		statement_node = ast_while_make(condition_node);
 		if (!statement_node)
@@ -1118,10 +1199,21 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		if (result)
 			return result;
 
+		bool multiline_header = cdata->token.starts_logical_line;
+		unsigned generator_indent = cdata->token.indent;
+
 		// identifier
 		if (cdata->token.type != TOKEN_IDENTIFIER)
 		{
 			print_err_l("Expected an iterator identifier after \"for\".", ERR_SYNTAX, cdata->token.line);
+			return ERR_SYNTAX;
+		}
+
+		if (multiline_header && generator_indent <= statement_indent_level)
+		{
+			print_err_l(
+				"The generator and guards in a multiline for loop must be indented further than the \"for\" keyword.",
+				ERR_SYNTAX, cdata->token.line);
 			return ERR_SYNTAX;
 		}
 
@@ -1141,6 +1233,13 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 		}
 
+		if (cdata->token.starts_logical_line)
+		{
+			free(iterator_id);
+			print_err_l("The generator of a for loop must be on one logical line.", ERR_SYNTAX, cdata->token.line);
+			return ERR_SYNTAX;
+		}
+
 		// <-
 		if (cdata->token.type != TOKEN_FOR_GEN_ASSIGN)
 		{
@@ -1155,6 +1254,13 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 		}
 
+		if (cdata->token.starts_logical_line)
+		{
+			free(iterator_id);
+			print_err_l("The generator of a for loop must be on one logical line.", ERR_SYNTAX, cdata->token.line);
+			return ERR_SYNTAX;
+		}
+
 		// <expression>
 		ast_node_t *from_node;
 		result = expression(cdata, &from_node);
@@ -1165,12 +1271,11 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		}
 
 		// First create the local variable table and add the iterator as a variable
-		cdata->local_var_table = local_table_create(cdata->local_var_table);
-		if (!cdata->local_var_table)
+		result = local_table_create(cdata);
+		if (result)
 		{
-			print_err("Failed to create a local variable table!", ERR_INTERNAL);
 			free(iterator_id);
-			return ERR_INTERNAL;
+			return result;
 		}
 
 		symbol_data_t *entry = symtable_item_create(cdata->local_var_table, iterator_id);
@@ -1201,7 +1306,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 
 		// <for-guard>
-		result = for_guard(cdata, statement_node);
+		result = for_guard(cdata, statement_node, multiline_header, generator_indent);
 		if (result)
 			return result;
 
@@ -1211,7 +1316,30 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			print_err_l("Expected the \"do\" keyword after a for guard.", ERR_SYNTAX, cdata->token.line);
 			return ERR_SYNTAX;
 		}
-		result = get_next_token(&cdata->token, EOL_REQUIRED);
+		if (multiline_header)
+		{
+			if (!cdata->token.starts_logical_line)
+			{
+				print_err_l("The \"do\" keyword in a multiline for loop must be on a separate line.", ERR_SYNTAX,
+							cdata->token.line);
+				return ERR_SYNTAX;
+			}
+			else if (cdata->token.indent != statement_indent_level)
+			{
+				print_err_l(
+					"The \"do\" keyword in a multiline for loop must be on the same indentation level as \"for\".",
+					ERR_SYNTAX, cdata->token.line);
+				return ERR_SYNTAX;
+			}
+		}
+		else if (cdata->token.starts_logical_line)
+		{
+			print_err_l("The \"do\" keyword in a single line for loop header must not be on a separate line.",
+						ERR_SYNTAX, cdata->token.line);
+			return ERR_SYNTAX;
+		}
+
+		result = get_next_token(&cdata->token, EOL_OPTIONAL);
 		if (result)
 			return result;
 
@@ -1231,12 +1359,9 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			return result;
 
 		// Destroy the local table
-		cdata->local_var_table = local_table_destroy(cdata->local_var_table);
-		if (!cdata->local_var_table)
-		{
-			print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		result = local_table_leave(cdata);
+		if (result)
+			return result;
 
 		return ast_block_add_statement(block_node, statement_node);
 	}
@@ -1272,13 +1397,19 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		token_t id_token = cdata->token;
 		token_t next_token;
 
-		result = peek_next_token(&next_token, EOL_FORBIDDEN);
+		result = peek_next_token(&next_token, EOL_OPTIONAL);
 		if (result)
 			return result;
 
 		// id = <expression>
 		if (next_token.type == TOKEN_ASSIGN)
 		{
+			// Consume the identificator
+			result = get_next_token(&cdata->token, EOL_FORBIDDEN);
+			if (result)
+				return result;
+
+			// Consume the =
 			result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 			if (result)
 				return result;
@@ -1290,7 +1421,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 			if (result)
 				return result;
 
-			const symbol_data_t *entry = symtable_item_find(cdata->local_var_table, id_token.attribute.string);
+			symbol_data_t *entry = symtable_item_find(cdata->local_var_table, id_token.attribute.string);
 			if (!entry)
 			{
 				print_err_l("Variable must be defined before assignment.", ERR_SEMANTIC_UNDEFINED, cdata->token.line);
@@ -1303,6 +1434,8 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 				print_err_l("Failed to create an AST node in statement().", ERR_INTERNAL, cdata->token.line);
 				return ERR_INTERNAL;
 			}
+			statement_node->variable_assignment.sym_table_entry = entry;
+
 			return ast_block_add_statement(block_node, statement_node);
 		}
 
@@ -1441,24 +1574,18 @@ err_t else_if_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header
 		}
 
 		// Create the local table for the then branch
-		cdata->local_var_table = local_table_create(cdata->local_var_table);
-		if (!cdata->local_var_table)
-		{
-			print_err("Failed to create a local variable table!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		result = local_table_create(cdata);
+		if (result)
+			return result;
 
 		result = block_start(cdata, then_block_node, header_indent_level);
 		if (result)
 			return result;
 
 		// Destroy the local table for the then branch
-		cdata->local_var_table = local_table_destroy(cdata->local_var_table);
-		if (!cdata->local_var_table)
-		{
-			print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
-			return ERR_INTERNAL;
-		}
+		result = local_table_leave(cdata);
+		if (result)
+			return result;
 
 		// Set the then branch
 		result = ast_if_set_then_block(*out_node, then_block_node);
@@ -1491,24 +1618,18 @@ err_t else_if_opt(compiler_data_t *cdata, ast_node_t **out_node, unsigned header
 	}
 
 	// Create the local table for the else branch
-	cdata->local_var_table = local_table_create(cdata->local_var_table);
-	if (!cdata->local_var_table)
-	{
-		print_err("Failed to create a local variable table!", ERR_INTERNAL);
-		return ERR_INTERNAL;
-	}
+	result = local_table_create(cdata);
+	if (result)
+		return result;
 
 	result = block_start(cdata, *out_node, header_indent_level);
 	if (result)
 		return result;
 
 	// Destroy the local table for the else branch
-	cdata->local_var_table = local_table_destroy(cdata->local_var_table);
-	if (!cdata->local_var_table)
-	{
-		print_err("Failed to destroy a local variable table!", ERR_INTERNAL);
-		return ERR_INTERNAL;
-	}
+	result = local_table_leave(cdata);
+	if (result)
+		return result;
 
 	return ERR_OK;
 }
@@ -1527,12 +1648,25 @@ err_t for_generator(compiler_data_t *cdata, ast_node_t *for_node)
 	{
 		err_t result;
 
+		if (cdata->token.starts_logical_line)
+		{
+			print_err_l("The generator of a for loop must be on a single logical line.", ERR_SYNTAX, cdata->token.line);
+			return ERR_SYNTAX;
+		}
+
 		// to
 		if (!strcmp(cdata->token.attribute.string, "to"))
 		{
 			result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 			if (result)
 				return result;
+
+			if (cdata->token.starts_logical_line)
+			{
+				print_err_l("The generator of a for loop must be on a single logical line.", ERR_SYNTAX,
+							cdata->token.line);
+				return ERR_SYNTAX;
+			}
 
 			// <expression>
 			ast_node_t *to_node;
@@ -1554,6 +1688,13 @@ err_t for_generator(compiler_data_t *cdata, ast_node_t *for_node)
 			result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 			if (result)
 				return result;
+
+			if (cdata->token.starts_logical_line)
+			{
+				print_err_l("The generator of a for loop must be on a single logical line.", ERR_SYNTAX,
+							cdata->token.line);
+				return ERR_SYNTAX;
+			}
 
 			// <expression>
 			ast_node_t *until_node;
@@ -1587,9 +1728,21 @@ err_t for_by(compiler_data_t *cdata, ast_node_t *for_node)
 	// by
 	if (cdata->token.type == TOKEN_IDENTIFIER && !strcmp(cdata->token.attribute.string, "by"))
 	{
+		if (cdata->token.starts_logical_line)
+		{
+			print_err_l("The generator of a for loop must be on a single logical line.", ERR_SYNTAX, cdata->token.line);
+			return ERR_SYNTAX;
+		}
+
 		result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 		if (result)
 			return result;
+
+		if (cdata->token.starts_logical_line)
+		{
+			print_err_l("The generator of a for loop must be on a single logical line.", ERR_SYNTAX, cdata->token.line);
+			return ERR_SYNTAX;
+		}
 
 		// <expression>
 		ast_node_t *by_node;
@@ -1617,16 +1770,47 @@ err_t for_by(compiler_data_t *cdata, ast_node_t *for_node)
  *
  * @param cdata Compiler data
  * @param for_node AST for statement node
+ * @param multiline_header Whether the for header uses the multiline form
+ * @param generator_indent Indentation level of the for loop generator
  * @return err_t Error code
  */
-err_t for_guard(compiler_data_t *cdata, ast_node_t *for_node)
+err_t for_guard(compiler_data_t *cdata, ast_node_t *for_node, bool multiline_header, unsigned generator_indent)
 {
 	// if
 	if (cdata->token.type == TOKEN_KEYWORD && cdata->token.attribute.keyword == KW_IF)
 	{
+		if (multiline_header)
+		{
+			if (!cdata->token.starts_logical_line)
+			{
+				print_err_l("All guards in a multiline for loop must be on their own line.", ERR_SYNTAX,
+							cdata->token.line);
+				return ERR_SYNTAX;
+			}
+			else if (cdata->token.indent != generator_indent)
+			{
+				print_err_l("The generator and all guards in a multiline for loop must be on the same indent level.",
+							ERR_SYNTAX, cdata->token.line);
+				return ERR_SYNTAX;
+			}
+		}
+		else if (cdata->token.starts_logical_line)
+		{
+			print_err_l("All guards in a single-line for loop header must be on the same logical line.", ERR_SYNTAX,
+						cdata->token.line);
+			return ERR_SYNTAX;
+		}
+
 		err_t result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 		if (result)
 			return result;
+
+		if (cdata->token.starts_logical_line)
+		{
+			print_err_l("A for loop guard condition must be on the same line as the \"if\".", ERR_SYNTAX,
+						cdata->token.line);
+			return ERR_SYNTAX;
+		}
 
 		// <expression>
 		ast_node_t *condition_node;
@@ -1639,7 +1823,7 @@ err_t for_guard(compiler_data_t *cdata, ast_node_t *for_node)
 			return result;
 
 		// <for-guard>
-		return for_guard(cdata, for_node);
+		return for_guard(cdata, for_node, multiline_header, generator_indent);
 	}
 
 	// Epsilon rule
@@ -1686,14 +1870,6 @@ err_t val_var_def(compiler_data_t *cdata, ast_node_t *var_def_node, symbol_data_
 		if (result)
 			return result;
 
-		// If types dont match, throw a semantic error
-		if (table_entry->data.variable.type != assigned_value_node->eval_type)
-		{
-			print_err_l("Type of the expression assigned to variable does not match its type.",
-						ERR_SEMANTIC_INVALID_TYPE, cdata->token.line);
-			return ERR_SEMANTIC_INVALID_TYPE;
-		}
-
 		return ast_var_def_set_assignment(var_def_node, assigned_value_node);
 	}
 
@@ -1709,9 +1885,6 @@ err_t val_var_def(compiler_data_t *cdata, ast_node_t *var_def_node, symbol_data_
 		result = expression(cdata, &assigned_value_node);
 		if (result)
 			return result;
-
-		// Set the type of the variable
-		table_entry->data.variable.type = assigned_value_node->eval_type;
 
 		return ast_var_def_set_assignment(var_def_node, assigned_value_node);
 	}

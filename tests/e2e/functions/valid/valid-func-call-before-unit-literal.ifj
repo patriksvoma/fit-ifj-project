@@ -1,0 +1,14 @@
+import ifj26.*
+
+def a(): Unit =
+  return ()
+
+def c: Unit =
+  return ()
+
+@main
+def b(): Unit =
+  a()
+  ()
+  c
+  ()

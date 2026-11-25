@@ -279,12 +279,15 @@ void print_bin_operation(operator_type_t operator, data_type_t data_type)
  * @param unique_id Unique name for the function
  * @param symtables Symtables with functions to find parameters
  * @param new_func_def Struct with couter for loops and function name, to name labels corectly
+ * @return true When a function returns Unit
+ * @return false When a function doesn't return Unit
  */
-void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_func_def)
+bool print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_func_def)
 {
 	new_func_def->for_counter = 0;
 	new_func_def->if_counter = 0;
 	new_func_def->while_counter = 0;
+	new_func_def->read_val_counter = 0;
 
 	new_func_def->func_name = unique_id;
 
@@ -292,10 +295,17 @@ void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 	const symbol_data_t *func_params = symtable_item_find(&symtables[0], unique_id);
 	if (func_params == NULL)
 	{
-		return;
+		return false;
 	}
 
 	printf("LABEL %s\n", unique_id);
+
+	// Prints another label to know witch function is main, if named differently
+	if (func_params->data.function.is_main && strcmp(unique_id, "main") != 0)
+	{
+		printf("LABEL main\n");
+	}
+
 	printf("CREATEFRAME\n");
 	printf("PUSHFRAME\n");
 
@@ -307,14 +317,34 @@ void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 		{
 			for (size_t j = func_params->data.function.param_lists[i - 1]->param_count; j > 0; j--)
 			{
-				printf("DEFVAR LF@%s$%s\n", unique_id,
-					   func_params->data.function.param_lists[i - 1]->params[j - 1]->identifier);
-				printf("POPS LF@%s$%s\n", unique_id,
-					   func_params->data.function.param_lists[i - 1]->params[j - 1]->identifier);
+				printf("DEFVAR LF@%s\n", func_params->data.function.param_lists[i - 1]->params[j - 1]->identifier);
+				printf("POPS LF@%s\n", func_params->data.function.param_lists[i - 1]->params[j - 1]->identifier);
 			}
 		}
 	}
-	return;
+	if (func_params->data.function.return_type == TYPE_UNIT)
+	{
+		return true;
+	}
+	return false;
+}
+
+/**
+ * @brief Function to change output of buil-in read functions from nil to correct output
+ *
+ * @param new_func_def Passed for uniquely naming labels when calling readInt, readDouble and readBoolean
+ */
+void read_val_nil(names_counter *new_func_def, const char *ret)
+{
+	unsigned curr_read = new_func_def->read_val_counter;
+	new_func_def->read_val_counter++;
+	printf("MOVE GF@temp2 nil@nil\n");
+	printf("JUMPIFNEQ %s$read$%u GF@temp1 GF@temp2\n", new_func_def->func_name, curr_read);
+	printf("PUSHS %s\n", ret);
+	printf("JUMP %s$read$%u$end\n", new_func_def->func_name, curr_read);
+	printf("LABEL %s$read$%u\n", new_func_def->func_name, curr_read);
+	printf("PUSHS GF@temp1\n");
+	printf("LABEL %s$read$%u$end\n", new_func_def->func_name, curr_read);
 }
 
 /**
@@ -323,7 +353,7 @@ void print_func_def(char *unique_id, symtable_t *symtables, names_counter *new_f
  * @param identifier Name of the functions
  * @param param_lists Pointer to array of lists of parameters
  * @param symtables Passed only so generate_nodes() can be called and not to be lost
- * @param new_func_def Passed only so generate_nodes() can be called and not to be lost
+ * @param new_func_def Passed for uniquely naming labels when calling readInt, readDouble and readBoolean
  * @return true When the function as a built-in function
  * @return false When it wasn't a built-in function
  */
@@ -348,7 +378,7 @@ bool print_build_in_func_call(const char *identifier, param_node_list_t **param_
 		}
 		printf("PUSHS nil@nil\n");
 	}
-	// TODO: Nejspis bude potreba predelat
+
 	else if (strcmp(id, "readLine") == 0)
 	{
 		printf("READ GF@temp1 string\n");
@@ -357,17 +387,17 @@ bool print_build_in_func_call(const char *identifier, param_node_list_t **param_
 	else if (strcmp(id, "readInt") == 0)
 	{
 		printf("READ GF@temp1 int\n");
-		printf("PUSHS GF@temp1\n");
+		read_val_nil(new_func_def, "int@0");
 	}
 	else if (strcmp(id, "readDouble") == 0)
 	{
 		printf("READ GF@temp1 float\n");
-		printf("PUSHS GF@temp1\n");
+		read_val_nil(new_func_def, "float@0x0p+0");
 	}
 	else if (strcmp(id, "readBoolean") == 0)
 	{
 		printf("READ GF@temp1 bool\n");
-		printf("PUSHS GF@temp1\n");
+		read_val_nil(new_func_def, "bool@false");
 	}
 	else if (strcmp(id, "toStr") == 0)
 	{
@@ -469,6 +499,7 @@ err_t print_ext_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 	new_func_def->for_counter = 0;
 	new_func_def->if_counter = 0;
 	new_func_def->while_counter = 0;
+	new_func_def->read_val_counter = 0;
 
 	new_func_def->func_name = unique_id;
 
@@ -485,8 +516,8 @@ err_t print_ext_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 	printf("PUSHFRAME\n");
 
 	// Base
-	printf("DEFVAR LF@%s$%s\n", unique_id, ext_params->data.extension.base_param.identifier);
-	printf("POPS LF@%s$%s\n", unique_id, ext_params->data.extension.base_param.identifier);
+	printf("DEFVAR LF@%s\n", ext_params->data.extension.base_param.identifier);
+	printf("POPS LF@%s\n", ext_params->data.extension.base_param.identifier);
 
 	// Definition and assigment of parameters from the last one, because parameters will be pushed to stack in order
 	// when calling the function
@@ -496,10 +527,8 @@ err_t print_ext_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 		{
 			for (size_t j = ext_params->data.extension.param_lists[i - 1]->param_count; j > 0; j--)
 			{
-				printf("DEFVAR LF@%s$%s\n", unique_id,
-					   ext_params->data.extension.param_lists[i - 1]->params[j - 1]->identifier);
-				printf("POPS LF@%s$%s\n", unique_id,
-					   ext_params->data.extension.param_lists[i - 1]->params[j - 1]->identifier);
+				printf("DEFVAR LF@%s\n", ext_params->data.extension.param_lists[i - 1]->params[j - 1]->identifier);
+				printf("POPS LF@%s\n", ext_params->data.extension.param_lists[i - 1]->params[j - 1]->identifier);
 			}
 		}
 	}
@@ -709,7 +738,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		break;
 
 	case AST_VAR_USE:
-		printf("PUSHS LF@%s\n", node->variable_use_unique_id);
+		printf("PUSHS LF@%s\n", node->variable_use.unique_id);
 		break;
 
 	case AST_VAR_DEF:
@@ -783,7 +812,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		break;
 
 	case AST_FUNC_DEF:
-		print_func_def(node->func_def.unique_id, symtables, new_func_def);
+		bool ret_unit = print_func_def(node->func_def.unique_id, symtables, new_func_def);
 		var_def(node->func_def.block, symtables, new_func_def);
 
 		// Definition of variables to help in for cycle before loops
@@ -797,6 +826,11 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		new_func_def->for_counter = 0;
 
 		generate_nodes(node->func_def.block, symtables, new_func_def);
+
+		if (ret_unit)
+		{
+			printf("PUSHS nil@nil\n");
+		}
 
 		// If there isnt a return, the frame must be cleaned
 		printf("POPFRAME\n");
@@ -860,6 +894,27 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		}
 
 		printf("LABEL %s$if$%u$end\n", new_func_def->func_name, curr_if);
+		break;
+
+	case AST_IF_EXPR:
+		unsigned curr_if_expr = new_func_def->if_counter;
+		new_func_def->if_counter++;
+
+		generate_nodes(node->if_expression.condition, symtables, new_func_def);
+
+		// Condition evaluation
+		printf("PUSHS bool@true\n");
+		printf("JUMPIFNEQS %s$if$%u$else\n", new_func_def->func_name, curr_if_expr);
+
+		// If block
+		generate_nodes(node->if_expression.then_branch, symtables, new_func_def);
+		printf("JUMP %s$if$%u$end\n", new_func_def->func_name, curr_if_expr);
+
+		// Else block
+		printf("LABEL %s$if$%u$else\n", new_func_def->func_name, curr_if_expr);
+		generate_nodes(node->if_expression.else_branch, symtables, new_func_def);
+
+		printf("LABEL %s$if$%u$end\n", new_func_def->func_name, curr_if_expr);
 		break;
 
 	case AST_WHILE:

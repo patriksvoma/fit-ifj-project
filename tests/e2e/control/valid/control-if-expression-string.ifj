@@ -1,0 +1,5 @@
+import ifj26.*
+
+@main def main(): Unit =
+    val x: Int = 5
+    val y: String = if x < 5 then "a" else "pneumonoultramicroscopicsilicovolcanoconiosis"

@@ -1,0 +1,10 @@
+import ifj26.*
+
+@main def main(): Unit =
+  var x = 7
+  var y: String = "ahoj"
+  var z: Double = 1.65
+  var w: Boolean = true
+
+  print(y+toStr(z))
+  print(x)

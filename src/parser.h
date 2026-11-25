@@ -21,6 +21,7 @@
 typedef struct
 {
 	token_t token;
+	bool in_parenthesis;
 
 	bool in_main;
 	bool in_extension;
@@ -30,8 +31,25 @@ typedef struct
 	symtable_t extension_table;
 
 	symtable_t *local_var_table;
+
+	symtable_t **var_tables;
+	size_t var_table_count;
+
 	bool main_defined;
-} compiler_data_t;
+
+	// Semantic check data
+	bool func_return_explicit;
+	data_type_t func_return_type;
+}
+
+compiler_data_t;
+/**
+ * @brief Destroys all symbol tables saved in the compiler data var_tables
+ *
+ * @param cdata Compiler data
+ * @return err_t Error code
+ */
+err_t local_tables_destroy(compiler_data_t *cdata);
 
 /**
  * @brief Main parsing function

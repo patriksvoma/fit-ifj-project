@@ -1,0 +1,8 @@
+import ifj26.*
+
+@main def main(): Unit =
+  foo(-5)()("ahoj",())
+
+def foo(n: Int)()(m: String, o: Unit): Unit =
+  print(n)
+  print(m)

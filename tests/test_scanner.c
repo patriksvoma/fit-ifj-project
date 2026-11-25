@@ -512,6 +512,41 @@ void test_token_ending_at_newline_keeps_newline()
 	TEST_ASSERT_EQUAL_UINT(2, keyword.line);
 }
 
+void test_eol_rules()
+{
+	set_input("a");
+	token_t token;
+
+	TEST_ASSERT_EQUAL(ERR_SYNTAX, get_next_token(&token, EOL_REQUIRED));
+
+	set_input("a");
+	TEST_ASSERT_EQUAL(ERR_OK, get_next_token(&token, EOL_OPTIONAL));
+	TEST_ASSERT_EQUAL(ERR_OK, get_next_token(&token, EOL_FORBIDDEN));
+}
+
+void test_eol_rules_after_newline()
+{
+	set_input("a\nb");
+	token_t token;
+
+	TEST_ASSERT_EQUAL(ERR_OK, get_next_token(&token, EOL_OPTIONAL));
+	TEST_ASSERT_EQUAL(ERR_SYNTAX, get_next_token(&token, EOL_FORBIDDEN));
+
+	set_input("a\nb");
+	TEST_ASSERT_EQUAL(ERR_OK, get_next_token(&token, EOL_OPTIONAL));
+	TEST_ASSERT_EQUAL(ERR_OK, get_next_token(&token, EOL_REQUIRED));
+}
+
+void test_eol_rules_with_peeked_token()
+{
+	set_input("a\nb");
+	token_t token;
+
+	TEST_ASSERT_EQUAL(ERR_OK, get_next_token(&token, EOL_OPTIONAL));
+	TEST_ASSERT_EQUAL(ERR_SYNTAX, peek_next_token(&token, EOL_FORBIDDEN));
+	TEST_ASSERT_EQUAL(ERR_OK, get_next_token(&token, EOL_OPTIONAL));
+}
+
 void test_short_program()
 {
 	EXPECT_TYPES("val x: Int = 1_000 + 2.5e-3 * \"a\"", TOKEN_KEYWORD, TOKEN_IDENTIFIER, TOKEN_COLON, TOKEN_KEYWORD,
@@ -664,6 +699,9 @@ int main()
 	RUN_TEST(test_token_line_numbers);
 	RUN_TEST(test_starts_logical_line_after_newline);
 	RUN_TEST(test_token_ending_at_newline_keeps_newline);
+	RUN_TEST(test_eol_rules);
+	RUN_TEST(test_eol_rules_after_newline);
+	RUN_TEST(test_eol_rules_with_peeked_token);
 	RUN_TEST(test_short_program);
 
 	RUN_TEST(test_division_is_not_comment);

@@ -628,7 +628,7 @@ ast_node_t *ast_var_use_make(const char *unique_id, data_type_t var_type)
 
 	char *id;
 	id = save_identifier(unique_id);
-	leaf->variable_use_unique_id = id;
+	leaf->variable_use.unique_id = id;
 	return leaf;
 }
 
@@ -663,6 +663,27 @@ ast_node_t *ast_if_make(ast_node_t *condition_node)
 	node->if_statement.condition = condition_node;
 	node->if_statement.if_block = NULL;
 	node->if_statement.else_block = NULL;
+	return node;
+}
+
+ast_node_t *ast_if_expr_make(ast_node_t *condition_node, ast_node_t *then_node, ast_node_t *else_node)
+{
+	if (condition_node == NULL || then_node == NULL || else_node == NULL)
+	{
+		return NULL;
+	}
+
+	ast_node_t *node = malloc(sizeof(ast_node_t));
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	node->eval_type = TYPE_NONE;
+	node->node_type = AST_IF_EXPR;
+	node->if_expression.condition = condition_node;
+	node->if_expression.then_branch = then_node;
+	node->if_expression.else_branch = else_node;
 	return node;
 }
 
@@ -937,7 +958,7 @@ void destruct(ast_node_t *root)
 		break;
 
 	case AST_VAR_USE:
-		free(root->variable_use_unique_id);
+		free(root->variable_use.unique_id);
 		break;
 
 	case AST_RETURN_CALL:
@@ -948,6 +969,12 @@ void destruct(ast_node_t *root)
 		destruct(root->if_statement.condition);
 		destruct(root->if_statement.if_block);
 		destruct(root->if_statement.else_block);
+		break;
+
+	case AST_IF_EXPR:
+		destruct(root->if_expression.condition);
+		destruct(root->if_expression.then_branch);
+		destruct(root->if_expression.else_branch);
 		break;
 
 	case AST_WHILE:
