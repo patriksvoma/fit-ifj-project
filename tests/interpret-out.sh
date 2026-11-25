@@ -202,6 +202,7 @@ echo "$BLUE-----unit function return-----$RESET"
 run_case "func_ret" "functions/user/func-ret.ifj" "" "()"
 run_case "func_no_ret" "functions/user/func-no-ret.ifj" "" "()"
 run_case "func_no_ret_no_exp" "functions/user/func-no-ret-ex.ifj" "" "()"
+run_case "func_ret_not_unit" "functions/user/func-not-u.ifj" "" "100"
 
 echo "$YELLOW-----Variables-----$RESET"
 run_case "var_def" "vars/var-def.ifj" "" ""
