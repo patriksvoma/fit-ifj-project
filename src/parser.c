@@ -1397,7 +1397,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		token_t id_token = cdata->token;
 		token_t next_token;
 
-		result = peek_next_token(&next_token, EOL_FORBIDDEN);
+		result = peek_next_token(&next_token, EOL_OPTIONAL);
 		if (result)
 			return result;
 
