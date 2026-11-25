@@ -254,6 +254,40 @@ err_t scan_fail(buffer_t *buf, err_t err)
 }
 
 /**
+ * @brief Check if the token matches the end of line rule
+ *
+ * @param token Token
+ * @param eol EOL rule
+ * @return err_t Error code
+ */
+static err_t check_eol(const token_t *token, eol_rule_t eol)
+{
+	switch (eol)
+	{
+	case EOL_REQUIRED:
+		if (token->starts_logical_line)
+			return ERR_OK;
+		else
+		{
+			print_err_l("End-of-line is required but is missing.", ERR_SYNTAX, token->line);
+			return ERR_SYNTAX;
+		}
+	case EOL_FORBIDDEN:
+		if (token->starts_logical_line)
+		{
+			print_err_l("End-of-line is not allowed here.", ERR_SYNTAX, token->line);
+			return ERR_SYNTAX;
+		}
+		else
+			return ERR_OK;
+	case EOL_OPTIONAL:
+		return ERR_OK;
+	default:
+		return ERR_SYNTAX;
+	}
+}
+
+/**
  * @brief Finish an accepted token
  *
  * @param buf Token buffer
@@ -333,7 +367,6 @@ err_t scan_next_token(token_t *token, eol_rule_t eol)
 	bool comment_eol = false;
 
 	memset(token, 0, sizeof(*token));
-	(void)eol; // TODO: check EOL
 
 	while (true)
 	{
@@ -935,10 +968,12 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 	}
 	else
 	{
-		return scan_next_token(token, eol);
+		err_t result = scan_next_token(token, eol);
+		if (result)
+			return result;
 	}
 
-	return ERR_OK;
+	return check_eol(token, eol);
 }
 
 err_t peek_next_token(token_t *token, eol_rule_t eol)
@@ -952,6 +987,5 @@ err_t peek_next_token(token_t *token, eol_rule_t eol)
 	}
 
 	*token = token_cache;
-
-	return ERR_OK;
+	return check_eol(token, eol);
 }
