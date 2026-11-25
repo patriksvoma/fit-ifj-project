@@ -1404,6 +1404,12 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		// id = <expression>
 		if (next_token.type == TOKEN_ASSIGN)
 		{
+			// Consume the identificator
+			result = get_next_token(&cdata->token, EOL_FORBIDDEN);
+			if (result)
+				return result;
+
+			// Consume the =
 			result = get_next_token(&cdata->token, EOL_FORBIDDEN);
 			if (result)
 				return result;
