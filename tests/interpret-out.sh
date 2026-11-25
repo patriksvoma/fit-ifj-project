@@ -195,7 +195,13 @@ run_case "func_def_more_lists" "functions/user/func-def-lists.ifj" "" ""
 
 echo "$BLUE-----function call-----$RESET"
 run_case "func_call" "functions/user/func-call.ifj" "" "5"
-run_case "func_call" "functions/user/func-call-lists.ifj" "" "-50"
+run_case "func_call" "functions/user/func-call-lists.ifj" "" "-5ahoj"
+
+echo "$YELLOW-----Variables-----$RESET"
+echo "$BLUE-----var definition-----$RESET"
+run_case "var_def" "vars/var-def.ifj" "" ""
+run_case "var_use" "vars/var-use.ifj" "" "ahoj1.657"
+run_case "var_operations" "vars/var-exp.ifj" "" "-7 8.25 7 4.24 17.43 -3 ahojtrue"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then

@@ -5,6 +5,4 @@ import ifj26.*
 
 def foo(n: Int)()(m: String, o: Unit): Unit =
   print(n)
-  if m < 0 then
-    var m = 0
-    print(n)
+  print(m)
