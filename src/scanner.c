@@ -92,14 +92,16 @@ bool find_keyword(const char *word, keyword_t *keyword)
 	return false;
 }
 
-unsigned scanner_line = 1;		  // Line of the last read character
-unsigned scanner_column = 0;	  // Column of the last read character
-unsigned scanner_prev_column = 0; // Column before the last newline, used by unread_char
-bool scanner_first_token = true;   // The next token is the first one in the file
-unsigned scanner_line_indent = 0;  // Spaces at the start of the current line
-bool scanner_line_start = true;    // Still reading spaces at the start of the line
-bool scanner_line_tab = false;     // A tab was found at the start of the line
-unsigned scanner_paren_depth = 0;  // Number of open parentheses
+unsigned scanner_line = 1;			  // Line of the last read character
+unsigned scanner_column = 0;		  // Column of the last read character
+unsigned scanner_prev_column = 0;	  // Column before the last newline, used by unread_char
+bool scanner_first_token = true;	  // The next token is the first one in the file
+unsigned scanner_line_indent = 0;	  // Spaces at the start of the current line
+bool scanner_line_start = true;		  // Still reading spaces at the start of the line
+bool scanner_line_tab = false;		  // A tab was found at the start of the line
+unsigned scanner_paren_depth = 0;	  // Number of open parentheses
+unsigned scanner_logical_indent = 0;  // Indentation of the current logical line
+bool scanner_line_bad_indent = false; // A line inside parentheses is not indented enough
 
 /**
  * @brief Read the next character from the input and update the position
@@ -266,6 +268,7 @@ err_t scan_fail(buffer_t *buf, err_t err)
  * @param comment_eol A multiline block comment was read on the current line
  * @return err_t ERR_OK, ERR_SCANNER if the line starts with a tab,
  *         or ERR_SYNTAX if a token follows a multiline block comment on the same line
+ *         or a line inside parentheses is not indented enough
  */
 err_t scan_accept(buffer_t *buf, token_t *token, bool comment_eol)
 {
@@ -276,6 +279,13 @@ err_t scan_accept(buffer_t *buf, token_t *token, bool comment_eol)
 		free(token->attribute.string);
 		token->attribute.string = NULL;
 		return ERR_SCANNER;
+	}
+
+	if (scanner_line_bad_indent && token->type != TOKEN_EOF)
+	{
+		free(token->attribute.string);
+		token->attribute.string = NULL;
+		return ERR_SYNTAX;
 	}
 
 	if (comment_eol && token->type != TOKEN_EOF)
@@ -363,6 +373,7 @@ err_t scan_next_token(token_t *token)
 				scanner_line_indent = 0;
 				scanner_line_start = true;
 				scanner_line_tab = false;
+				scanner_line_bad_indent = false;
 				break;
 			}
 
@@ -382,6 +393,14 @@ err_t scan_next_token(token_t *token)
 
 			if (c == '\r')
 				break;
+
+			if (scanner_line_start)
+			{
+				if (newline_seen)
+					scanner_logical_indent = scanner_line_indent;
+				else if (scanner_paren_depth > 0 && scanner_line_indent <= scanner_logical_indent)
+					scanner_line_bad_indent = true;
+			}
 
 			scanner_line_start = false;
 
