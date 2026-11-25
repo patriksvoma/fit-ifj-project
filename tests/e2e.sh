@@ -260,6 +260,8 @@ run_case "control-for-until.ifj" 0 "control/valid/control-for-until.ifj"
 echo "$BLUE-----For guards-----$RESET"
 
 echo "$BLUE-----For syntax-----$RESET"
+run_case "control-for-single-body.ifj" 0 "control/valid/control-for-single-body.ifj"
+run_case "control-for-multiline.ifj" 0 "control/valid/control-for-multiline.ifj"
 
 
 printf '\n'
