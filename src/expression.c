@@ -940,10 +940,15 @@ err_t parse_expression_internal(compiler_data_t *cdata, ast_node_t **return_node
 			if (result)
 				return result;
 
-			// Try to parse a function call
-			result = try_parse_func_call(cdata, b, &call_consumed);
-			if (result)
-				return result;
+			// Preserve a new-line token for the enclosing block parser.
+			if (expression_started && parenthesis_level == 0 && b->source_token.starts_logical_line)
+				call_consumed = false;
+			else
+			{
+				result = try_parse_func_call(cdata, b, &call_consumed);
+				if (result)
+					return result;
+			}
 
 			break;
 		case S:
@@ -983,10 +988,15 @@ err_t parse_expression_internal(compiler_data_t *cdata, ast_node_t **return_node
 			if (result)
 				return result;
 
-			// Try to parse a function call
-			result = try_parse_func_call(cdata, b, &call_consumed);
-			if (result)
-				return result;
+			// Try to parse a function call, but only if it is not on another logical line
+			if (expression_started && parenthesis_level == 0 && b->source_token.starts_logical_line)
+				call_consumed = false;
+			else
+			{
+				result = try_parse_func_call(cdata, b, &call_consumed);
+				if (result)
+					return result;
+			}
 
 			break;
 		case R:
