@@ -32,6 +32,8 @@ err_t check_for(ast_node_t *node, compiler_data_t *cdata);
 err_t check_int_to_double(ast_node_t *node, compiler_data_t *cdata);
 err_t insert_int_to_double_node(ast_node_t **node);
 err_t check_unknown_node(ast_node_t *node, compiler_data_t *cdata);
+bool node_always_returns(const ast_node_t *node);
+bool block_always_returns(const ast_node_t *block);
 
 /**
  * @brief Recursive checks for the literal_int node
@@ -186,8 +188,8 @@ err_t check_func_def(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	// Check if it is a main function, if so, check the parameters and return type
-	const symbol_data_t *entry = symtable_item_find(&cdata->function_table, node->func_def.unique_id);
+	// Get the symbol table entry
+	symbol_data_t *entry = symtable_item_find(&cdata->function_table, node->func_def.unique_id);
 	if (entry == NULL)
 	{
 		print_err("A function definition exists in the AST, but no in the symbol table. This should not happen.",
@@ -195,6 +197,45 @@ err_t check_func_def(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
+	// Resolve the block (the return types are used for return statement semantic checks)
+	cdata->func_return_type = entry->data.function.return_type;
+	cdata->func_return_explicit = cdata->func_return_type != TYPE_NONE;
+
+	err_t result = check_block(node->func_def.block, cdata);
+	if (result)
+		return result;
+
+	// If the return type is explicit and not Unit, the last statement must match the return type
+	size_t last = node->func_def.block->block.statement_count - 1;
+
+	if (cdata->func_return_explicit && entry->data.function.return_type != TYPE_UNIT &&
+		!block_always_returns(node->func_def.block))
+	{
+		// Allow implicit int to double conversions
+		if (entry->data.function.return_type == TYPE_DOUBLE &&
+			node->func_def.block->block.statements[last]->eval_type == TYPE_INT)
+		{
+			result = insert_int_to_double_node(&node->func_def.block->block.statements[last]);
+			if (result)
+				return result;
+		}
+
+		if (entry->data.function.return_type != node->func_def.block->block.statements[last]->eval_type)
+		{
+			print_err("The last statement of a function with an explicit return type must evaluate to the return type.",
+					  ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+	}
+
+	// If the return type is implicit, it is taken from the last statement
+	if (!cdata->func_return_explicit)
+	{
+		entry->data.function.return_type =
+			node->func_def.block->block.statements[node->func_def.block->block.statement_count - 1]->eval_type;
+	}
+
+	// Check if it is a main function, if so, check the parameters and return type
 	if (entry->data.function.is_main)
 	{
 		// Not sure if these checks are required by the specs
@@ -217,7 +258,7 @@ err_t check_func_def(ast_node_t *node, compiler_data_t *cdata)
 		}
 	}
 
-	return check_block(node->func_def.block, cdata);
+	return ERR_OK;
 }
 
 /**
@@ -888,6 +929,8 @@ err_t check_var_def(ast_node_t *node, compiler_data_t *cdata)
 		}
 	}
 
+	node->eval_type = TYPE_UNIT;
+
 	return ERR_OK;
 }
 
@@ -930,6 +973,8 @@ err_t check_var_assign(ast_node_t *node, compiler_data_t *cdata)
 		print_err("Trying to assign value of a wrong type to a variable.", ERR_SEMANTIC_INVALID_TYPE);
 		return ERR_SEMANTIC_INVALID_TYPE;
 	}
+
+	node->eval_type = TYPE_UNIT;
 
 	return ERR_OK;
 }
@@ -984,7 +1029,36 @@ err_t check_return_call(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	return check_unknown_node(node->return_call, cdata);
+	err_t result = check_unknown_node(node->return_call, cdata);
+	if (result)
+		return result;
+
+	if (!cdata->func_return_explicit)
+	{
+		print_err("Return statements are not allowed in functions with implict return types.",
+				  ERR_SEMANTIC_INVALID_TYPE);
+		return ERR_SEMANTIC_INVALID_TYPE;
+	}
+
+	// Allow implicit int to double conversions
+	if (cdata->func_return_type == TYPE_DOUBLE && node->return_call->eval_type == TYPE_INT)
+	{
+		result = insert_int_to_double_node(&node->return_call);
+		if (result)
+			return result;
+	}
+
+	if (cdata->func_return_type != TYPE_UNIT)
+	{
+		if (cdata->func_return_type != node->return_call->eval_type)
+		{
+			print_err("Expression inside a return statement must match the functions return type.",
+					  ERR_SEMANTIC_INVALID_TYPE);
+			return ERR_SEMANTIC_INVALID_TYPE;
+		}
+	}
+
+	return ERR_OK;
 }
 
 /**
@@ -1057,6 +1131,8 @@ err_t check_while(ast_node_t *node, compiler_data_t *cdata)
 	result = check_unknown_node(node->while_loop.block, cdata);
 	if (result)
 		return result;
+
+	node->eval_type = TYPE_UNIT;
 
 	return ERR_OK;
 }
@@ -1185,6 +1261,8 @@ err_t check_for(ast_node_t *node, compiler_data_t *cdata)
 	if (result)
 		return result;
 
+	node->eval_type = TYPE_UNIT;
+
 	return ERR_OK;
 }
 
@@ -1308,6 +1386,51 @@ err_t check_unknown_node(ast_node_t *node, compiler_data_t *cdata)
 		print_err("Error in check_unknown_node()", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
+}
+
+/**
+ * @brief Checks if a node returns in all paths
+ *
+ * @param node Node to check recursively
+ * @return true A return check is in every path
+ * @return false A return check is not in every path
+ */
+bool node_always_returns(const ast_node_t *node)
+{
+	if (!node)
+		return false;
+
+	if (node->node_type == AST_RETURN_CALL)
+		return true;
+
+	if (node->node_type == AST_BLOCK)
+		return block_always_returns(node);
+
+	if (node->node_type == AST_IF)
+	{
+		return node->if_statement.else_block != NULL && node_always_returns(node->if_statement.if_block) &&
+			   node_always_returns(node->if_statement.else_block);
+	}
+
+	return false;
+}
+
+/**
+ * @brief Checks if a block returns in all paths
+ *
+ * @param block Block to check recursively
+ * @return true A return check is in every path
+ * @return false A return check is not in every path
+ */
+bool block_always_returns(const ast_node_t *block)
+{
+	for (size_t i = 0; i < block->block.statement_count; i++)
+	{
+		if (node_always_returns(block->block.statements[i]))
+			return true;
+	}
+
+	return false;
 }
 
 err_t do_semantic_checks(ast_node_t *program_node, compiler_data_t *cdata)

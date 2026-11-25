@@ -36,6 +36,10 @@ typedef struct
 	size_t var_table_count;
 
 	bool main_defined;
+
+	// Semantic check data
+	bool func_return_explicit;
+	data_type_t func_return_type;
 }
 
 compiler_data_t;
