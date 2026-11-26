@@ -492,9 +492,10 @@ err_t print_user_func_call(const char *unique_id, param_node_list_t **param_list
  * @param unique_id Identifier of the extension
  * @param symtables Array including symtable for extensions
  * @param new_func_def Passed for setting zeros and extension name
- * @return err_t Error code
+ * @return true When a function returns Unit
+ * @return false When a function doesn't return Unit
  */
-err_t print_ext_def(char *unique_id, symtable_t *symtables, names_counter *new_func_def)
+bool print_ext_def(char *unique_id, symtable_t *symtables, names_counter *new_func_def)
 {
 	new_func_def->for_counter = 0;
 	new_func_def->if_counter = 0;
@@ -507,7 +508,7 @@ err_t print_ext_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 	const symbol_data_t *ext_params = symtable_item_find(&symtables[1], unique_id);
 	if (ext_params == NULL)
 	{
-		return ERR_OK;
+		return false;
 	}
 
 	printf("LABEL %s\n", unique_id);
@@ -532,7 +533,11 @@ err_t print_ext_def(char *unique_id, symtable_t *symtables, names_counter *new_f
 			}
 		}
 	}
-	return ERR_OK;
+	if(ext_params->data.extension.return_type == TYPE_UNIT)
+	{
+		return true;
+	}
+	return false;
 }
 
 /**
@@ -812,7 +817,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		break;
 
 	case AST_FUNC_DEF:
-		bool ret_unit = print_func_def(node->func_def.unique_id, symtables, new_func_def);
+		bool ret_unit_func = print_func_def(node->func_def.unique_id, symtables, new_func_def);
 		var_def(node->func_def.block, symtables, new_func_def);
 
 		// Definition of variables to help in for cycle before loops
@@ -827,7 +832,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 
 		generate_nodes(node->func_def.block, symtables, new_func_def);
 
-		if (ret_unit)
+		if (ret_unit_func)
 		{
 			printf("PUSHS nil@nil\n");
 		}
@@ -849,7 +854,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		break;
 
 	case AST_EXT_DEF:
-		print_ext_def(node->ext_def.unique_id, symtables, new_func_def);
+		bool ret_unit_ext = print_ext_def(node->ext_def.unique_id, symtables, new_func_def);
 		var_def(node->ext_def.block, symtables, new_func_def);
 
 		// Definition of variables to help in for cycle before loops
@@ -863,6 +868,12 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		new_func_def->for_counter = 0;
 
 		generate_nodes(node->ext_def.block, symtables, new_func_def);
+
+		if(ret_unit_ext)
+		{
+			printf("PUSHS nil@nil\n");
+		}
+
 		printf("POPFRAME\n");
 		printf("RETURN\n");
 		break;
