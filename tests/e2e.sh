@@ -290,7 +290,48 @@ run_case "parameter-immutable-assign" 7 "variables/invalid/parameter-immutable-a
 run_case "var-mutable-assign" 0 "variables/valid/var-mutable-assign.ifj"
 
 echo "$BLUE-----Variable usage-----$RESET"
+# TODO:
 
+echo "$YELLOW-----VALMEM-----$RESET"
+echo "$BLUE-----Parameters-----$RESET"
+run_case "valmem-parameter-list-1" 5 "valmem/invalid/valmem-parameter-list-1.ifj"
+run_case "valmem-parameter-list-2" 5 "valmem/invalid/valmem-parameter-list-2.ifj"
+run_case "valmem-parameter-list-3" 5 "valmem/invalid/valmem-parameter-list-3.ifj"
+run_case "valmem-parameter-list-4" 5 "valmem/invalid/valmem-parameter-list-4.ifj"
+run_case "valmem-toint-type" 5 "valmem/invalid/valmem-toint-type.ifj"
+run_case "valmem-floor-type" 5 "valmem/invalid/valmem-floor-type.ifj"
+run_case "valmem-length-type" 5 "valmem/invalid/valmem-length-type.ifj"
+run_case "valmem-chain-type" 5 "valmem/invalid/valmem-chain-type.ifj"
+run_case "valmem-same-name-function" 0 "valmem/valid/valmem-same-name-function.ifj"
+
+echo "$BLUE-----toString-----$RESET"
+run_case "valmem-tostring-1" 0 "valmem/valid/valmem-tostring-1.ifj"
+run_case "valmem-tostring-2" 0 "valmem/valid/valmem-tostring-2.ifj"
+run_case "valmem-tostring-3" 0 "valmem/valid/valmem-tostring-3.ifj"
+run_case "valmem-tostring-4" 0 "valmem/valid/valmem-tostring-4.ifj"
+run_case "valmem-tostring-5" 0 "valmem/valid/valmem-tostring-5.ifj"
+run_case "valmem-tostring-6" 0 "valmem/valid/valmem-tostring-6.ifj"
+run_case "valmem-tostring-7" 0 "valmem/valid/valmem-tostring-7.ifj"
+
+echo "$BLUE-----toInt-----$RESET"
+run_case "valmem-toint-1" 0 "valmem/valid/valmem-toint-1.ifj"
+run_case "valmem-toint-2" 0 "valmem/valid/valmem-toint-2.ifj"
+run_case "valmem-toint-3" 0 "valmem/valid/valmem-toint-3.ifj"
+
+echo "$BLUE-----floor-----$RESET"
+run_case "valmem-floor-1" 0 "valmem/valid/valmem-floor-1.ifj"
+run_case "valmem-floor-2" 0 "valmem/valid/valmem-floor-2.ifj"
+run_case "valmem-floor-3" 0 "valmem/valid/valmem-floor-3.ifj"
+
+echo "$BLUE-----length-----$RESET"
+run_case "valmem-length-1" 0 "valmem/valid/valmem-length-1.ifj"
+run_case "valmem-length-2" 0 "valmem/valid/valmem-length-2.ifj"
+run_case "valmem-length-3" 0 "valmem/valid/valmem-length-3.ifj"
+
+echo "$BLUE-----Chaining VALMEM calls-----$RESET"
+run_case "valmem-chain-1" 0 "valmem/valid/valmem-chain-1.ifj"
+run_case "valmem-chain-2" 0 "valmem/valid/valmem-chain-2.ifj"
+run_case "valmem-chain-3" 0 "valmem/valid/valmem-chain-3.ifj"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then

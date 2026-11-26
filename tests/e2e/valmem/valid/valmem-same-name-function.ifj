@@ -1,0 +1,9 @@
+import ifj26.*
+
+def toString: String =
+  "ahoj"
+
+@main
+def main(): Unit =
+  var a: String = (6 + 7).toString
+  ()
