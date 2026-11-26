@@ -71,6 +71,11 @@ pack: clean
 	exit \
 	'
 
+# Compiles the documentation pdf
+doc:
+	latexmk -pdf -synctex=1 -interaction=nonstopmode -file-line-error -outdir=docs/aux -auxdir=docs/aux docs/documentation.tex
+	mv docs/aux/documentation.pdf dokumentace.pdf
+
 # Cleans files created during a build
 clean:
-	rm -f $(OBJ) $(DEP) $(TARGET) $(TEST_BIN) $(TEST_BIN:.test=.d) $(TEST_BIN:=.test) xsvomap00.zip
+	rm -rf $(OBJ) $(DEP) $(TARGET) $(TEST_BIN) $(TEST_BIN:.test=.d) $(TEST_BIN:=.test) xsvomap00.zip docs/aux
