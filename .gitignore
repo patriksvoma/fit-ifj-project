@@ -15,3 +15,12 @@ out.prog
 
 # Archive file
 xsvomap00.zip
+
+# Latex auxiliary files
+*.aux
+*.fdb_latexmk
+*.files*.log
+*.synctex.gz
+
+# Latex auxiliary folder
+docs/aux
