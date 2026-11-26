@@ -72,7 +72,12 @@
  }
 
 \section{Spolupráce na projektu} {
-  TODO:
+  Pro spolupráci na projektu jsme využili GitHub, pro komunikaci Discord, případně osobní setkání.
+  Stanovili jsme si pravidla ohledně formátování, pojmenovávání proměnných či funkcí, nebo commitů.
+  Do CI pipeline jsme zapojili kontroly pomocí \texttt{clang-format} a \texttt{cppcheck}.
+  Pro vynucení dodržování pravidel jsme uzamknuli branch \texttt{main} a využili GitHub Actions, kde se testy automaticky spouští a pro schválení PR je vyžadováno, aby byly úspěšné.
+  \par
+  Pro formátování kódu jsme využili vestavěný styl \texttt{Microsoft} s odsazením tabulátory. Pro další automatické nastavení jsme využili soubor \texttt{.editorconfig}.
  }
 
 \section{Návrh překladače} {
