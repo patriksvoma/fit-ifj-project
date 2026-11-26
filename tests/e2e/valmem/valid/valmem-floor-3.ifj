@@ -1,0 +1,6 @@
+import ifj26.*
+
+@main
+def main(): Unit =
+  var a: Double = (54.67).floor
+  ()

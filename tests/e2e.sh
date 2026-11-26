@@ -296,7 +296,9 @@ echo "$YELLOW-----VALMEM-----$RESET"
 echo "$BLUE-----Parameters-----$RESET"
 run_case "valmem-parameter-list-1" 5 "valmem/invalid/valmem-parameter-list-1.ifj"
 run_case "valmem-parameter-list-2" 5 "valmem/invalid/valmem-parameter-list-2.ifj"
+run_case "valmem-parameter-list-3" 5 "valmem/invalid/valmem-parameter-list-3.ifj"
 run_case "valmem-toint-type" 5 "valmem/invalid/valmem-toint-type.ifj"
+run_case "valmem-floor-type" 5 "valmem/invalid/valmem-floor-type.ifj"
 
 echo "$BLUE-----toString-----$RESET"
 run_case "valmem-tostring-1" 0 "valmem/valid/valmem-tostring-1.ifj"
@@ -313,6 +315,10 @@ run_case "valmem-toint-2" 0 "valmem/valid/valmem-toint-2.ifj"
 run_case "valmem-toint-3" 0 "valmem/valid/valmem-toint-3.ifj"
 
 echo "$BLUE-----floor-----$RESET"
+run_case "valmem-floor-1" 0 "valmem/valid/valmem-floor-1.ifj"
+run_case "valmem-floor-2" 0 "valmem/valid/valmem-floor-2.ifj"
+run_case "valmem-floor-3" 0 "valmem/valid/valmem-floor-3.ifj"
+
 echo "$BLUE-----length-----$RESET"
 
 
