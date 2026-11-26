@@ -78,6 +78,12 @@
   Pro vynucení dodržování pravidel jsme uzamknuli branch \texttt{main} a využili GitHub Actions, kde se testy automaticky spouští a pro schválení PR je vyžadováno, aby byly úspěšné.
   \par
   Pro formátování kódu jsme využili vestavěný styl \texttt{Microsoft} s odsazením tabulátory. Pro další automatické nastavení jsme využili soubor \texttt{.editorconfig}.
+
+  \subsection{Formy testování} {
+	Na testování lexikálního analyzátoru jsme si vytvořili unit testy. Během testování
+	zbytku programu jsme se opírali o kontroly malými programy. Následně jsme využívali
+	end-to-end testy na kontrolu funkčnosti překladače.
+  }
  }
 
 \section{Návrh překladače} {
