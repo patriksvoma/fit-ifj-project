@@ -3,6 +3,7 @@
 \usepackage[a4paper, top=3cm, left=2cm, textwidth=17cm, textheight=24cm]{geometry}
 \usepackage{graphicx}
 \usepackage[hidelinks]{hyperref}
+\usepackage{float}
 
 \hypersetup{
     pdftitle={Dokumentace - Implementace překladače imperativního jazyka IFJ26}
@@ -81,8 +82,13 @@
 		  TODO:
 	  }
 
-	  \subsubsection{Precedenční tabulka} {
-		  TODO:
+	  \subsubsection{Precedenční analýza} {
+		  \begin{figure}[H]
+			  \centering
+			  \includegraphics[width=\textwidth]{images/Precedence table.pdf}
+			  \caption{Použitá precedenční tabulka}
+			  \label{fig:prec_table}
+		  \end{figure}
 	  }
   }
 
