@@ -1,0 +1,102 @@
+<mxfile host="Electron">
+  <diagram name="Page-1" id="FwlSKeTKRUatWp81Vh_1">
+    <mxGraphModel dx="793" dy="835" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-14" edge="1" parent="1" source="AOQpZ54qaY-Djmq6XVQl-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;labelPadding=0 4;" target="AOQpZ54qaY-Djmq6XVQl-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" value="IFJ26&lt;div&gt;kód&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="120" x="160" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-15" edge="1" parent="1" source="AOQpZ54qaY-Djmq6XVQl-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;labelPadding=0 4;" target="AOQpZ54qaY-Djmq6XVQl-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-26" connectable="0" parent="AOQpZ54qaY-Djmq6XVQl-15" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;defaultLabelBackgroundColor=page;labelPadding=0 4;" value="token/error" vertex="1">
+          <mxGeometry relative="1" x="-0.3627" y="1" as="geometry">
+            <mxPoint x="-35" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="Lexikální analyzátor" vertex="1">
+          <mxGeometry height="40" width="120" x="160" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-19" edge="1" parent="1" source="AOQpZ54qaY-Djmq6XVQl-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;labelPadding=0 4;" target="AOQpZ54qaY-Djmq6XVQl-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-31" connectable="0" parent="AOQpZ54qaY-Djmq6XVQl-19" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;defaultLabelBackgroundColor=page;labelPadding=0 4;" value="Informace o symbolu&lt;br&gt;symbol_data_t" vertex="1">
+          <mxGeometry relative="1" x="0.0868" y="-2" as="geometry">
+            <mxPoint x="53" y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-29" edge="1" parent="1" source="AOQpZ54qaY-Djmq6XVQl-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;labelPadding=0 4;" target="AOQpZ54qaY-Djmq6XVQl-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-32" connectable="0" parent="AOQpZ54qaY-Djmq6XVQl-29" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;defaultLabelBackgroundColor=page;labelPadding=0 4;" value="Informace o symbolu&lt;div&gt;symbol_data_t&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.087" y="-2" as="geometry">
+            <mxPoint x="-1" y="14" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-37" edge="1" parent="1" source="AOQpZ54qaY-Djmq6XVQl-7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;labelPadding=0 4;curved=0;" target="AOQpZ54qaY-Djmq6XVQl-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-38" connectable="0" parent="AOQpZ54qaY-Djmq6XVQl-37" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;defaultLabelBackgroundColor=page;labelPadding=0 4;" value="Informace o symbolu&lt;br&gt;symbol_data_t" vertex="1">
+          <mxGeometry relative="1" x="-0.4341" y="1" as="geometry">
+            <mxPoint x="39" y="16" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Tabulka symbolů" vertex="1">
+          <mxGeometry height="40" width="120" x="160" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-16" edge="1" parent="1" source="AOQpZ54qaY-Djmq6XVQl-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;labelPadding=0 4;" target="AOQpZ54qaY-Djmq6XVQl-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-27" connectable="0" parent="AOQpZ54qaY-Djmq6XVQl-16" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;defaultLabelBackgroundColor=page;labelPadding=0 4;" value="požadavek na&lt;div&gt;token/nahlédnutní&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.07" y="1" as="geometry">
+            <mxPoint x="51" y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-18" edge="1" parent="1" source="AOQpZ54qaY-Djmq6XVQl-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;labelPadding=0 4;" target="AOQpZ54qaY-Djmq6XVQl-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-30" connectable="0" parent="AOQpZ54qaY-Djmq6XVQl-18" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;defaultLabelBackgroundColor=page;labelPadding=0 4;" value="funkce vkládání,&lt;div&gt;vyhledávání, ...&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.2083" as="geometry">
+            <mxPoint x="-46" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-20" edge="1" parent="1" source="AOQpZ54qaY-Djmq6XVQl-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;labelPadding=0 4;" target="AOQpZ54qaY-Djmq6XVQl-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Syntaktický&lt;span style=&quot;background-color: transparent;&quot;&gt; analyzátor&lt;/span&gt;" vertex="1">
+          <mxGeometry height="40" width="120" x="160" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-34" edge="1" parent="1" source="AOQpZ54qaY-Djmq6XVQl-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;labelPadding=0 4;" target="AOQpZ54qaY-Djmq6XVQl-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-35" connectable="0" parent="AOQpZ54qaY-Djmq6XVQl-34" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;defaultLabelBackgroundColor=page;labelPadding=0 4;" value="Zkontrolovaný&lt;div&gt;AST&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.0576" y="-1" as="geometry">
+            <mxPoint y="-21" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Sémantický&lt;span style=&quot;background-color: transparent;&quot;&gt; analyzátor&lt;/span&gt;" vertex="1">
+          <mxGeometry height="40" width="120" x="400" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-28" edge="1" parent="1" source="AOQpZ54qaY-Djmq6XVQl-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;labelPadding=0 4;" target="AOQpZ54qaY-Djmq6XVQl-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;fillColor=#f8cecc;strokeColor=#b85450;" value="Abstraktní syntaktický strom" vertex="1">
+          <mxGeometry height="40" width="120" x="400" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-24" edge="1" parent="1" source="AOQpZ54qaY-Djmq6XVQl-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;labelPadding=0 4;" target="AOQpZ54qaY-Djmq6XVQl-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Generátor cílového kódu" vertex="1">
+          <mxGeometry height="40" width="120" x="600" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="AOQpZ54qaY-Djmq6XVQl-12" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" value="IFJcode26&lt;div&gt;kód&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="120" x="600" y="560" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

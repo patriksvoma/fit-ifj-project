@@ -24,3 +24,6 @@ xsvomap00.zip
 
 # Latex auxiliary folder
 docs/aux
+
+# draw.io backup files
+*.drawio.bkp
