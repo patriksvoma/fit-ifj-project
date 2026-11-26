@@ -1,0 +1,9 @@
+import ifj26.*
+
+@main def main() =
+  val abc: Int = 0
+  abc = xxx()
+  ()
+
+def xxx(): Double =
+  6.7

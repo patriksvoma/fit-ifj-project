@@ -283,7 +283,9 @@ run_case "var-def-explicit-type-2" 6 "variables/invalid/var-def-explicit-type-2.
 run_case "var-def-explicit-type-3" 6 "variables/invalid/var-def-explicit-type-3.ifj"
 
 echo "$BLUE-----Variable assignment-----$RESET"
-run_case "val-immutable-assign" 7 "variables/invalid/val-immutable-assign.ifj"
+run_case "val-immutable-assign-1" 7 "variables/invalid/val-immutable-assign-1.ifj"
+run_case "val-immutable-assign-2" 7 "variables/invalid/val-immutable-assign-2.ifj"
+run_case "val-immutable-assign-3" 7 "variables/invalid/val-immutable-assign-3.ifj"
 run_case "parameter-immutable-assign" 7 "variables/invalid/parameter-immutable-assign.ifj"
 run_case "var-mutable-assign" 0 "variables/valid/var-mutable-assign.ifj"
 
