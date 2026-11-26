@@ -2,5 +2,5 @@ import ifj26.*
 
 @main
 def main(): Unit =
-  var a: String = (54.7).floor()
+  var a: Double = (54.7).floor()
   ()

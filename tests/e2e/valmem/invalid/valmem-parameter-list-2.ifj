@@ -2,5 +2,5 @@ import ifj26.*
 
 @main
 def main(): Unit =
-  var a: String = 54.toInt()
+  var a: Int = 54.toInt()
   ()

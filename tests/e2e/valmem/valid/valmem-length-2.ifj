@@ -1,0 +1,6 @@
+import ifj26.*
+
+@main
+def main(): Unit =
+  var a: Int = "a6s5d4f6sd45f".length
+  ()
