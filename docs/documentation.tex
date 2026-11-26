@@ -173,7 +173,10 @@
   }
 
   \subsection{Sémantická analýza} {
-	  TODO:
+	  Většina sémantických kontrol je prováděna až po syntaktické analýze, a to postorder průchodem abstraktního syntaktického stromu.
+	  Tento přístup jsme zvolili, protože ve chvíli kdy se provádí sémantické kontroly jsou již definované všechny funkce.
+	  Při průchodu se pro každý uzel stromu nastavuje typ vyhodnocení \texttt{eval\_type}, pomocí kterého se provádějí typové kontroly.
+	  Při kontrole typu může sémantický analyzátor vkládat do stromu uzly pro převod z typu \texttt{Int} na typ \texttt{Double}.
   }
 
   \subsection{Generování cílového kódu}
