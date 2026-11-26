@@ -183,6 +183,18 @@
 			  \label{fig:prec_table}
 		  \end{figure}
 	  }
+	  \subsubsection{Abstraktní syntaktický strom} {
+		  Abstraktní syntaktický strom (ASS) reprezentuje celý program. Je definován v \texttt{ast.h}.
+		  Jeho uzly jsou implementovány pomocí struktury obsahující typ uzlu, datový typ vyhodnocení a
+		  \texttt{union} s příslušnými daty pro každý typ uzlu. Literály a použití proměnné jsou listy.
+		  Každý uzel obsahuje data potřebná pro práci s jeho typem, jako například hodnotu literálu,
+		  odkaz na uzel operandu, odkazy na uzly s podmínkou a tělem cyklu nebo odkazy na definice funkcí v
+		  kořeni.
+
+		  V souboru \texttt{ast.c} jsou implementovány funkce pro práci s ASS. Soubor obsahuje funkce pro
+		  sestavování stromu pro všechny typy uzlů, které využívá syntaktický analyzátor. Dále obsahuje
+		  funkci pro uvolnění celého stromu volanou na konci \texttt{main.c}.
+	  }
   }
 
   \subsection{Sémantická analýza} {
@@ -206,10 +218,26 @@
 	metody jsou uchovávány v samostatných globálních tabulkách.
 
   \subsection{Generování cílového kódu}
+  Cílový kód v jazyce IFJcode26 je generován přímo z vnitřní reprezentace ASS bez mezikódu. Pro
+  generování jsme zvolili zásobníkové instrukce, protože zjednodušují implementaci. Generování je
+  realizováno post-order průchodem ASS, kde se pro každý uzel generuje sekvence instrukcí. Vestavěné
+  funkce jazyka IFJ26, které nemají odpovídající instrukce, jsou implementovány přímo ve výstupním
+  kódu.
+
+  Při generování funkcí se nejdříve z tabulky symbolů zjistí, jestli jde o \texttt{main}, a definují
+  se parametry. Poté se vytknou definice proměnných v celé funkci, aby nedocházelo k duplicitní
+  definici uvnitř cyklů. Při volání funkcí se rozlišují vestavěné a uživatelské funkce, kde
+  vestavěné mají vlastní definici. U cyklů se unikátnost návěští řeší pomocí názvu funkce a počítadla
+  cyklů. U cyklu \texttt{for} jsou navíc generovány pomocné lokální proměnné.
  }
 
 \section{Využití AI} {
-  TODO:
+  Při práci na projektu jsme využívali jazykové modely Google Gemini, MAI Code 2 Flash a GPT-6 Luna.
+  Google Gemini sloužil hlavně pro konzultace řešení jednotlivých částí a pro lepší pochopení zadání.
+  Konzultace probíhala tak, že jsme přišli s návrhem, jak určitý problém vyřešit, a jazykový model
+  poradil s možnými chybami, které by mohly nastat, pomohl dovysvětlit nejasnosti a navrhnout, jak
+  postupovat při implementaci. Modely MAI Code 2 Flash a GPT-6 Luna jsme použili pro generování skriptů,
+  které spouštěly testy, a pro pomoc při hledání chyb v kódu.
  }
 
 \section{Zdroje} {
