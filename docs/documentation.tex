@@ -63,14 +63,12 @@
 \newpage
 
 \section{Rozdělení práce} {
-  V týmu jsme si práci rozdělili následovně:
-
-  \begin{tabular}{l l l l}
-	  Patrik Švoma    & Syntaktická analýza                        \\
-	  Petr Marek      & Generování cílového kódu, implementace AST \\
-	  Jakub Kvasnička &                                            \\
-	  Jan Šerák       &                                            \\
-  \end{tabular}
+  \begin{tabularx}{\textwidth}{l | >{\raggedright\arraybackslash}X}
+	  \textbf{Patrik Švoma}    & Syntaktická analýza, sémantická analýza, zpracování chyb, CI pipeline, dokumentace \\
+	  \textbf{Petr Marek}      & Generování cílového kódu, implementace AST, dokumentace                            \\
+	  \textbf{Jakub Kvasnička} & Tabulka symbolů, testování, dokumentace                                            \\
+	  \textbf{Jan Šerák}       & Lexikální analýza, dokumentace                                                     \\
+  \end{tabularx}
  }
 
 \section{Spolupráce na projektu} {
