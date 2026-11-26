@@ -1,0 +1,6 @@
+import ifj26.*
+
+@main def main() =
+  val abc: Int = 0
+  abc = 6
+  ()
