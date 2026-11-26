@@ -206,16 +206,16 @@
   }
 
   \subsection{Tabulka symbolů}
-	Tabulku symbolů jsme implementovali pomocí výškově vyváženého binárního vyhledávacího
-	stromu, konkrétně AVL stromu. Při návrhu a implementaci jsme se inspirovali přednáškami
-	k předmětu IAL a knihou \textit{Průvodce labyrintem algoritmů}. Při vkládání
-	nových prvků rekurzivně procházíme strom a poté zkontrolujeme vyváženost
-	jednotlivých uzlů. Pokud se poruší vyváženost, provedou se
-	rotace, jež obnoví vyváženost stromu.
-	\\
-	Podpora vnoření je řešena pomocí propojených tabulek symbolů, kde proměnné jsou ukládány
-	do samostatných tabulek, které obsahují ukazatel na nadřazenou tabulku. Funkce a rozšiřující
-	metody jsou uchovávány v samostatných globálních tabulkách.
+  Tabulku symbolů jsme implementovali pomocí výškově vyváženého binárního vyhledávacího
+  stromu, konkrétně AVL stromu. Při návrhu a implementaci jsme se inspirovali přednáškami
+  k předmětu IAL a knihou \textit{Průvodce labyrintem algoritmů}. Při vkládání
+  nových prvků rekurzivně procházíme strom a poté zkontrolujeme vyváženost
+  jednotlivých uzlů. Pokud se poruší vyváženost, provedou se
+  rotace, jež obnoví vyváženost stromu.
+  \\
+  Podpora vnoření je řešena pomocí propojených tabulek symbolů, kde proměnné jsou ukládány
+  do samostatných tabulek, které obsahují ukazatel na nadřazenou tabulku. Funkce a rozšiřující
+  metody jsou uchovávány v samostatných globálních tabulkách.
 
   \subsection{Generování cílového kódu}
   Cílový kód v jazyce IFJcode26 je generován přímo z vnitřní reprezentace ASS bez mezikódu. Pro
@@ -229,6 +229,21 @@
   definici uvnitř cyklů. Při volání funkcí se rozlišují vestavěné a uživatelské funkce, kde
   vestavěné mají vlastní definici. U cyklů se unikátnost návěští řeší pomocí názvu funkce a počítadla
   cyklů. U cyklu \texttt{for} jsou navíc generovány pomocné lokální proměnné.
+ }
+
+\section{Moduly} {
+  \begin{itemize}
+	  \item \texttt{ast.h} - Implementace abstraktního syntaktického stromu
+	  \item \texttt{codegen.h} - Generátor cílového kódu
+	  \item \texttt{error.h} - Definice chybových kódu a jejich vypisování na chybový výstup
+	  \item \texttt{expression.h} - Precedenční analýza pro zpracování výrazů
+	  \item \texttt{main.c} - Vstupní bod programu
+	  \item \texttt{parser.h} - Rekurzivní syntaktická analýza
+	  \item \texttt{scanner.h} - Lexikální analýza
+	  \item \texttt{semantics.h} - Sémantická analýza
+	  \item \texttt{symstack.h} - Zásobník symbolů využívaný precedenčním analyzátorem
+	  \item \texttt{symtable.h} - Tabulka symbolů
+  \end{itemize}
  }
 
 \section{Využití AI} {
