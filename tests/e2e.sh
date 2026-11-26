@@ -302,6 +302,7 @@ run_case "valmem-toint-type" 5 "valmem/invalid/valmem-toint-type.ifj"
 run_case "valmem-floor-type" 5 "valmem/invalid/valmem-floor-type.ifj"
 run_case "valmem-length-type" 5 "valmem/invalid/valmem-length-type.ifj"
 run_case "valmem-chain-type" 5 "valmem/invalid/valmem-chain-type.ifj"
+run_case "valmem-same-name-function" 0 "valmem/valid/valmem-same-name-function.ifj"
 
 echo "$BLUE-----toString-----$RESET"
 run_case "valmem-tostring-1" 0 "valmem/valid/valmem-tostring-1.ifj"
@@ -331,7 +332,6 @@ echo "$BLUE-----Chaining VALMEM calls-----$RESET"
 run_case "valmem-chain-1" 0 "valmem/valid/valmem-chain-1.ifj"
 run_case "valmem-chain-2" 0 "valmem/valid/valmem-chain-2.ifj"
 run_case "valmem-chain-3" 0 "valmem/valid/valmem-chain-3.ifj"
-
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
