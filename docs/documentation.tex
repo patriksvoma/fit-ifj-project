@@ -87,6 +87,17 @@
   }
 
   \subsection{Generování cílového kódu}
+  Cílový kód v jazyce IFJcode26 je generován přímo z vnitřní reprezentace ASS bez mezikódu. Pro
+  generování jsme zvolili zásobníkové instrukce, protože zjednodušují implementaci. Generování je
+  realizováno post-order průchodem ASS, kde se pro každý uzel generuje sekvence instrukcí. Vestavěné
+  funkce jazyka IFJ26, které nemají odpovídající instrukce, jsou implementovány přímo ve výstupním
+  kódu.
+
+  Při generování funkcí se nejdříve z tabulky symbolů zjistí, jestli jde o \texttt{main}, a definují
+  se parametry. Poté se vytknou definice proměnných v celé funkci, aby nedocházelo k duplicitní
+  definici uvnitř cyklů. Při volání funkcí se rozlišují vestavěné a uživatelské funkce, kde
+  vestavěné mají vlastní definici. U cyklů se unikátnost návěští řeší pomocí názvu funkce a počítadla
+  cyklů. U cyklu \texttt{for} jsou navíc generovány pomocné lokální proměnné.
  }
 
 \section{Využití AI} {
