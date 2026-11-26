@@ -84,6 +84,18 @@
 	  \subsubsection{Precedenční tabulka} {
 		  TODO:
 	  }
+	  \subsubsection{Abstraktní syntaktický strom} {
+		  Abstraktní syntaktický strom (ASS) reprezentuje celý program. Je definován v \texttt{ast.h}.
+		  Jeho uzly jsou implementovány pomocí struktury obsahující typ uzlu, datový typ vyhodnocení a
+		  \texttt{union} s příslušnými daty pro každý typ uzlu. Literály a použití proměnné jsou listy.
+		  Každý uzel obsahuje data potřebná pro práci s jeho typem, jako například hodnotu literálu,
+		  odkaz na uzel operandu, odkazy na uzly s podmínkou a tělem cyklu nebo odkazy na definice funkcí v
+		  kořeni.
+
+		  V souboru \texttt{ast.c} jsou implementovány funkce pro práci s ASS. Soubor obsahuje funkce pro
+		  sestavování stromu pro všechny typy uzlů, které využívá syntaktický analyzátor. Dále obsahuje
+		  funkci pro uvolnění celého stromu volanou na konci \texttt{main.c}.
+	  }
   }
 
   \subsection{Generování cílového kódu}
