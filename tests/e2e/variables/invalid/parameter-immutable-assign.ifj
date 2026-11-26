@@ -1,0 +1,10 @@
+import ifj26.*
+
+def cau(abc: Int): Unit =
+  abc = 54
+  ()
+
+@main
+def main(): Unit =
+  cau(67)
+  ()

@@ -924,7 +924,7 @@ err_t check_var_def(ast_node_t *node, compiler_data_t *cdata)
 		if (entry->data.variable.type != node->variable_definition.assigned_value->eval_type)
 		{
 			// TODO: Formatted output
-			print_err("A variable has an explicit type, but is assigned a value of a different type.",
+			print_err("A variable is defined with an explicit type, but is assigned a value of a different type.",
 					  ERR_SEMANTIC_INVALID_TYPE);
 			return ERR_SEMANTIC_INVALID_TYPE;
 		}
@@ -964,9 +964,16 @@ err_t check_var_assign(ast_node_t *node, compiler_data_t *cdata)
 	const symbol_data_t *entry = node->variable_assignment.sym_table_entry;
 	if (!entry)
 	{
-		print_err("A variable definiton AST node is missing the symbol_table_entry record. This shoud not happepen",
+		print_err("A variable definiton AST node is missing the symbol_table_entry record. This should not happen",
 				  ERR_INTERNAL);
 		return ERR_INTERNAL;
+	}
+
+	// Check if the variable is mutable
+	if (!entry->data.variable.mutable)
+	{
+		print_err("Trying to assign a value to an immutable variable.", ERR_SEMANTIC_IMMUTABLE);
+		return ERR_SEMANTIC_IMMUTABLE;
 	}
 
 	if (entry->data.variable.type != node->variable_assignment.assigned_value->eval_type)

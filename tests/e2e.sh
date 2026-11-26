@@ -266,6 +266,31 @@ echo "$BLUE-----For syntax-----$RESET"
 run_case "control-for-single-body.ifj" 0 "control/valid/control-for-single-body.ifj"
 run_case "control-for-multiline.ifj" 0 "control/valid/control-for-multiline.ifj"
 
+echo "$YELLOW-----Variables-----$RESET"
+echo "$BLUE-----Variable definition-----$RESET"
+run_case "var-def-explicit-1" 0 "variables/valid/var-def-explicit-1.ifj"
+run_case "var-def-explicit-2" 0 "variables/valid/var-def-explicit-2.ifj"
+run_case "var-def-explicit-3" 0 "variables/valid/var-def-explicit-3.ifj"
+run_case "var-def-explicit-4" 0 "variables/valid/var-def-explicit-4.ifj"
+run_case "var-def-explicit-5" 0 "variables/valid/var-def-explicit-5.ifj"
+run_case "var-def-implicit-1" 0 "variables/valid/var-def-implicit-1.ifj"
+run_case "var-def-implicit-2" 0 "variables/valid/var-def-implicit-2.ifj"
+run_case "var-def-implicit-3" 0 "variables/valid/var-def-implicit-3.ifj"
+run_case "var-def-implicit-4" 0 "variables/valid/var-def-implicit-4.ifj"
+run_case "var-def-implicit-5" 0 "variables/valid/var-def-implicit-5.ifj"
+run_case "var-def-explicit-type-1" 6 "variables/invalid/var-def-explicit-type-1.ifj"
+run_case "var-def-explicit-type-2" 6 "variables/invalid/var-def-explicit-type-2.ifj"
+run_case "var-def-explicit-type-3" 6 "variables/invalid/var-def-explicit-type-3.ifj"
+
+echo "$BLUE-----Variable assignment-----$RESET"
+run_case "val-immutable-assign-1" 7 "variables/invalid/val-immutable-assign-1.ifj"
+run_case "val-immutable-assign-2" 7 "variables/invalid/val-immutable-assign-2.ifj"
+run_case "val-immutable-assign-3" 7 "variables/invalid/val-immutable-assign-3.ifj"
+run_case "parameter-immutable-assign" 7 "variables/invalid/parameter-immutable-assign.ifj"
+run_case "var-mutable-assign" 0 "variables/valid/var-mutable-assign.ifj"
+
+echo "$BLUE-----Variable usage-----$RESET"
+
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
