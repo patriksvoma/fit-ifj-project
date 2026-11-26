@@ -86,6 +86,18 @@
 	  }
   }
 
+  \subsection{Tabulka symbolů}
+	Tabulku symbolů jsme implementovali pomocí výškově vyváženého binárního vyhledávacího
+	stromu, konkrétně AVL stromu. Při návrhu a implementaci jsme se inspirovali přednáškami
+	k předmětu IAL a knihou \textit{Průvodce labyrintem algoritmů}. Při vkládání
+	nových prvků rekurzivně procházíme strom a poté zkontrolujeme vyváženost
+	jednotlivých uzlů. Pokud se poruší vyváženost, provedou se
+	rotace, jež obnoví vyváženost stromu.
+	\\
+	Podpora vnoření je řešena pomocí propojených tabulek symbolů, kde proměnné jsou ukládány
+	do samostatných tabulek, které obsahují ukazatel na nadřazenou tabulku. Funkce a rozšiřující
+	metody jsou uchovávány v samostatných globálních tabulkách.
+
   \subsection{Generování cílového kódu}
  }
 
@@ -94,7 +106,7 @@
  }
 
 \section{Zdroje} {
-  TODO:
+  TODO: Průvodce labyrintem algoritmů 9788088168638
  }
 
 \end{document}
