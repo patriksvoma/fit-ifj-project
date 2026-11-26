@@ -7,6 +7,7 @@
 \usepackage{tabularx}
 \usepackage{array}
 \usepackage[T1]{fontenc}
+\usepackage{parskip}
 
 
 \hypersetup{
@@ -23,7 +24,6 @@
 
 	{\huge \textbf{Implementace překladače imperativního jazyka IFJ26} \par}
 	{\Large \textbf{Dokumentace k projektu} \par}
-	{\Large Varianta vv-BVS \par}
 	\vspace{1cm}
 
 	\Large{
@@ -41,6 +41,8 @@
 
 	\vspace{1cm}
 
+	{\Large \textbf{Varianta:}\par}
+	{\large vv-BVS \par}
 	{\Large \textbf{Podporovaná rozšíření:} \par}
 	{\large
 		FUNEXP \\
@@ -61,7 +63,14 @@
 \newpage
 
 \section{Rozdělení práce} {
-  TODO:
+  V týmu jsme si práci rozdělili následovně:
+
+  \begin{tabular}{l l l l}
+	  Patrik Švoma    & Syntaktická analýza                        \\
+	  Petr Marek      & Generování cílového kódu, implementace AST \\
+	  Jakub Kvasnička &                                            \\
+	  Jan Šerák       &                                            \\
+  \end{tabular}
  }
 
 \section{Spolupráce na projektu} {
@@ -78,20 +87,15 @@
   }
 
   \subsection{Syntaktická analýza} {
-	  TODO:
-  }
+	  Největší částí překladače je syntaktický analyzátor.
+	  Ten se řídí metodou rekurzivního sestupu a pro zpracování výrazů předává řízení precedenčnímu analyzátoru.
+	  Každé pravidlo má v \texttt{parser.c} vlastní funkci, která provádí syntaktické kontroly, případně tvoří abstraktní syntaktický strom.
+	  Funkce si předávají data strukturou \texttt{compiler\_data\_t cdata}. Při vstupu do bloku je vždy vytvořena nová tabulka symbolů, při výstupu ale není zničena.
+	  Tabulky symbolů jsou zničeny naráz až po sémantické analýze.
+	  \par
+	  Precedenční analýza se řídí podle precedenční tabulky, v případě že narazí na volání funkce nebo na podmíněný výraz if, zpracuje ho jako celek a poté teprve pokračuje.
 
-  \subsection{Sémantická analýza} {
 	  \subsubsection{LL gramatika} {
-		  TODO:
-
-		  \begin{figure}[H]
-			  \centering
-			  \includegraphics[width=\textwidth]{images/LL table.pdf}
-			  \caption{LL tabulka podle gramatiky}
-			  \label{fig:ll_table}
-		  \end{figure}
-
 		  \begin{figure}[H]
 			  \centering
 			  \ttfamily\begin{tabularx}{\textwidth}{r l c >{\raggedright\arraybackslash}X}
@@ -146,19 +150,30 @@
 				  49 & <val-var-def>     & :: & = <expression>                                                      \\
 				  50 & <expression>      & :: & Vstup do precedenční analýzy
 			  \end{tabularx}
+			  \label{fig::ll_grammar}
 		  \end{figure}
 	  }
 
-	  \newpage
-	  \subsubsection{Precedenční analýza} {
-		  TODO:
+	  \subsubsection{LL tabulka}
+	  \begin{figure}[H]
+		  \centering
+		  \includegraphics[width=\textwidth]{images/LL table.pdf}
+		  \caption{LL tabulka podle gramatiky}
+		  \label{fig:ll_table}
+	  \end{figure}
+
+	  \subsubsection{Precedenční tabulka} {
 		  \begin{figure}[H]
 			  \centering
-			  \includegraphics[width=\textwidth]{images/Precedence table.pdf}
+			  \includegraphics[width=0.9\textwidth]{images/Precedence table.pdf}
 			  \caption{Použitá precedenční tabulka}
 			  \label{fig:prec_table}
 		  \end{figure}
 	  }
+  }
+
+  \subsection{Sémantická analýza} {
+	  TODO:
   }
 
   \subsection{Generování cílového kódu}
