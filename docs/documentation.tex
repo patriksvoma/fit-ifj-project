@@ -1,9 +1,46 @@
 \documentclass[11pt]{article}
 \usepackage[english, czech]{babel}
 \usepackage[a4paper, top=3cm, left=2cm, textwidth=17cm, textheight=24cm]{geometry}
+\usepackage{graphicx}
 
 \begin{document}
 
-ahoj
+\begin{titlepage}
+	\centering
+	\includegraphics[width=\textwidth]{images/FIT_barevne_CMYK_CZ.pdf}
+	\par
+	\vspace{\stretch{0.382}}
+
+	{\huge \textbf{Implementace překladače imperativního jazyka IFJ26} \par}
+	{\Large \textbf{Dokumentace k projektu} \par}
+	{\Large Varianta vv-BVS \par}
+	\vspace{1cm}
+
+	\Large{
+		\begin{tabular}{r c l r}
+			\textbf{Patrik Švoma} & \textbf{281791} & \textbf{(xsvomap00)} & \textbf{25} \% \\
+			Petr Marek            & 282032          & (xmarekp00)          & 25 \%          \\
+			Jakub Kvasnička       & 281736          & (xkvasnj00)          & 25 \%          \\
+			Jan Šerák             & 281790          & (xserakj00)          & 25 \%          \\
+		\end{tabular}
+	}
+
+	\vspace{2cm}
+
+	{\Large \textbf{Podporovaná rozšíření:} \par}
+	{\large
+		FUNEXP \\
+		BOOLTHEN \\
+		CONTROL \\
+		VALMEM \\
+		EXTKW \\
+		PARAMLISTS
+		\par
+	}
+
+	\vspace{\stretch{0.618}}
+
+	{\large \today\par}
+\end{titlepage}
 
 \end{document}

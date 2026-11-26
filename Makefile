@@ -73,7 +73,7 @@ pack: clean
 
 # Compiles the documentation pdf
 doc:
-	latexmk -pdf -synctex=1 -interaction=nonstopmode -file-line-error -outdir=docs/aux -auxdir=docs/aux docs/documentation.tex
+	cd docs && latexmk -pdf -synctex=1 -interaction=nonstopmode -file-line-error -outdir=aux -auxdir=aux documentation.tex
 	mv docs/aux/documentation.pdf dokumentace.pdf
 
 # Cleans files created during a build
