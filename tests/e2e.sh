@@ -301,6 +301,7 @@ run_case "valmem-parameter-list-4" 5 "valmem/invalid/valmem-parameter-list-4.ifj
 run_case "valmem-toint-type" 5 "valmem/invalid/valmem-toint-type.ifj"
 run_case "valmem-floor-type" 5 "valmem/invalid/valmem-floor-type.ifj"
 run_case "valmem-length-type" 5 "valmem/invalid/valmem-length-type.ifj"
+run_case "valmem-chain-type" 5 "valmem/invalid/valmem-chain-type.ifj"
 
 echo "$BLUE-----toString-----$RESET"
 run_case "valmem-tostring-1" 0 "valmem/valid/valmem-tostring-1.ifj"
@@ -325,6 +326,11 @@ echo "$BLUE-----length-----$RESET"
 run_case "valmem-length-1" 0 "valmem/valid/valmem-length-1.ifj"
 run_case "valmem-length-2" 0 "valmem/valid/valmem-length-2.ifj"
 run_case "valmem-length-3" 0 "valmem/valid/valmem-length-3.ifj"
+
+echo "$BLUE-----Chaining VALMEM calls-----$RESET"
+run_case "valmem-chain-1" 0 "valmem/valid/valmem-chain-1.ifj"
+run_case "valmem-chain-2" 0 "valmem/valid/valmem-chain-2.ifj"
+run_case "valmem-chain-3" 0 "valmem/valid/valmem-chain-3.ifj"
 
 
 printf '\n'
