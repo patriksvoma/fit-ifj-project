@@ -290,6 +290,20 @@ run_case "parameter-immutable-assign" 7 "variables/invalid/parameter-immutable-a
 run_case "var-mutable-assign" 0 "variables/valid/var-mutable-assign.ifj"
 
 echo "$BLUE-----Variable usage-----$RESET"
+# TODO:
+
+echo "$YELLOW-----VALMEM-----$RESET"
+echo "$BLUE-----Parameters-----$RESET"
+run_case "valmem-parameter-list-1" 0 "valmem/invalid/valmem-parameter-list-1.ifj"
+
+echo "$BLUE-----toString-----$RESET"
+run_case "valmem-tostring-1" 0 "valmem/valid/valmem-tostring-1.ifj"
+run_case "valmem-tostring-2" 0 "valmem/valid/valmem-tostring-2.ifj"
+run_case "valmem-tostring-3" 0 "valmem/valid/valmem-tostring-3.ifj"
+run_case "valmem-tostring-4" 0 "valmem/valid/valmem-tostring-4.ifj"
+run_case "valmem-tostring-5" 0 "valmem/valid/valmem-tostring-5.ifj"
+run_case "valmem-tostring-6" 0 "valmem/valid/valmem-tostring-6.ifj"
+run_case "valmem-tostring-7" 0 "valmem/valid/valmem-tostring-7.ifj"
 
 
 printf '\n'
