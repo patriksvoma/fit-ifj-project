@@ -17,8 +17,8 @@ def main(): Unit =
   print(c4)
   var c5: String = "ahoj".toString
   print(c5)
-  var d: Double = 54.245.floor
-  print(d)
+  var d: Double = (-54.245).floor
+  print(toStr(d))
   var e: Int = "ahoj".length
   print(e)
   ()
