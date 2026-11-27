@@ -93,7 +93,6 @@ err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item, boo
 	item.next = NULL;
 	item.source_token = *token;
 	item.node = NULL;
-	// TODO: Maybe copy the string if the token is an identificator
 
 	switch (token->type)
 	{
@@ -115,7 +114,6 @@ err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item, boo
 	case TOKEN_KEYWORD:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_DOLLAR;
-		// TODO: Support if statements
 		break;
 	case TOKEN_OPENING_BRACKET:
 		item.type = STACKITEM_TYPE_TERMINAL;
