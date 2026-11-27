@@ -648,9 +648,6 @@ err_t scan_next_token(token_t *token)
 				break;
 			}
 
-			if (isalpha(c))
-				return scan_fail(&buf, ERR_SCANNER, "Invalid character in an integer number literal.");
-
 			unread_char(c);
 			token->type = TOKEN_INT;
 			return scan_number(&buf, token, comment_eol);
@@ -721,9 +718,6 @@ err_t scan_next_token(token_t *token)
 				return scan_number(&buf, token, comment_eol);
 			}
 
-			if (isalpha(c))
-				return scan_fail(&buf, ERR_SCANNER, "Invalid character in a double number literal.");
-
 			unread_char(c);
 			token->type = TOKEN_DOUBLE;
 			return scan_number(&buf, token, comment_eol);
@@ -783,9 +777,6 @@ err_t scan_next_token(token_t *token)
 				token->type = TOKEN_DOUBLE;
 				return scan_number(&buf, token, comment_eol);
 			}
-
-			if (isalpha(c))
-				return scan_fail(&buf, ERR_SCANNER, "Invalid character in a double number literal with an exponent.");
 
 			unread_char(c);
 			token->type = TOKEN_DOUBLE;
