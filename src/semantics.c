@@ -1017,6 +1017,14 @@ err_t check_var_assign(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_SEMANTIC_IMMUTABLE;
 	}
 
+	// Allow implicit conversions
+	if (entry->data.variable.type == TYPE_DOUBLE && node->variable_assignment.assigned_value->eval_type == TYPE_INT)
+	{
+		result = insert_int_to_double_node(&node->variable_assignment.assigned_value);
+		if (result)
+			return result;
+	}
+
 	if (entry->data.variable.type != node->variable_assignment.assigned_value->eval_type)
 	{
 		print_err("Trying to assign value of a wrong type to a variable.", ERR_SEMANTIC_INVALID_TYPE);
