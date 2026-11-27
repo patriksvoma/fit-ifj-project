@@ -40,13 +40,16 @@ int main()
 		return err_code;
 	}
 
+	// Generate code
+	err_code = generate_code(ast_root, &cdata);
+	if (err_code)
+		return err_code;
+
 	// Destroy the local symbol tables
 	err_code = local_tables_destroy(&cdata);
 	if (err_code)
 		return err_code;
 
-	err_code = generate_code(ast_root, &cdata);
-
 	destruct(ast_root);
-	return err_code;
+	return ERR_OK;
 }

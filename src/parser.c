@@ -111,12 +111,17 @@ err_t local_tables_destroy(compiler_data_t *cdata)
 {
 	for (size_t i = 0; i < cdata->var_table_count; i++)
 	{
-		symtable_destroy(&cdata->var_tables[i]);
+		symtable_destroy(cdata->var_tables[i]);
+		free(cdata->var_tables[i]);
 	}
 
 	free(cdata->var_tables);
 	cdata->var_tables = NULL;
 	cdata->var_table_count = 0;
+
+	// Destroy the function and extension tables
+	symtable_destroy(&cdata->function_table);
+	symtable_destroy(&cdata->extension_table);
 
 	return ERR_OK;
 }
