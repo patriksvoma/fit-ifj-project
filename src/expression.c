@@ -508,7 +508,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 
 		node = stack->top->node;
 
-		// FIXME: check if there should be 3 or 4 symbols popped here
 		result = symstack_pop_multiple(stack, 3);
 		if (result)
 			return result;
