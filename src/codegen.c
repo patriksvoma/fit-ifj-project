@@ -533,7 +533,7 @@ bool print_ext_def(char *unique_id, symtable_t *symtables, names_counter *new_fu
 			}
 		}
 	}
-	if(ext_params->data.extension.return_type == TYPE_UNIT)
+	if (ext_params->data.extension.return_type == TYPE_UNIT)
 	{
 		return true;
 	}
@@ -566,6 +566,31 @@ err_t print_ext_call(const char *unique_id, param_node_list_t **param_lists, siz
 
 	printf("CALL %s\n", unique_id);
 	return ERR_OK;
+}
+
+/**
+ *
+ */
+bool to_clear_stack(node_type_t node_type)
+{
+	switch (node_type)
+	{
+	case AST_LITERAL_INT:
+	case AST_LITERAL_DOUBLE:
+	case AST_LITERAL_STRING:
+	case AST_LITERAL_BOOLEAN:
+	case AST_LITERAL_UNIT:
+	case AST_VAR_USE:
+	case AST_UN_OPERATOR:
+	case AST_BIN_OPERATOR:
+	case AST_INT_TO_DOUBLE:
+	case AST_FUNC_CALL:
+	case AST_EXT_CALL:
+	case AST_IF_EXPR:
+		return true;
+	default:
+		return false;
+	}
 }
 
 /**
@@ -687,7 +712,13 @@ err_t print_for(const ast_node_t *node, symtable_t *symtables, names_counter *ne
 		printf("JUMPIFNEQS %s$for$%u$inc\n", new_func_def->func_name, curr_for);
 	}
 
+	// Definition of variables to help in for cycle before loops
+	bool is_unit_for = new_func_def->is_unit;
+	new_func_def->is_unit = true;
+
 	generate_nodes(node->for_loop.block, symtables, new_func_def);
+
+	new_func_def->is_unit = is_unit_for;
 
 	// Incrementation
 	printf("LABEL %s$for$%u$inc\n", new_func_def->func_name, curr_for);
@@ -795,6 +826,17 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		for (size_t i = 0; i < node->block.statement_count; i++)
 		{
 			generate_nodes(node->block.statements[i], symtables, new_func_def);
+
+			// To pop values from expressions and function calling, that won't be used
+			if (i == node->block.statement_count - 1 && new_func_def->is_unit &&
+				to_clear_stack(node->block.statements[i]->node_type))
+			{
+				printf("POPS GF@temp1\n");
+			}
+			else if (i != node->block.statement_count - 1 && to_clear_stack(node->block.statements[i]->node_type))
+			{
+				printf("POPS GF@temp1\n");
+			}
 		}
 		break;
 
@@ -816,9 +858,11 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		printf("RETURN\n");
 		break;
 
-	case AST_FUNC_DEF:
+	case AST_FUNC_DEF: {
 		bool ret_unit_func = print_func_def(node->func_def.unique_id, symtables, new_func_def);
 		var_def(node->func_def.block, symtables, new_func_def);
+
+		new_func_def->is_unit = ret_unit_func;
 
 		// Definition of variables to help in for cycle before loops
 		for (unsigned i = 0; i < new_func_def->for_counter; i++)
@@ -841,8 +885,8 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		printf("POPFRAME\n");
 		printf("RETURN\n");
 		break;
-
-	case AST_FUNC_CALL:
+	}
+	case AST_FUNC_CALL: {
 		bool is_build_in =
 			print_build_in_func_call(node->func_call.unique_id, node->func_call.param_lists, symtables, new_func_def);
 
@@ -852,10 +896,12 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 								 node->func_call.param_list_count, symtables, new_func_def);
 		}
 		break;
-
-	case AST_EXT_DEF:
+	}
+	case AST_EXT_DEF: {
 		bool ret_unit_ext = print_ext_def(node->ext_def.unique_id, symtables, new_func_def);
 		var_def(node->ext_def.block, symtables, new_func_def);
+
+		new_func_def->is_unit = ret_unit_ext;
 
 		// Definition of variables to help in for cycle before loops
 		for (unsigned i = 0; i < new_func_def->for_counter; i++)
@@ -869,7 +915,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 
 		generate_nodes(node->ext_def.block, symtables, new_func_def);
 
-		if(ret_unit_ext)
+		if (ret_unit_ext)
 		{
 			printf("PUSHS nil@nil\n");
 		}
@@ -877,13 +923,13 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		printf("POPFRAME\n");
 		printf("RETURN\n");
 		break;
-
+	}
 	case AST_EXT_CALL:
 		print_ext_call(node->ext_call.unique_id, node->ext_call.param_lists, node->ext_call.param_list_count,
 					   node->ext_call.base_node, symtables, new_func_def);
 		break;
 
-	case AST_IF:
+	case AST_IF: {
 		unsigned curr_if = new_func_def->if_counter;
 		new_func_def->if_counter++;
 
@@ -892,6 +938,10 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		// Condition evaluation
 		printf("PUSHS bool@true\n");
 		printf("JUMPIFNEQS %s$if$%u$else\n", new_func_def->func_name, curr_if);
+
+		// To save previous is_unit state
+		bool is_unit_if = new_func_def->is_unit;
+		new_func_def->is_unit = true;
 
 		// If block
 		generate_nodes(node->if_statement.if_block, symtables, new_func_def);
@@ -904,10 +954,12 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 			generate_nodes(node->if_statement.else_block, symtables, new_func_def);
 		}
 
+		new_func_def->is_unit = is_unit_if;
+
 		printf("LABEL %s$if$%u$end\n", new_func_def->func_name, curr_if);
 		break;
-
-	case AST_IF_EXPR:
+	}
+	case AST_IF_EXPR: {
 		unsigned curr_if_expr = new_func_def->if_counter;
 		new_func_def->if_counter++;
 
@@ -927,8 +979,8 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 
 		printf("LABEL %s$if$%u$end\n", new_func_def->func_name, curr_if_expr);
 		break;
-
-	case AST_WHILE:
+	}
+	case AST_WHILE: {
 		unsigned curr_while = new_func_def->while_counter;
 		new_func_def->while_counter++;
 
@@ -940,14 +992,20 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		printf("PUSHS bool@true\n");
 		printf("JUMPIFNEQS %s$while$%u$end\n", new_func_def->func_name, curr_while);
 
+		// To save previous is_unit state
+		bool is_unit_while = new_func_def->is_unit;
+		new_func_def->is_unit = true;
+
 		generate_nodes(node->while_loop.block, symtables, new_func_def);
+
+		new_func_def->is_unit = is_unit_while;
 
 		// Going back to condition evaluation, if its not true jumop back here
 		printf("JUMP %s$while$%u$start\n", new_func_def->func_name, curr_while);
 		printf("LABEL %s$while$%u$end\n", new_func_def->func_name, curr_while);
 
 		break;
-
+	}
 	case AST_FOR:
 		print_for(node, symtables, new_func_def);
 		break;

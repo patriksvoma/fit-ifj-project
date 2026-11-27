@@ -22,6 +22,7 @@ typedef struct names_counter
 	unsigned for_counter;
 	unsigned while_counter;
 	unsigned read_val_counter;
+	bool is_unit;
 } names_counter;
 
 /**
