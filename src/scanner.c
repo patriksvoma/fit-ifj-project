@@ -669,6 +669,18 @@ err_t scan_next_token(token_t *token)
 			break;
 
 		case S_DOT:
+			// If the dot is followed by a valid identifier, accept the previous number as an integer
+			// This has to be done in order to support extension calls on integers
+			if (isalpha(c) || c == '_')
+			{
+				// Remove the . from the buffer
+				buf.data[--buf.len] = '\0';
+				unread_char(c);
+				unread_char('.');
+				token->type = TOKEN_INT;
+				return scan_number(&buf, token, comment_eol);
+			}
+
 			if (!isdigit(c))
 				return scan_fail(&buf, ERR_SCANNER, "Expected a digit after the decimal point.");
 
