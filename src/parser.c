@@ -1287,7 +1287,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		}
 		entry->symbol_type = SYM_VARIABLE;
 		entry->data.variable.is_defined = true;
-		entry->data.variable.mutable = true;
+		entry->data.variable.mutable = false;
 		entry->data.variable.type = TYPE_INT;
 		symbol_generate_unique_id(iterator_id, entry, cdata->local_var_table);
 		free(iterator_id);
