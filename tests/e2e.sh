@@ -344,10 +344,22 @@ run_case "valmem-chain-2" 0 "valmem/valid/valmem-chain-2.ifj"
 run_case "valmem-chain-3" 0 "valmem/valid/valmem-chain-3.ifj"
 
 echo "$YELLOW-----FUNEXP-----$RESET"
-echo "$BLUE-----Basic functions-----$RESET"
+echo "$BLUE-----Functions in expressions-----$RESET"
 run_case "funexp-function-in-arithmetic.ifj" 0 "funexp/valid/funexp-function-in-arithmetic.ifj"
 run_case "funexp-function-in-expression.ifj" 0 "funexp/valid/funexp-function-in-expression.ifj"
 run_case "funexp-function-nested.ifj" 0 "funexp/valid/funexp-function-nested.ifj"
+
+run_case "funexp-missing-closing-parenthesis.ifj" 2 "funexp/invalid/funexp-missing-closing-parenthesis.ifj"
+run_case "funexp-missing-closing-argument.ifj" 2 "funexp/invalid/funexp-missing-argument.ifj"
+run_case "funexp-missing-comma.ifj" 2 "funexp/invalid/funexp-missing-comma.ifj"
+
+run_case "funexp-undefined-function.ifj" 3 "funexp/invalid/funexp-undefined-function.ifj"
+
+run_case "funexp-wrong-argument-count-less.ifj" 5 "funexp/invalid/funexp-wrong-argument-count-less.ifj"
+run_case "funexp-wrong-argument-count-more.ifj" 5 "funexp/invalid/funexp-wrong-argument-count-more.ifj"
+run_case "funexp-wrong-argument-type.ifj" 5 "funexp/invalid/funexp-wrong-argument-type.ifj"
+
+
 
 echo "$BLUE-----Built-in functions-----$RESET"
 run_case "funexp-built-in-function-in-expression-1.ifj" 0 "funexp/valid/funexp-built-in-function-in-expression-1.ifj"
