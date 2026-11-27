@@ -649,7 +649,7 @@ err_t scan_next_token(token_t *token)
 			}
 
 			if (isalpha(c))
-				return scan_fail(&buf, ERR_SCANNER, "Invalid character in a number literal.");
+				return scan_fail(&buf, ERR_SCANNER, "Invalid character in an integer number literal.");
 
 			unread_char(c);
 			token->type = TOKEN_INT;
@@ -660,7 +660,8 @@ err_t scan_next_token(token_t *token)
 				break;
 
 			if (!isdigit(c))
-				return scan_fail(&buf, ERR_SCANNER, "An underscore in a number literal must be followed by a digit.");
+				return scan_fail(&buf, ERR_SCANNER,
+								 "An underscore in an integer number literal must be followed by a digit.");
 
 			if (!buf_append(&buf, (char)c))
 				return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
@@ -669,6 +670,18 @@ err_t scan_next_token(token_t *token)
 			break;
 
 		case S_DOT:
+			// If the dot is followed by a valid identifier, accept the previous number as an integer
+			// This has to be done in order to support extension calls on integers
+			if (isalpha(c) || c == '_')
+			{
+				// Remove the . from the buffer
+				buf.data[--buf.len] = '\0';
+				unread_char(c);
+				unread_char('.');
+				token->type = TOKEN_INT;
+				return scan_number(&buf, token, comment_eol);
+			}
+
 			if (!isdigit(c))
 				return scan_fail(&buf, ERR_SCANNER, "Expected a digit after the decimal point.");
 
@@ -708,8 +721,8 @@ err_t scan_next_token(token_t *token)
 				return scan_number(&buf, token, comment_eol);
 			}
 
-			if (isalpha(c) || c == '.')
-				return scan_fail(&buf, ERR_SCANNER, "Invalid character in a number literal.");
+			if (isalpha(c))
+				return scan_fail(&buf, ERR_SCANNER, "Invalid character in a double number literal.");
 
 			unread_char(c);
 			token->type = TOKEN_DOUBLE;
@@ -720,7 +733,8 @@ err_t scan_next_token(token_t *token)
 				break;
 
 			if (!isdigit(c))
-				return scan_fail(&buf, ERR_SCANNER, "An underscore in a number literal must be followed by a digit.");
+				return scan_fail(&buf, ERR_SCANNER,
+								 "An underscore in a double number literal must be followed by a digit.");
 
 			if (!buf_append(&buf, (char)c))
 				return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
@@ -770,8 +784,8 @@ err_t scan_next_token(token_t *token)
 				return scan_number(&buf, token, comment_eol);
 			}
 
-			if (isalpha(c) || c == '.')
-				return scan_fail(&buf, ERR_SCANNER, "Invalid character in a number literal.");
+			if (isalpha(c))
+				return scan_fail(&buf, ERR_SCANNER, "Invalid character in a double number literal with an exponent.");
 
 			unread_char(c);
 			token->type = TOKEN_DOUBLE;
@@ -782,7 +796,9 @@ err_t scan_next_token(token_t *token)
 				break;
 
 			if (!isdigit(c))
-				return scan_fail(&buf, ERR_SCANNER, "An underscore in a number literal must be followed by a digit.");
+				return scan_fail(
+					&buf, ERR_SCANNER,
+					"An underscore in a double number literal with an exponent must be followed by a digit.");
 
 			if (!buf_append(&buf, (char)c))
 				return scan_fail(&buf, ERR_INTERNAL, "Failed to allocate memory in the scanner.");
