@@ -2,7 +2,7 @@ import ifj26.*
 
 extension (value: String)
   def ahoj(a: String): String =
-    value + a
+    value = "ffff" + a
 
 @main
 def main(): Unit =
