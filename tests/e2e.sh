@@ -343,6 +343,17 @@ run_case "valmem-chain-1" 0 "valmem/valid/valmem-chain-1.ifj"
 run_case "valmem-chain-2" 0 "valmem/valid/valmem-chain-2.ifj"
 run_case "valmem-chain-3" 0 "valmem/valid/valmem-chain-3.ifj"
 
+echo "$YELLOW-----FUNEXP-----$RESET"
+echo "$BLUE-----Basic functions-----$RESET"
+run_case "funexp-function-in-arithmetic.ifj" 0 "funexp/valid/funexp-function-in-arithmetic.ifj"
+run_case "funexp-function-in-expression.ifj" 0 "funexp/valid/funexp-function-in-expression.ifj"
+run_case "funexp-function-nested.ifj" 0 "funexp/valid/funexp-function-nested.ifj"
+
+echo "$BLUE-----Built-in functions-----$RESET"
+run_case "funexp-built-in-function-in-expression-1.ifj" 0 "funexp/valid/funexp-built-in-function-in-expression-1.ifj"
+run_case "funexp-built-in-function-in-expression-2.ifj" 0 "funexp/valid/funexp-built-in-function-in-expression-2.ifj"
+run_case "funexp-built-in-with-functions.ifj" 0 "funexp/valid/funexp-built-in-with-functions.ifj"
+
 printf '\n'
 if [ "$failed" -ne 0 ]; then
 printf '%s%d passed, %d failed%s\n' "$RED" "$passed" "$failed" "$RESET" >&2
