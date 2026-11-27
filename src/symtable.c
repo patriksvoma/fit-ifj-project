@@ -484,10 +484,8 @@ void destroy_tree(tree_node_t *node)
 			for (size_t j = 0; j < list->param_count; j++)
 			{
 				free(list->params[j]->identifier);
-				free(list->params[j]);
 			}
 			free(list->params);
-			free(list);
 		}
 		free(node->data.data.function.param_lists);
 	}
@@ -500,10 +498,8 @@ void destroy_tree(tree_node_t *node)
 			for (size_t j = 0; j < list->param_count; j++)
 			{
 				free(list->params[j]->identifier);
-				free(list->params[j]);
 			}
 			free(list->params);
-			free(list);
 		}
 		free(node->data.data.extension.param_lists);
 		free(node->data.data.extension.base_param.identifier);
@@ -518,7 +514,6 @@ void symtable_destroy(symtable_t *table)
 		return;
 
 	destroy_tree(table->root_node);
-	free(table);
 }
 
 err_t append_last_table_counter(char **buf, size_t *buf_len, symtable_t *table)
