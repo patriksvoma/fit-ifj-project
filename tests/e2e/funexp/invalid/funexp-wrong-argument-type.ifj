@@ -1,0 +1,8 @@
+import ifj26.*
+
+def foo(a: Int, b: Int): Int =
+  return a + b
+
+@main
+def main() =
+  val x = foo("patizon", 15)
