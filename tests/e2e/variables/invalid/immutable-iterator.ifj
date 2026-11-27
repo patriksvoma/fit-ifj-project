@@ -1,0 +1,10 @@
+import ifj26.*
+
+@main
+def main(): Unit =
+  for asd <- 1 to 25 do
+    asd = 1
+    print(asd)
+    print("\n")
+
+  ()

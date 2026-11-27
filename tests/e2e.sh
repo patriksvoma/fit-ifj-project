@@ -295,6 +295,9 @@ run_case "val-immutable-assign-2" 7 "variables/invalid/val-immutable-assign-2.if
 run_case "val-immutable-assign-3" 7 "variables/invalid/val-immutable-assign-3.ifj"
 run_case "parameter-immutable-assign" 7 "variables/invalid/parameter-immutable-assign.ifj"
 run_case "var-mutable-assign" 0 "variables/valid/var-mutable-assign.ifj"
+run_case "immutable-ext-base" 7 "variables/invalid/immutable-ext-base.ifj"
+run_case "immutable-param" 7 "variables/invalid/immutable-param.ifj"
+run_case "immutable-iterator" 7 "variables/invalid/immutable-iterator.ifj"
 
 echo "$BLUE-----Variable usage-----$RESET"
 # TODO:

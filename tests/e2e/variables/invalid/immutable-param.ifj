@@ -1,0 +1,11 @@
+import ifj26.*
+
+def ahoj(a: String) =
+  a = "cau lidi"
+  ()
+
+@main
+def main(): Unit =
+  var a: String = (54.5).toString
+  ahoj("cau")
+  ()
