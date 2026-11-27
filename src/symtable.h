@@ -3,6 +3,7 @@
  * @brief Symbol table for the IFJ26 compiler
  *
  * @author Jakub Kvasnička (xkvasnj00@stud.fit.vut.cz)
+ * @author Patrik Švoma (xsvomap00@stud.fit.vut.cz)
  *
  * @date 2026-11-13
  */
@@ -176,7 +177,7 @@ err_t symbol_add_param(symbol_data_t *symbol);
  *
  * @param table Pointer to the symbol tree which will be destroyed
  */
-void symtable_destroy(symtable_t **table);
+void symtable_destroy(symtable_t *table);
 
 /**
  * @brief Generates a unique name for a symbol and saves it inside

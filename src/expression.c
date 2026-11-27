@@ -93,7 +93,6 @@ err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item, boo
 	item.next = NULL;
 	item.source_token = *token;
 	item.node = NULL;
-	// TODO: Maybe copy the string if the token is an identificator
 
 	switch (token->type)
 	{
@@ -115,7 +114,6 @@ err_t token_to_stack_item(const token_t *token, symstack_item_t *stack_item, boo
 	case TOKEN_KEYWORD:
 		item.type = STACKITEM_TYPE_TERMINAL;
 		item.data.terminal = TERMINAL_DOLLAR;
-		// TODO: Support if statements
 		break;
 	case TOKEN_OPENING_BRACKET:
 		item.type = STACKITEM_TYPE_TERMINAL;
@@ -469,13 +467,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 						return ERR_SEMANTIC_UNDEFINED;
 					}
 
-					if (entry->data.function.param_list_count != 0)
-					{
-						print_err_l("A function call is missing the parameter list.", ERR_SEMANTIC_INVALID_ARG,
-									token.line);
-						return ERR_SEMANTIC_INVALID_ARG;
-					}
-
 					// Create the AST node
 					node = ast_func_call_make(token.attribute.string);
 					if (!node)
@@ -515,7 +506,6 @@ err_t apply_rule(prec_rule_t rule, symstack_t *stack, compiler_data_t *cdata, un
 
 		node = stack->top->node;
 
-		// FIXME: check if there should be 3 or 4 symbols popped here
 		result = symstack_pop_multiple(stack, 3);
 		if (result)
 			return result;
@@ -932,7 +922,7 @@ err_t parse_function_call(compiler_data_t *cdata, const token_t *identifier_toke
 					// FIXME: allow the trailing comma in certain situations
 					if (cdata->token.type == TOKEN_CLOSING_BRACKET)
 					{
-						print_err_l("Expected an parameter after the comma.", ERR_SYNTAX, cdata->token.line);
+						print_err_l("Expected a parameter after the comma.", ERR_SYNTAX, cdata->token.line);
 						return ERR_SYNTAX;
 					}
 					continue;

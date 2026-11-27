@@ -252,8 +252,8 @@ run_case "control-if-expression-string.ifj" 0 "control/valid/control-if-expressi
 run_case "control-if-expression-multiline.ifj" 0 "control/valid/control-if-expression-multiline.ifj"
 
 run_case "control-if-expression-missing-else.ifj" 2 "control/invalid/control-if-expression-missing-else.ifj"
-run_case "control-if-expression-different-types-1.ifj" 6 "control/valid/control-if-expression-different-types-1.ifj"
-run_case "control-if-expression-different-types-2.ifj" 6 "control/valid/control-if-expression-different-types-2.ifj"
+run_case "control-if-expression-different-types-1.ifj" 6 "control/invalid/control-if-expression-different-types-1.ifj"
+run_case "control-if-expression-different-types-2.ifj" 6 "control/invalid/control-if-expression-different-types-2.ifj"
 
 echo "$BLUE-----For loops-----$RESET"
 run_case "control-for-to.ifj" 0 "control/valid/control-for-to.ifj"
@@ -295,6 +295,9 @@ run_case "val-immutable-assign-2" 7 "variables/invalid/val-immutable-assign-2.if
 run_case "val-immutable-assign-3" 7 "variables/invalid/val-immutable-assign-3.ifj"
 run_case "parameter-immutable-assign" 7 "variables/invalid/parameter-immutable-assign.ifj"
 run_case "var-mutable-assign" 0 "variables/valid/var-mutable-assign.ifj"
+run_case "immutable-ext-base" 7 "variables/invalid/immutable-ext-base.ifj"
+run_case "immutable-param" 7 "variables/invalid/immutable-param.ifj"
+run_case "immutable-iterator" 7 "variables/invalid/immutable-iterator.ifj"
 
 echo "$BLUE-----Variable usage-----$RESET"
 # TODO:
@@ -305,10 +308,10 @@ run_case "valmem-parameter-list-1" 5 "valmem/invalid/valmem-parameter-list-1.ifj
 run_case "valmem-parameter-list-2" 5 "valmem/invalid/valmem-parameter-list-2.ifj"
 run_case "valmem-parameter-list-3" 5 "valmem/invalid/valmem-parameter-list-3.ifj"
 run_case "valmem-parameter-list-4" 5 "valmem/invalid/valmem-parameter-list-4.ifj"
-run_case "valmem-toint-type" 5 "valmem/invalid/valmem-toint-type.ifj"
-run_case "valmem-floor-type" 5 "valmem/invalid/valmem-floor-type.ifj"
-run_case "valmem-length-type" 5 "valmem/invalid/valmem-length-type.ifj"
-run_case "valmem-chain-type" 5 "valmem/invalid/valmem-chain-type.ifj"
+run_case "valmem-toint-type" 3 "valmem/invalid/valmem-toint-type.ifj"
+run_case "valmem-floor-type" 3 "valmem/invalid/valmem-floor-type.ifj"
+run_case "valmem-length-type" 3 "valmem/invalid/valmem-length-type.ifj"
+run_case "valmem-chain-type" 3 "valmem/invalid/valmem-chain-type.ifj"
 run_case "valmem-same-name-function" 0 "valmem/valid/valmem-same-name-function.ifj"
 
 echo "$BLUE-----toString-----$RESET"
@@ -319,16 +322,19 @@ run_case "valmem-tostring-4" 0 "valmem/valid/valmem-tostring-4.ifj"
 run_case "valmem-tostring-5" 0 "valmem/valid/valmem-tostring-5.ifj"
 run_case "valmem-tostring-6" 0 "valmem/valid/valmem-tostring-6.ifj"
 run_case "valmem-tostring-7" 0 "valmem/valid/valmem-tostring-7.ifj"
+run_case "valmem-tostring-8" 0 "valmem/valid/valmem-tostring-8.ifj"
 
 echo "$BLUE-----toInt-----$RESET"
 run_case "valmem-toint-1" 0 "valmem/valid/valmem-toint-1.ifj"
 run_case "valmem-toint-2" 0 "valmem/valid/valmem-toint-2.ifj"
 run_case "valmem-toint-3" 0 "valmem/valid/valmem-toint-3.ifj"
+run_case "valmem-toint-4" 0 "valmem/valid/valmem-toint-4.ifj"
 
 echo "$BLUE-----floor-----$RESET"
 run_case "valmem-floor-1" 0 "valmem/valid/valmem-floor-1.ifj"
 run_case "valmem-floor-2" 0 "valmem/valid/valmem-floor-2.ifj"
 run_case "valmem-floor-3" 0 "valmem/valid/valmem-floor-3.ifj"
+run_case "valmem-floor-4" 0 "valmem/valid/valmem-floor-4.ifj"
 
 echo "$BLUE-----length-----$RESET"
 run_case "valmem-length-1" 0 "valmem/valid/valmem-length-1.ifj"
@@ -339,6 +345,29 @@ echo "$BLUE-----Chaining VALMEM calls-----$RESET"
 run_case "valmem-chain-1" 0 "valmem/valid/valmem-chain-1.ifj"
 run_case "valmem-chain-2" 0 "valmem/valid/valmem-chain-2.ifj"
 run_case "valmem-chain-3" 0 "valmem/valid/valmem-chain-3.ifj"
+
+echo "$YELLOW-----FUNEXP-----$RESET"
+echo "$BLUE-----Functions in expressions-----$RESET"
+run_case "funexp-function-in-arithmetic.ifj" 0 "funexp/valid/funexp-function-in-arithmetic.ifj"
+run_case "funexp-function-in-expression.ifj" 0 "funexp/valid/funexp-function-in-expression.ifj"
+run_case "funexp-function-nested.ifj" 0 "funexp/valid/funexp-function-nested.ifj"
+
+run_case "funexp-missing-closing-parenthesis.ifj" 2 "funexp/invalid/funexp-missing-closing-parenthesis.ifj"
+run_case "funexp-missing-closing-argument.ifj" 2 "funexp/invalid/funexp-missing-argument.ifj"
+run_case "funexp-missing-comma.ifj" 2 "funexp/invalid/funexp-missing-comma.ifj"
+
+run_case "funexp-undefined-function.ifj" 3 "funexp/invalid/funexp-undefined-function.ifj"
+
+run_case "funexp-wrong-argument-count-less.ifj" 5 "funexp/invalid/funexp-wrong-argument-count-less.ifj"
+run_case "funexp-wrong-argument-count-more.ifj" 5 "funexp/invalid/funexp-wrong-argument-count-more.ifj"
+run_case "funexp-wrong-argument-type.ifj" 5 "funexp/invalid/funexp-wrong-argument-type.ifj"
+
+
+
+echo "$BLUE-----Built-in functions-----$RESET"
+run_case "funexp-built-in-function-in-expression-1.ifj" 0 "funexp/valid/funexp-built-in-function-in-expression-1.ifj"
+run_case "funexp-built-in-function-in-expression-2.ifj" 0 "funexp/valid/funexp-built-in-function-in-expression-2.ifj"
+run_case "funexp-built-in-with-functions.ifj" 0 "funexp/valid/funexp-built-in-with-functions.ifj"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then

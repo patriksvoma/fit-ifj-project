@@ -286,7 +286,6 @@ err_t check_func_call(ast_node_t *node, compiler_data_t *cdata)
 	const symbol_data_t *entry = symtable_item_find(&cdata->function_table, node->func_call.unique_id);
 	if (entry == NULL)
 	{
-		// TODO: Formatted output with the function name
 		print_err("A function that was called is not defined.", ERR_SEMANTIC_UNDEFINED);
 		return ERR_SEMANTIC_UNDEFINED;
 	}
@@ -432,24 +431,59 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 		return ERR_INTERNAL;
 	}
 
-	free(node->ext_call.unique_id);
-	node->ext_call.unique_id = new_id;
-
-	const symbol_data_t *entry = symtable_item_find(&cdata->extension_table, node->ext_call.unique_id);
+	symbol_data_t *entry = symtable_item_find(&cdata->extension_table, new_id);
 
 	if (entry == NULL)
 	{
-		// TODO: Formatted output with the extension name
-		print_err("An extension that was called is not defined.", ERR_SEMANTIC_UNDEFINED);
-		return ERR_SEMANTIC_UNDEFINED;
+		free(new_id);
+		// If the base node type was an int, maybe it can be converted into an double and
+		// have a double extension called on it
+		if (node->ext_call.base_node->eval_type == TYPE_INT)
+		{
+			// Generate a new id with the base as a double
+			new_id = generate_unique_ext_id(node->ext_call.unique_id, TYPE_DOUBLE);
+
+			if (new_id == NULL)
+			{
+				print_err("Failed to allocate memory for an extension call unique_id.", ERR_INTERNAL);
+				return ERR_INTERNAL;
+			}
+
+			entry = symtable_item_find(&cdata->extension_table, new_id);
+
+			if (entry == NULL)
+			{
+				free(new_id);
+				print_err("An extension that was called is not defined.", ERR_SEMANTIC_UNDEFINED);
+				return ERR_SEMANTIC_UNDEFINED;
+			}
+			else
+			{
+				// If the extension method was found, insert an into to double node
+				result = insert_int_to_double_node(&node->ext_call.base_node);
+				if (result)
+				{
+					free(new_id);
+					return result;
+				}
+			}
+		}
+		else
+		{
+			print_err("An extension that was called is not defined.", ERR_SEMANTIC_UNDEFINED);
+			return ERR_SEMANTIC_UNDEFINED;
+		}
 	}
+
+	free(node->ext_call.unique_id);
+	node->ext_call.unique_id = new_id;
 
 	// Check parameter list count
 	if (node->ext_call.param_list_count != entry->data.extension.param_list_count)
 	{
 		print_err("An extension was called with a different number of parameter lists than defined.",
-				  ERR_SEMANTIC_INVALID_TYPE);
-		return ERR_SEMANTIC_INVALID_TYPE;
+				  ERR_SEMANTIC_INVALID_ARG);
+		return ERR_SEMANTIC_INVALID_ARG;
 	}
 
 	// Check all the parameter nodes
@@ -523,8 +557,6 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
  */
 err_t check_block(ast_node_t *node, compiler_data_t *cdata)
 {
-	// TODO: Maybe pass the expected return type/last statement type for checking correct return placement
-
 	if (!node || !cdata)
 	{
 		print_err("Null-pointer reference in check_block()!", ERR_INTERNAL);
@@ -920,10 +952,18 @@ err_t check_var_def(ast_node_t *node, compiler_data_t *cdata)
 	}
 	else
 	{
-		// Explicit definition, check if the types match
+		// Explicit definition
+		// Allow implicit conversions
+		if (entry->data.variable.type == TYPE_DOUBLE && node->variable_definition.assigned_value->eval_type == TYPE_INT)
+		{
+			result = insert_int_to_double_node(&node->variable_definition.assigned_value);
+			if (result)
+				return result;
+		}
+
+		// Check if the types match
 		if (entry->data.variable.type != node->variable_definition.assigned_value->eval_type)
 		{
-			// TODO: Formatted output
 			print_err("A variable is defined with an explicit type, but is assigned a value of a different type.",
 					  ERR_SEMANTIC_INVALID_TYPE);
 			return ERR_SEMANTIC_INVALID_TYPE;
@@ -974,6 +1014,14 @@ err_t check_var_assign(ast_node_t *node, compiler_data_t *cdata)
 	{
 		print_err("Trying to assign a value to an immutable variable.", ERR_SEMANTIC_IMMUTABLE);
 		return ERR_SEMANTIC_IMMUTABLE;
+	}
+
+	// Allow implicit conversions
+	if (entry->data.variable.type == TYPE_DOUBLE && node->variable_assignment.assigned_value->eval_type == TYPE_INT)
+	{
+		result = insert_int_to_double_node(&node->variable_assignment.assigned_value);
+		if (result)
+			return result;
 	}
 
 	if (entry->data.variable.type != node->variable_assignment.assigned_value->eval_type)

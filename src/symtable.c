@@ -3,6 +3,7 @@
  * @brief Symbol table for the IFJ26 compiler
  *
  * @author Jakub Kvasnička (xkvasnj00@stud.fit.vut.cz)
+ * @author Patrik Švoma (xsvomap00@stud.fit.vut.cz)
  *
  * @date 2026-11-13
  */
@@ -483,7 +484,8 @@ void destroy_tree(tree_node_t *node)
 
 			for (size_t j = 0; j < list->param_count; j++)
 			{
-				free(list->params[j]->identifier);
+				if (list->params[j]->identifier)
+					free(list->params[j]->identifier);
 				free(list->params[j]);
 			}
 			free(list->params);
@@ -499,7 +501,8 @@ void destroy_tree(tree_node_t *node)
 
 			for (size_t j = 0; j < list->param_count; j++)
 			{
-				free(list->params[j]->identifier);
+				if (list->params[j]->identifier)
+					free(list->params[j]->identifier);
 				free(list->params[j]);
 			}
 			free(list->params);
@@ -512,14 +515,12 @@ void destroy_tree(tree_node_t *node)
 	free(node);
 }
 
-void symtable_destroy(symtable_t **table)
+void symtable_destroy(symtable_t *table)
 {
-	if (table == NULL || *table == NULL)
+	if (table == NULL)
 		return;
 
-	destroy_tree((*table)->root_node);
-	free(*table);
-	*table = NULL;
+	destroy_tree(table->root_node);
 }
 
 err_t append_last_table_counter(char **buf, size_t *buf_len, symtable_t *table)
@@ -694,7 +695,7 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 
 			for (unsigned param_index = 0; param_index < list->param_count; param_index++)
 			{
-				const param_t *param = list->params[param_index];
+				param_t *param = list->params[param_index];
 				if (param == NULL)
 				{
 					print_err("Trying to access NULL param inside symbol_func_add_parameters_into_table()!",
@@ -723,6 +724,16 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 				result = symbol_generate_unique_id(param->identifier, entry, table);
 				if (result)
 					return result;
+
+				// Also rewrite the original param name with the unique id
+				free(param->identifier);
+				param->identifier = malloc(strlen(entry->data.variable.unique_name) + 1);
+				if (param->identifier == NULL)
+				{
+					print_err("Failed to allocate memory in symbol_func_add_parameters_into_table()!", ERR_INTERNAL);
+					return ERR_INTERNAL;
+				}
+				strcpy(param->identifier, entry->data.variable.unique_name);
 			}
 		}
 
@@ -751,6 +762,16 @@ err_t symbol_add_parameters_into_table(symbol_data_t *symbol, symtable_t *table)
 		result = symbol_generate_unique_id(base_param->identifier, entry, table);
 		if (result)
 			return result;
+
+		// Set the base parameters id to the new one
+		free(symbol->data.extension.base_param.identifier);
+		symbol->data.extension.base_param.identifier = malloc(strlen(entry->data.variable.unique_name) + 1);
+		if (symbol->data.extension.base_param.identifier == NULL)
+		{
+			print_err("Failed to allocate memory in symbol_add_parameters_into_table().", ERR_INTERNAL);
+			return ERR_INTERNAL;
+		}
+		strcpy(symbol->data.extension.base_param.identifier, entry->data.variable.unique_name);
 	}
 	else
 	{
@@ -782,6 +803,7 @@ err_t symbol_add_param_named(symbol_data_t *symbol, const char *param_name, data
 		print_err("Failed to allocate memory in symbol_add_param_named().", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
+	strcpy(param->identifier, param_name);
 
 	return ERR_OK;
 }
@@ -1095,7 +1117,7 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 		entry = symtable_item_create(ext_table, id);
 
 		entry->symbol_type = SYM_EXTENSION;
-		entry->data.extension.base_param.identifier = "value";
+		entry->data.extension.base_param.identifier = NULL; // The identifier is not needed
 		entry->data.extension.base_param.type = types[i];
 		entry->data.extension.is_defined = true;
 		entry->data.extension.return_type = TYPE_STRING;
@@ -1114,7 +1136,7 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 	entry = symtable_item_create(ext_table, id);
 
 	entry->symbol_type = SYM_EXTENSION;
-	entry->data.extension.base_param.identifier = "value";
+	entry->data.extension.base_param.identifier = NULL; // The identifier is not needed
 	entry->data.extension.base_param.type = TYPE_DOUBLE;
 	entry->data.extension.is_defined = true;
 	entry->data.extension.return_type = TYPE_INT;
@@ -1132,7 +1154,7 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 	entry = symtable_item_create(ext_table, id);
 
 	entry->symbol_type = SYM_EXTENSION;
-	entry->data.extension.base_param.identifier = "value";
+	entry->data.extension.base_param.identifier = NULL; // The identifier is not needed
 	entry->data.extension.base_param.type = TYPE_DOUBLE;
 	entry->data.extension.is_defined = true;
 	entry->data.extension.return_type = TYPE_DOUBLE;
@@ -1150,10 +1172,12 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 	entry = symtable_item_create(ext_table, id);
 
 	entry->symbol_type = SYM_EXTENSION;
-	entry->data.extension.base_param.identifier = "value";
+	entry->data.extension.base_param.identifier = NULL; // The identifier is not needed
 	entry->data.extension.base_param.type = TYPE_STRING;
 	entry->data.extension.is_defined = true;
 	entry->data.extension.return_type = TYPE_INT;
+
+	free(id);
 
 	return ERR_OK;
 }

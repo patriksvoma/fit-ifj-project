@@ -1,0 +1,9 @@
+import ifj26.*
+
+def foo(a: Int, b: Int): Int =
+  return a + b
+
+
+@main
+def main(): Unit =
+  val x = foo(54, 52)

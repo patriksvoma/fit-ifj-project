@@ -111,12 +111,17 @@ err_t local_tables_destroy(compiler_data_t *cdata)
 {
 	for (size_t i = 0; i < cdata->var_table_count; i++)
 	{
-		symtable_destroy(&cdata->var_tables[i]);
+		symtable_destroy(cdata->var_tables[i]);
+		free(cdata->var_tables[i]);
 	}
 
 	free(cdata->var_tables);
 	cdata->var_tables = NULL;
 	cdata->var_table_count = 0;
+
+	// Destroy the function and extension tables
+	symtable_destroy(&cdata->function_table);
+	symtable_destroy(&cdata->extension_table);
 
 	return ERR_OK;
 }
@@ -134,12 +139,6 @@ err_t prologue(compiler_data_t *cdata, ast_node_t *program_node)
 	err_t result = get_next_token(&cdata->token, EOL_OPTIONAL);
 	if (result)
 		return result;
-
-	if (cdata->token.indent != 0)
-	{
-		print_err_l("The program prologue must be at indentation level 0.", ERR_SYNTAX, cdata->token.line);
-		return ERR_SYNTAX;
-	}
 
 	if (cdata->token.type != TOKEN_KEYWORD || cdata->token.attribute.keyword != KW_IMPORT)
 	{
@@ -332,16 +331,12 @@ err_t ext_def_list(compiler_data_t *cdata, ast_node_t *program_node, unsigned li
 	// def
 	if (cdata->token.type == TOKEN_KEYWORD && cdata->token.attribute.keyword == KW_DEF)
 	{
-		err_t result = get_next_token(&cdata->token, EOL_FORBIDDEN);
-		if (result)
-			return result;
-
 		// These flags are used in order to create the correct node in <func-def>
 		cdata->in_main = false;
 		cdata->in_extension = true;
 
 		// <func-def>
-		result = func_def(cdata, program_node);
+		err_t result = func_def(cdata, program_node);
 		if (result)
 			return result;
 
@@ -468,7 +463,16 @@ err_t func_def(compiler_data_t *cdata, ast_node_t *program_node)
 		}
 		table_entry->symbol_type = SYM_EXTENSION;
 		table_entry->data.extension.is_defined = true;
+
 		table_entry->data.extension.base_param = cdata->last_extension_param;
+		table_entry->data.extension.base_param.identifier = malloc(strlen(cdata->last_extension_param.identifier) + 1);
+		if (!table_entry->data.extension.base_param.identifier)
+		{
+			free(unique_id);
+			print_err_l("Failed to allocate memory in func_def().", ERR_INTERNAL, cdata->token.line);
+			return ERR_INTERNAL;
+		}
+		strcpy(table_entry->data.extension.base_param.identifier, cdata->last_extension_param.identifier);
 
 		// Create an AST node
 		def_node = ast_ext_def_make(cdata->last_extension_param.type);
@@ -1287,7 +1291,7 @@ err_t statement(compiler_data_t *cdata, ast_node_t *block_node)
 		}
 		entry->symbol_type = SYM_VARIABLE;
 		entry->data.variable.is_defined = true;
-		entry->data.variable.mutable = true;
+		entry->data.variable.mutable = false;
 		entry->data.variable.type = TYPE_INT;
 		symbol_generate_unique_id(iterator_id, entry, cdata->local_var_table);
 		free(iterator_id);

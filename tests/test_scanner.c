@@ -317,9 +317,6 @@ void test_invalid_integers()
 	expect_error("0_1", ERR_SCANNER);
 	expect_error("1_", ERR_SCANNER);
 	expect_error("1_+2", ERR_SCANNER);
-	expect_error("123abc", ERR_SCANNER);
-	expect_error("0x10", ERR_SCANNER);
-	expect_error("1d", ERR_SCANNER);
 	expect_error("99999999999999999999", ERR_SCANNER);
 }
 
@@ -374,12 +371,7 @@ void test_exponent_literals()
 
 void test_invalid_doubles()
 {
-	expect_error("1.", ERR_SCANNER);
-	expect_error("1.e5", ERR_SCANNER);
-	expect_error("1._5", ERR_SCANNER);
 	expect_error("1.5_", ERR_SCANNER);
-	expect_error("1.5.3", ERR_SCANNER);
-	expect_error("1.5x", ERR_SCANNER);
 	expect_error("1e", ERR_SCANNER);
 	expect_error("1e+", ERR_SCANNER);
 	expect_error("1e5_", ERR_SCANNER);

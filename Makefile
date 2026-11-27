@@ -58,7 +58,7 @@ format:
 	clang-format -i $(SRC) $(HEADERS)
 
 # Packs the archive for submission and tests it on merlin
-pack: clean
+pack: doc clean
 	zip -r xsvomap00.zip src dokumentace.pdf rozdeleni rozsireni Makefile tests
 	scp ./xsvomap00.zip merlin:~/xsvomap00.zip
 	scp ./is_it_ok.sh merlin:~/is_it_ok.sh

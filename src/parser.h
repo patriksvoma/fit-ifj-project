@@ -40,9 +40,8 @@ typedef struct
 	// Semantic check data
 	bool func_return_explicit;
 	data_type_t func_return_type;
-}
+} compiler_data_t;
 
-compiler_data_t;
 /**
  * @brief Destroys all symbol tables saved in the compiler data var_tables
  *

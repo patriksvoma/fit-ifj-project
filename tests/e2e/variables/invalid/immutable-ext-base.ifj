@@ -1,0 +1,10 @@
+import ifj26.*
+
+extension (value: String)
+  def ahoj(a: String): String =
+    value = "ffff" + a
+
+@main
+def main(): Unit =
+  print("lidi ".ahoj("cau"))
+  ()
