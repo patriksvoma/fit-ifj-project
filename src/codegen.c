@@ -463,6 +463,70 @@ bool print_build_in_func_call(const char *identifier, param_node_list_t **param_
 }
 
 /**
+ * @brief Prints code for valmem calling
+ *
+ * @param identifier Name of the valmem function
+ * @param base Pointer to node with the base of the valmem
+ * @param symtables Passed only so generate_nodes() can be called and not to be lost
+ * @param new_func_def Passed only so generate_nodes() can be called and not to be lost
+ * @return true When it is a valmem
+ * @return false When it isn't a valmem
+ */
+bool print_valmem(const char *identifier, const ast_node_t *base, symtable_t *symtables, names_counter *new_func_def)
+{
+	const char *id = identifier;
+
+	if (strcmp(id, "Int$toString") == 0)
+	{
+		generate_nodes(base, symtables, new_func_def);
+		printf("INT2STRS\n");
+	}
+	else if (strcmp(id, "Double$toString") == 0)
+	{
+		generate_nodes(base, symtables, new_func_def);
+		printf("FLOAT2STRS\n");
+	}
+	else if (strcmp(id, "Boolean$toString") == 0)
+	{
+		generate_nodes(base, symtables, new_func_def);
+		printf("CALL bool2str\n");
+	}
+	else if (strcmp(id, "Unit$toString") == 0)
+	{
+		generate_nodes(base, symtables, new_func_def);
+		printf("POPS GF@temp1\n");
+		printf("PUSHS string@()\n");
+	}
+	else if (strcmp(id, "String$toString") == 0)
+	{
+		generate_nodes(base, symtables, new_func_def);
+	}
+	else if (strcmp(id, "Double$toInt") == 0)
+	{
+		generate_nodes(base, symtables, new_func_def);
+		printf("FLOAT2INTS\n");
+	}
+	else if (strcmp(id, "Double$floor") == 0)
+	{
+		generate_nodes(base, symtables, new_func_def);
+		printf("FLOAT2INTS\n");
+		printf("INT2FLOATS\n");
+	}
+	else if (strcmp(id, "String$length") == 0)
+	{
+		generate_nodes(base, symtables, new_func_def);
+		printf("POPS GF@temp1\n");
+		printf("STRLEN GF@temp2 GF@temp1\n");
+		printf("PUSHS GF@temp2\n");
+	}
+	else
+	{
+		return false;
+	}
+	return true;
+}
+
+/**
  * @brief Prints code for user function calling
  *
  * @param unique_id Unique name of the function
@@ -569,7 +633,11 @@ err_t print_ext_call(const char *unique_id, param_node_list_t **param_lists, siz
 }
 
 /**
+ * @brief Function to know for whitch node to pop stack
  *
+ * @param node_type Node type
+ * @return true When a stack needs to be poped
+ * @return false When a stack doesn't need to be poped
  */
 bool to_clear_stack(node_type_t node_type)
 {
@@ -924,11 +992,16 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 		printf("RETURN\n");
 		break;
 	}
-	case AST_EXT_CALL:
-		print_ext_call(node->ext_call.unique_id, node->ext_call.param_lists, node->ext_call.param_list_count,
-					   node->ext_call.base_node, symtables, new_func_def);
-		break;
+	case AST_EXT_CALL: {
+		bool is_valmem = print_valmem(node->ext_call.unique_id, node->ext_call.base_node, symtables, new_func_def);
 
+		if (!is_valmem)
+		{
+			print_ext_call(node->ext_call.unique_id, node->ext_call.param_lists, node->ext_call.param_list_count,
+						   node->ext_call.base_node, symtables, new_func_def);
+		}
+		break;
+	}
 	case AST_IF: {
 		unsigned curr_if = new_func_def->if_counter;
 		new_func_def->if_counter++;

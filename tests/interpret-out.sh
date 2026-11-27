@@ -196,7 +196,7 @@ run_case "func_def_more_lists" "functions/user/func-def-lists.ifj" "" ""
 echo "$BLUE-----function call-----$RESET"
 run_case "func_call" "functions/user/func-call.ifj" "" "5"
 run_case "func_call" "functions/user/func-call-lists.ifj" "" "-5ahoj"
-run_case "func_in_exp" "functions/user/func-in-exp.ifj" "" "125"
+run_case "func_in_exp" "functions/user/func-in-exp.ifj" "" "25125"
 
 #Function return
 echo "$BLUE-----unit function return-----$RESET"
@@ -217,6 +217,10 @@ run_case "if_else" "if/if-else.ifj" "15" "x>10"
 run_case "if_else" "if/if-else.ifj" "5" "x<10"
 run_case "only_if" "if/only-if.ifj" "15" "x>10 a"
 run_case "only_if" "if/only-if.ifj" "5" "a"
+
+echo "$YELLOW-----Extensions-----$RESET"
+echo "$BLUE-----valmem-----$RESET"
+run_case "valmem" "valmem/valmem.ifj" "" "54554.2454true()ahoj0x1.bp+54"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then
