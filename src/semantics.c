@@ -448,8 +448,8 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 	if (node->ext_call.param_list_count != entry->data.extension.param_list_count)
 	{
 		print_err("An extension was called with a different number of parameter lists than defined.",
-				  ERR_SEMANTIC_INVALID_TYPE);
-		return ERR_SEMANTIC_INVALID_TYPE;
+				  ERR_SEMANTIC_INVALID_ARG);
+		return ERR_SEMANTIC_INVALID_ARG;
 	}
 
 	// Check all the parameter nodes
