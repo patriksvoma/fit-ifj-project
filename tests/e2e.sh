@@ -252,8 +252,8 @@ run_case "control-if-expression-string.ifj" 0 "control/valid/control-if-expressi
 run_case "control-if-expression-multiline.ifj" 0 "control/valid/control-if-expression-multiline.ifj"
 
 run_case "control-if-expression-missing-else.ifj" 2 "control/invalid/control-if-expression-missing-else.ifj"
-run_case "control-if-expression-different-types-1.ifj" 6 "control/valid/control-if-expression-different-types-1.ifj"
-run_case "control-if-expression-different-types-2.ifj" 6 "control/valid/control-if-expression-different-types-2.ifj"
+run_case "control-if-expression-different-types-1.ifj" 6 "control/invalid/control-if-expression-different-types-1.ifj"
+run_case "control-if-expression-different-types-2.ifj" 6 "control/invalid/control-if-expression-different-types-2.ifj"
 
 echo "$BLUE-----For loops-----$RESET"
 run_case "control-for-to.ifj" 0 "control/valid/control-for-to.ifj"

@@ -436,6 +436,7 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 
 	if (entry == NULL)
 	{
+		free(new_id);
 		// If the base node type was an int, maybe it can be converted into an double and
 		// have a double extension called on it
 		if (node->ext_call.base_node->eval_type == TYPE_INT)
@@ -453,6 +454,7 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 
 			if (entry == NULL)
 			{
+				free(new_id);
 				// TODO: Formatted output with the extension name
 				print_err("An extension that was called is not defined.", ERR_SEMANTIC_UNDEFINED);
 				return ERR_SEMANTIC_UNDEFINED;
@@ -462,7 +464,10 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 				// If the extension method was found, insert an into to double node
 				result = insert_int_to_double_node(&node->ext_call.base_node);
 				if (result)
+				{
+					free(new_id);
 					return result;
+				}
 			}
 		}
 		else
@@ -952,7 +957,16 @@ err_t check_var_def(ast_node_t *node, compiler_data_t *cdata)
 	}
 	else
 	{
-		// Explicit definition, check if the types match
+		// Explicit definition
+		// Allow implicit conversions
+		if (entry->data.variable.type == TYPE_DOUBLE && node->variable_definition.assigned_value->eval_type == TYPE_INT)
+		{
+			result = insert_int_to_double_node(&node->variable_definition.assigned_value);
+			if (result)
+				return result;
+		}
+
+		// Check if the types match
 		if (entry->data.variable.type != node->variable_definition.assigned_value->eval_type)
 		{
 			// TODO: Formatted output
@@ -1006,6 +1020,14 @@ err_t check_var_assign(ast_node_t *node, compiler_data_t *cdata)
 	{
 		print_err("Trying to assign a value to an immutable variable.", ERR_SEMANTIC_IMMUTABLE);
 		return ERR_SEMANTIC_IMMUTABLE;
+	}
+
+	// Allow implicit conversions
+	if (entry->data.variable.type == TYPE_DOUBLE && node->variable_assignment.assigned_value->eval_type == TYPE_INT)
+	{
+		result = insert_int_to_double_node(&node->variable_assignment.assigned_value);
+		if (result)
+			return result;
 	}
 
 	if (entry->data.variable.type != node->variable_assignment.assigned_value->eval_type)
