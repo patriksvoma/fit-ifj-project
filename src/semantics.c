@@ -286,7 +286,6 @@ err_t check_func_call(ast_node_t *node, compiler_data_t *cdata)
 	const symbol_data_t *entry = symtable_item_find(&cdata->function_table, node->func_call.unique_id);
 	if (entry == NULL)
 	{
-		// TODO: Formatted output with the function name
 		print_err("A function that was called is not defined.", ERR_SEMANTIC_UNDEFINED);
 		return ERR_SEMANTIC_UNDEFINED;
 	}
@@ -455,7 +454,6 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 			if (entry == NULL)
 			{
 				free(new_id);
-				// TODO: Formatted output with the extension name
 				print_err("An extension that was called is not defined.", ERR_SEMANTIC_UNDEFINED);
 				return ERR_SEMANTIC_UNDEFINED;
 			}
@@ -472,7 +470,6 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 		}
 		else
 		{
-			// TODO: Formatted output with the extension name
 			print_err("An extension that was called is not defined.", ERR_SEMANTIC_UNDEFINED);
 			return ERR_SEMANTIC_UNDEFINED;
 		}
@@ -560,8 +557,6 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
  */
 err_t check_block(ast_node_t *node, compiler_data_t *cdata)
 {
-	// TODO: Maybe pass the expected return type/last statement type for checking correct return placement
-
 	if (!node || !cdata)
 	{
 		print_err("Null-pointer reference in check_block()!", ERR_INTERNAL);
@@ -969,7 +964,6 @@ err_t check_var_def(ast_node_t *node, compiler_data_t *cdata)
 		// Check if the types match
 		if (entry->data.variable.type != node->variable_definition.assigned_value->eval_type)
 		{
-			// TODO: Formatted output
 			print_err("A variable is defined with an explicit type, but is assigned a value of a different type.",
 					  ERR_SEMANTIC_INVALID_TYPE);
 			return ERR_SEMANTIC_INVALID_TYPE;

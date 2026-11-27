@@ -135,12 +135,6 @@ err_t prologue(compiler_data_t *cdata, ast_node_t *program_node)
 	if (result)
 		return result;
 
-	if (cdata->token.indent != 0)
-	{
-		print_err_l("The program prologue must be at indentation level 0.", ERR_SYNTAX, cdata->token.line);
-		return ERR_SYNTAX;
-	}
-
 	if (cdata->token.type != TOKEN_KEYWORD || cdata->token.attribute.keyword != KW_IMPORT)
 	{
 		print_err_l("Invalid token. Expected the \"import\" keyword.", ERR_SYNTAX, cdata->token.line);
