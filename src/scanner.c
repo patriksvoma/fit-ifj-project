@@ -784,7 +784,7 @@ err_t scan_next_token(token_t *token)
 				return scan_number(&buf, token, comment_eol);
 			}
 
-			if (isalpha(c) || c == '.')
+			if (isalpha(c))
 				return scan_fail(&buf, ERR_SCANNER, "Invalid character in a double number literal with an exponent.");
 
 			unread_char(c);
