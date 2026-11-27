@@ -1,0 +1,9 @@
+import ifj26.*
+
+@main def main(): Unit =
+  var x = 5 * foo(5*5)
+  print(x)
+
+def foo(n: Int): Int =
+  print(n)
+  return n

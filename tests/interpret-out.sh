@@ -196,6 +196,7 @@ run_case "func_def_more_lists" "functions/user/func-def-lists.ifj" "" ""
 echo "$BLUE-----function call-----$RESET"
 run_case "func_call" "functions/user/func-call.ifj" "" "5"
 run_case "func_call" "functions/user/func-call-lists.ifj" "" "-5ahoj"
+run_case "func_in_exp" "functions/user/func-in-exp.ifj" "" "125"
 
 #Function return
 echo "$BLUE-----unit function return-----$RESET"
