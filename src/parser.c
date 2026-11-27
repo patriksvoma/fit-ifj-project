@@ -331,16 +331,12 @@ err_t ext_def_list(compiler_data_t *cdata, ast_node_t *program_node, unsigned li
 	// def
 	if (cdata->token.type == TOKEN_KEYWORD && cdata->token.attribute.keyword == KW_DEF)
 	{
-		err_t result = get_next_token(&cdata->token, EOL_FORBIDDEN);
-		if (result)
-			return result;
-
 		// These flags are used in order to create the correct node in <func-def>
 		cdata->in_main = false;
 		cdata->in_extension = true;
 
 		// <func-def>
-		result = func_def(cdata, program_node);
+		err_t result = func_def(cdata, program_node);
 		if (result)
 			return result;
 
@@ -467,7 +463,16 @@ err_t func_def(compiler_data_t *cdata, ast_node_t *program_node)
 		}
 		table_entry->symbol_type = SYM_EXTENSION;
 		table_entry->data.extension.is_defined = true;
+
 		table_entry->data.extension.base_param = cdata->last_extension_param;
+		table_entry->data.extension.base_param.identifier = malloc(strlen(cdata->last_extension_param.identifier) + 1);
+		if (!table_entry->data.extension.base_param.identifier)
+		{
+			free(unique_id);
+			print_err_l("Failed to allocate memory in func_def().", ERR_INTERNAL, cdata->token.line);
+			return ERR_INTERNAL;
+		}
+		strcpy(table_entry->data.extension.base_param.identifier, cdata->last_extension_param.identifier);
 
 		// Create an AST node
 		def_node = ast_ext_def_make(cdata->last_extension_param.type);
