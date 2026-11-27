@@ -485,8 +485,10 @@ void destroy_tree(tree_node_t *node)
 			{
 				if (list->params[j]->identifier)
 					free(list->params[j]->identifier);
+				free(list->params[j]);
 			}
 			free(list->params);
+			free(list);
 		}
 		free(node->data.data.function.param_lists);
 	}
@@ -500,8 +502,10 @@ void destroy_tree(tree_node_t *node)
 			{
 				if (list->params[j]->identifier)
 					free(list->params[j]->identifier);
+				free(list->params[j]);
 			}
 			free(list->params);
+			free(list);
 		}
 		free(node->data.data.extension.param_lists);
 		free(node->data.data.extension.base_param.identifier);
