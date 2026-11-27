@@ -120,7 +120,7 @@ err_t local_tables_destroy(compiler_data_t *cdata)
 
 	// Destroy the function and extension tables
 	symtable_destroy(&cdata->function_table);
-	// symtable_destroy(&cdata->extension_table);
+	symtable_destroy(&cdata->extension_table);
 
 	return ERR_OK;
 }

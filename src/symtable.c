@@ -483,7 +483,8 @@ void destroy_tree(tree_node_t *node)
 
 			for (size_t j = 0; j < list->param_count; j++)
 			{
-				free(list->params[j]->identifier);
+				if (list->params[j]->identifier)
+					free(list->params[j]->identifier);
 			}
 			free(list->params);
 		}
@@ -497,7 +498,8 @@ void destroy_tree(tree_node_t *node)
 
 			for (size_t j = 0; j < list->param_count; j++)
 			{
-				free(list->params[j]->identifier);
+				if (list->params[j]->identifier)
+					free(list->params[j]->identifier);
 			}
 			free(list->params);
 		}
@@ -1110,7 +1112,7 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 		entry = symtable_item_create(ext_table, id);
 
 		entry->symbol_type = SYM_EXTENSION;
-		entry->data.extension.base_param.identifier = "value";
+		entry->data.extension.base_param.identifier = NULL; // The identifier is not needed
 		entry->data.extension.base_param.type = types[i];
 		entry->data.extension.is_defined = true;
 		entry->data.extension.return_type = TYPE_STRING;
@@ -1129,7 +1131,7 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 	entry = symtable_item_create(ext_table, id);
 
 	entry->symbol_type = SYM_EXTENSION;
-	entry->data.extension.base_param.identifier = "value";
+	entry->data.extension.base_param.identifier = NULL; // The identifier is not needed
 	entry->data.extension.base_param.type = TYPE_DOUBLE;
 	entry->data.extension.is_defined = true;
 	entry->data.extension.return_type = TYPE_INT;
@@ -1147,7 +1149,7 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 	entry = symtable_item_create(ext_table, id);
 
 	entry->symbol_type = SYM_EXTENSION;
-	entry->data.extension.base_param.identifier = "value";
+	entry->data.extension.base_param.identifier = NULL; // The identifier is not needed
 	entry->data.extension.base_param.type = TYPE_DOUBLE;
 	entry->data.extension.is_defined = true;
 	entry->data.extension.return_type = TYPE_DOUBLE;
@@ -1165,7 +1167,7 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 	entry = symtable_item_create(ext_table, id);
 
 	entry->symbol_type = SYM_EXTENSION;
-	entry->data.extension.base_param.identifier = "value";
+	entry->data.extension.base_param.identifier = NULL; // The identifier is not needed
 	entry->data.extension.base_param.type = TYPE_STRING;
 	entry->data.extension.is_defined = true;
 	entry->data.extension.return_type = TYPE_INT;
