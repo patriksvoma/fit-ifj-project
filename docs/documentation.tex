@@ -69,7 +69,27 @@
   }
 
   \subsection{Lexikální analýza} {
-	  TODO:
+	  \sloppy
+	  Scanner (lexikální analyzátor) je implementován v souborech \texttt{scanner.c} a \texttt{scanner.h}
+	  jako deterministický konečný automat. Parser si o tokeny říká postupně funkcí \texttt{get\_next\_token}, scanner tedy nikdy
+	  nezpracovává celý vstup najednou. Nejdříve jsme si konečný automat nakreslili a poté podle něho psali kód scanneru.
+
+	  \subsubsection{Čtení vstupu} {
+		  Zdrojový kód se čte ze standardního vstupu po znacích funkcí \texttt{next\_char}, která zároveň
+		  udržuje číslo aktuálního řádku a pozici na něm. Některé stavy potřebují nahlédnout o~jeden znak dopředu (např.\ při
+		  rozlišení \texttt{<} a~\texttt{<=} nebo na konci identifikátoru), přebytečný znak se vrací zpět
+		  funkcí \texttt{unread\_char}. Text právě čteného tokenu se ukládá do bufferu (dynamického řetězce), jehož
+		  kapacita se při zaplnění zdvojnásobí. Řetězec se po přijetí tokenu předá do jeho atributu a~za jeho
+		  uvolnění pak odpovídá parser.
+	  }
+
+	  \subsubsection{Token} {
+		  Každý token nese svůj typ (např. klíčové slovo, celé číslo, desetinné číslo), atribut s hodnotou tokenu a číslo řádku pro chybové
+		  hlášení. Scanner nemá zvláštní token pro konec řádku. Místo něj má každý token hodnotu
+		  \texttt{starts\_logical\_line}, který říká, zda token začíná nový logický řádek, a hodnotu
+		  \texttt{indent} s~mírou jeho odsazení.
+	  }
+
   }
 
   \subsection{Syntaktická analýza} {
