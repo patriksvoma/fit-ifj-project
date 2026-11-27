@@ -1035,12 +1035,6 @@ err_t get_next_token(token_t *token, eol_rule_t eol)
 
 	if (token_cached)
 	{
-		if (token)
-		{
-			if (token->attribute.string)
-				free(token->attribute.string);
-			free(token);
-		}
 		*token = token_cache;
 		token_cached = false;
 	}
