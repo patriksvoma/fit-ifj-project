@@ -27,3 +27,4 @@ docs/aux
 
 # draw.io backup files
 *.drawio.bkp
+*.drawio.dtmp
