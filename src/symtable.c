@@ -802,6 +802,7 @@ err_t symbol_add_param_named(symbol_data_t *symbol, const char *param_name, data
 		print_err("Failed to allocate memory in symbol_add_param_named().", ERR_INTERNAL);
 		return ERR_INTERNAL;
 	}
+	strcpy(param->identifier, param_name);
 
 	return ERR_OK;
 }
@@ -1174,6 +1175,8 @@ err_t symtable_insert_builtins(symtable_t *func_table, symtable_t *ext_table)
 	entry->data.extension.base_param.type = TYPE_STRING;
 	entry->data.extension.is_defined = true;
 	entry->data.extension.return_type = TYPE_INT;
+
+	free(id);
 
 	return ERR_OK;
 }
