@@ -952,7 +952,16 @@ err_t check_var_def(ast_node_t *node, compiler_data_t *cdata)
 	}
 	else
 	{
-		// Explicit definition, check if the types match
+		// Explicit definition
+		// Allow implicit conversions
+		if (entry->data.variable.type == TYPE_DOUBLE && node->variable_definition.assigned_value->eval_type == TYPE_INT)
+		{
+			result = insert_int_to_double_node(&node->variable_definition.assigned_value);
+			if (result)
+				return result;
+		}
+
+		// Check if the types match
 		if (entry->data.variable.type != node->variable_definition.assigned_value->eval_type)
 		{
 			// TODO: Formatted output
