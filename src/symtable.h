@@ -176,7 +176,7 @@ err_t symbol_add_param(symbol_data_t *symbol);
  *
  * @param table Pointer to the symbol tree which will be destroyed
  */
-void symtable_destroy(symtable_t **table);
+void symtable_destroy(symtable_t *table);
 
 /**
  * @brief Generates a unique name for a symbol and saves it inside

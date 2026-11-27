@@ -512,14 +512,13 @@ void destroy_tree(tree_node_t *node)
 	free(node);
 }
 
-void symtable_destroy(symtable_t **table)
+void symtable_destroy(symtable_t *table)
 {
-	if (table == NULL || *table == NULL)
+	if (table == NULL)
 		return;
 
-	destroy_tree((*table)->root_node);
-	free(*table);
-	*table = NULL;
+	destroy_tree(table->root_node);
+	free(table);
 }
 
 err_t append_last_table_counter(char **buf, size_t *buf_len, symtable_t *table)
