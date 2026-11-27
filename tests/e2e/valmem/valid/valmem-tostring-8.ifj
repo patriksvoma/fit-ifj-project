@@ -1,0 +1,6 @@
+import ifj26.*
+
+@main
+def main(): Unit =
+  var a: String = (6 + 7)*12e-5.toString
+  ()
