@@ -112,6 +112,7 @@ err_t local_tables_destroy(compiler_data_t *cdata)
 	for (size_t i = 0; i < cdata->var_table_count; i++)
 	{
 		symtable_destroy(cdata->var_tables[i]);
+		free(cdata->var_tables[i]);
 	}
 
 	free(cdata->var_tables);
