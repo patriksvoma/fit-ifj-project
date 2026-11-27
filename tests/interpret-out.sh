@@ -220,7 +220,7 @@ run_case "only_if" "if/only-if.ifj" "5" "a"
 
 echo "$YELLOW-----Extensions-----$RESET"
 echo "$BLUE-----valmem-----$RESET"
-run_case "valmem" "valmem/valmem.ifj" "" "54554.2454true()ahoj0x1.bp+54"
+run_case "valmem" "valmem/valmem.ifj" "" "54554.2454true()ahoj-55.004"
 
 printf '\n'
 if [ "$failed" -ne 0 ]; then

@@ -147,6 +147,36 @@ void print_bool2str()
 	return;
 }
 
+void print_floor_ext()
+{
+	printf("LABEL floor$ext\n");
+
+	// Save values
+	printf("POPS GF@temp1\n");
+	printf("PUSHS GF@temp1\n");
+	printf("PUSHS GF@temp1\n");
+
+	printf("FLOAT2INTS\n");
+	printf("INT2FLOATS\n");
+	printf("POPS GF@temp1\n");
+	printf("PUSHS GF@temp1\n");
+
+	// Check if origanl value is smaller than rounded one
+	printf("LTS\n");
+	printf("PUSHS bool@true\n");
+	printf("JUMPIFEQS floor$ext$sub\n");
+
+	printf("JUMP floor$ext$end\n");
+
+	printf("LABEL floor$ext$sub\n");
+	printf("SUB GF@temp1 GF@temp1 float@%a\n", 1.0);
+
+	printf("LABEL floor$ext$end\n");
+	printf("PUSHS GF@temp1\n");
+	printf("RETURN\n");
+	return;
+}
+
 /**
  * @brief Prints string with chars that need escape sequence
  *
@@ -509,8 +539,7 @@ bool print_valmem(const char *identifier, const ast_node_t *base, symtable_t *sy
 	else if (strcmp(id, "Double$floor") == 0)
 	{
 		generate_nodes(base, symtables, new_func_def);
-		printf("FLOAT2INTS\n");
-		printf("INT2FLOATS\n");
+		printf("CALL floor$ext\n");
 	}
 	else if (strcmp(id, "String$length") == 0)
 	{
@@ -1091,6 +1120,7 @@ err_t generate_nodes(const ast_node_t *node, symtable_t *symtables, names_counte
 
 err_t generate_code(const ast_node_t *root, const compiler_data_t *cdata)
 {
+	fprintf(stderr, "%a\n\n", -55.0);
 	// Make structures to help with unique names for if, while and for
 	names_counter *new_func_def = calloc(1, sizeof(names_counter));
 	symtable_t *symtables = calloc(2, sizeof(symtable_t));
@@ -1119,6 +1149,7 @@ err_t generate_code(const ast_node_t *root, const compiler_data_t *cdata)
 	print_substr();
 	print_ord();
 	print_bool2str();
+	print_floor_ext();
 
 	generate_nodes(root, symtables, new_func_def);
 
