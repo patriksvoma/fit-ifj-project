@@ -436,6 +436,7 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 
 	if (entry == NULL)
 	{
+		free(new_id);
 		// If the base node type was an int, maybe it can be converted into an double and
 		// have a double extension called on it
 		if (node->ext_call.base_node->eval_type == TYPE_INT)
@@ -453,6 +454,7 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 
 			if (entry == NULL)
 			{
+				free(new_id);
 				// TODO: Formatted output with the extension name
 				print_err("An extension that was called is not defined.", ERR_SEMANTIC_UNDEFINED);
 				return ERR_SEMANTIC_UNDEFINED;
@@ -462,7 +464,10 @@ err_t check_ext_call(ast_node_t *node, compiler_data_t *cdata)
 				// If the extension method was found, insert an into to double node
 				result = insert_int_to_double_node(&node->ext_call.base_node);
 				if (result)
+				{
+					free(new_id);
 					return result;
+				}
 			}
 		}
 		else
